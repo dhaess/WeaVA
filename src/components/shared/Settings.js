@@ -1,0 +1,124 @@
+import {useDispatch, useSelector} from "react-redux";
+import {useRef, useEffect, useState} from "react";
+import {Box, Button, Menu, MenuItem, Modal} from "@mui/material";
+import SettingsIcon from "../../static/images/settings.png";
+import {NestedMenuItem} from "mui-nested-menu";
+import Credits from "./Credits";
+import {styled} from "@mui/material/styles";
+import {setMapTile, setTheme} from "./features/SettingsSlice";
+
+const creditStyle = {
+    background: "var(--main-bg-color)",
+    fontSize: "8px",
+    color: "black",
+    padding: "5px",
+    minWidth: "0"
+}
+
+const modalStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 500,
+    backgroundColor: 'white',
+    border: '2px solid black',
+    boxShadow: 24,
+    p: 4,
+    padding: "15px"
+}
+
+const StyledOuterMenuItem = styled(MenuItem)({
+    fontSize: "13px",
+})
+
+const StyledInnerMenuItem = styled(MenuItem)({
+    fontSize: "13px",
+    border: "1px solid transparent",
+    lineHeight: "1",
+    "&:hover": {
+        border: "1px solid #606060"
+    }
+})
+
+const Settings = () => {
+    const dispatch = useDispatch()
+
+    let menuRef = useRef()
+
+    const theme = useSelector(state => state.settings.theme)
+
+    const [open, setOpen] = useState(false)
+    const [modal, setModal] = useState(false);
+
+    useEffect(() => {
+        document.documentElement.className = theme
+    }, [theme])
+
+    const handleOpenCredits = () => {
+        setModal(true)
+        setOpen(false)
+    };
+    const handleCloseCredits = () => setModal(false);
+
+    const closeColorMenu = (theme) => {
+        if (theme !== "") {
+            dispatch(setTheme(theme))
+        }
+        setOpen(false)
+    }
+
+    const closeMapMenu = (tile) => {
+        if (theme !== "") {
+            dispatch(setMapTile(tile))
+        }
+        setOpen(false)
+    }
+
+    return (<>
+        <Button sx={creditStyle} onClick={() => setOpen(true)} ref={menuRef}><img src={SettingsIcon} width={20} alt={"Settings"}/></Button>
+        <Menu
+            id="color-menu"
+            anchorEl={menuRef.current}
+            open={open}
+            onClose={() => closeColorMenu("")}
+        >
+            <NestedMenuItem
+                label={"Color Theme"}
+                parentMenuOpen={open}
+                className={"nestedMenu"}
+            >
+                <StyledInnerMenuItem onClick={() => closeColorMenu("terraCotta")} sx={{background: "linear-gradient(90deg, #d9876b, #d67857, #d9876b)"}}>Terra Cotta</StyledInnerMenuItem>
+                <StyledInnerMenuItem onClick={() => closeColorMenu("oceanGreen")} sx={{background: "linear-gradient(90deg, #6dc6ae, #47bd9c, #6dc6ae)"}}>Ocean Green</StyledInnerMenuItem>
+                <StyledInnerMenuItem onClick={() => closeColorMenu("vistaBlue")} sx={{background: "linear-gradient(90deg, #9eafcf, #7898d4, #9eafcf)"}}>Vista Blue</StyledInnerMenuItem>
+                <StyledInnerMenuItem onClick={() => closeColorMenu("turquoise")} sx={{background: "linear-gradient(90deg, #87d9e0, #34cdda, #87d9e0)"}}>Turquoise</StyledInnerMenuItem>
+                <StyledInnerMenuItem onClick={() => closeColorMenu("darkKhaki")} sx={{background: "linear-gradient(90deg, #ddd456, #cbc56d, #ddd456)"}}>Dark Khaki</StyledInnerMenuItem>
+                <StyledInnerMenuItem onClick={() => closeColorMenu("deepMauve")} sx={{background: "linear-gradient(90deg, #e2b4e2, #d478d3, #e2b4e2)"}}>Deep Mauve</StyledInnerMenuItem>
+            </NestedMenuItem>
+            <NestedMenuItem
+                label={"Map Background"}
+                parentMenuOpen={open}
+                className={"nestedMenu"}
+            >
+                <StyledInnerMenuItem onClick={() => closeMapMenu("CH")}>CH</StyledInnerMenuItem>
+                <StyledInnerMenuItem onClick={() => closeMapMenu("OSM")}>OSM</StyledInnerMenuItem>
+                <StyledInnerMenuItem onClick={() => closeMapMenu("NationalMapColor")}>NationalMapColor</StyledInnerMenuItem>
+                <StyledInnerMenuItem onClick={() => closeMapMenu("NationalMapGrey")}>NationalMapGrey</StyledInnerMenuItem>
+                <StyledInnerMenuItem onClick={() => closeMapMenu("SWISSIMAGE")}>SWISSIMAGE</StyledInnerMenuItem>
+            </NestedMenuItem>
+            <StyledOuterMenuItem onClick={handleOpenCredits}>Credits</StyledOuterMenuItem>
+        </Menu>
+        <Modal
+            open={modal}
+            onClose={handleCloseCredits}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+        >
+            <Box style={modalStyle}>
+                <Credits/>
+            </Box>
+        </Modal>
+    </>)
+}
+
+export default Settings;

@@ -1,0 +1,288 @@
+:root,
+:root.terraCotta {
+    --main-bg-color: #d67857;
+    --light-bg-color: #dfb6a8;
+    --opacity-bg-color: #f8e5e0;
+    --opacity2-bg-color: #d6785785;
+    --shadow-bg-color: #d9876b;
+    --gray-bg-color: #d8d8d8;
+}
+
+:root.oceanGreen {
+    --main-bg-color: #47bd9c;
+    --light-bg-color: #b5d2ca;
+    --opacity-bg-color: #e0f3ed;
+    --opacity2-bg-color: #47bd9c85;
+    --shadow-bg-color: #6dc6ae;
+    --gray-bg-color: #d8d8d8;
+}
+
+:root.vistaBlue {
+    --main-bg-color: #7898d4;
+    --light-bg-color: #c4c9d2;
+    --opacity-bg-color: #e6ebf7;
+    --opacity2-bg-color: #7898d485;
+    --shadow-bg-color: #9eafcf;
+    --gray-bg-color: #d8d8d8;
+}
+
+:root.turquoise {
+    --main-bg-color: #34cdda;
+    --light-bg-color: #bbdcdf;
+    --opacity-bg-color: #def6f9;
+    --opacity2-bg-color: #34cdda85;
+    --shadow-bg-color: #87d9e0;
+    --gray-bg-color: #d8d8d8;
+}
+
+:root.darkKhaki {
+    --main-bg-color: #cbc56d;
+    --light-bg-color: #e5e4cf;
+    --opacity-bg-color: #f5f4e5;
+    --opacity2-bg-color: #cbc56d85;
+    --shadow-bg-color: #ddd456;
+    --gray-bg-color: #d8d8d8;
+}
+
+:root.deepMauve {
+    --main-bg-color: #d478d3;
+    --light-bg-color: #dbcedb;
+    --opacity-bg-color: #f8e5f7;
+    --opacity2-bg-color: #d478d385;
+    --shadow-bg-color: #e2b4e2;
+    --gray-bg-color: #d8d8d8;
+}
+
+/*use with var(--main-bg-color)*/
+
+body {
+    background-color: #000000cc;
+}
+.App {
+    background-color: #ffffff;
+    border: 1px solid white;
+    display: flex;
+    width: 100vw;
+    margin-top: -1px;
+}
+
+#Map {
+    overflow: auto;
+    display: block;
+    width: 100%;
+}
+
+#MapOverloadBox {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background-color: white;
+    border: var(--main-bg-color) 5px solid;
+    font-size: 30px;
+    top: -50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#Histogram {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    background: white;
+    border: var(--main-bg-color) solid 3px;
+    border-left: 0;
+    transition: width 0.5s ease-in-out, left 0.5s ease-in-out;
+}
+
+.histogramContent {
+    display: flex;
+    flex-direction: column;
+}
+
+.histogramContent div {
+    display: flex;
+}
+
+.histogramButtons {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin-right: 20px;
+    margin-left: -23px;
+    padding-top: 30px;
+}
+
+.circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    border-radius: 50%;
+    border-style: solid;
+    font-weight: bold;
+    border-width: 1px;
+}
+
+.flex-container {
+    display: flex;
+}
+
+.flex-child {
+    flex: 1;
+    border: 2px solid yellow;
+}
+
+.flex-child:first-child {
+    margin-right: 20px;
+}
+
+.histogramLoading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(255 255 255 / 60%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mapLoading {
+    position: relative;
+    top: -100%;
+    height: 100%;
+    background-color: rgb(255 255 255 / 30%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.MuiCircularProgress-colorPrimary {
+    color: var(--main-bg-color) !important;
+}
+
+#SelectionButtons {
+    position: absolute;
+    z-index: 100;
+    background: white;
+    border: 2px solid var(--main-bg-color);
+    border-top: 0;
+    margin-left: -1px;
+}
+
+.selectionButtonsContent {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.MapBoxTitle {
+    background-color: var(--shadow-bg-color);
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.leaflet-draw-section {
+    display:none
+}
+
+.leaflet-draw-toolbar{
+    display:none
+}
+
+.leaflet-popup-content {
+    margin: 4px 4px 4px 4px;
+}
+
+.leaflet-draw-tooltip-single {
+    background-color: #fbf0ea;
+    color: rgba(0, 0, 0, 0.87);
+    box-shadow: #00000091 0 0 3px;
+    margin-top: -13px;
+}
+
+.leaflet-draw-tooltip {
+    background-color: #fbf0ea;
+    color: rgba(0, 0, 0, 0.87);
+    box-shadow: #00000091 0 0 3px;
+    margin-top: -13px;
+}
+
+.leaflet-draw-tooltip:before {
+    border-right: 8px solid rgba(0,0,0,0.5);
+    left: -9px;
+}
+
+
+.leaflet-draw-tooltip-subtext {
+    color: rgba(0, 0, 0, 0.87);
+}
+
+.leaflet-touch .leaflet-control-layers-toggle {
+    width: 30px;
+    height: 30px;
+}
+
+.leaflet-retina .leaflet-control-layers-toggle {
+    background-size: 20px 20px;
+}
+
+.leaflet-control-layers-expanded {
+    text-align: left;
+}
+
+.leaflet-minimap {
+    top: 0;
+    right: 0;
+    margin-top: 0;
+    margin-right: 0;
+    position: absolute;
+    z-index: 1000;
+    border: 3px solid var(--main-bg-color);
+    border-top: 0;
+    font-size: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+#previewButton {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 16px;
+    padding: 4px;
+    background: var(--shadow-bg-color);
+    border-radius: 0;
+}
+
+#selectionBoxButton {
+    position: absolute;
+    top: 0;
+    left: 0;
+    min-width: 16px;
+    padding: 4px;
+    background: var(--shadow-bg-color);
+    border-radius: 0;
+    z-index: 1000;
+}
+
+#histogramButton {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    min-width: 16px;
+    padding: 4px;
+    background: var(--shadow-bg-color);
+    border-radius: 0;
+    z-index: 1000;
+}
+
+.minimapMarkers {
+    cursor: default;
+}
