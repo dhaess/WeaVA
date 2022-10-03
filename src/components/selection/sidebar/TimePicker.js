@@ -7,8 +7,8 @@ import {StyledRadio, StyledTextField} from "../../../static/style/muiStyling";
 import {DateTimePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
 
-const minDataDate = 1633593924245
-const maxDataDate = 1654187033966
+const minDataDate = new Date("2021-10-07T08:00").getTime()
+const maxDataDate = new Date("2022-06-02T20:00").getTime()
 
 const minArray = [...Array(60).keys()]
 const hourArray = [...Array(24).keys()]
@@ -141,17 +141,39 @@ export default function TimePicker() {
         return timeRanges
     })
 
-    const handleTimeChange1 = (val) => {
-        let startVal = val.getTime()
-        if (startVal < minDataDate) {
-            startVal = minDataDate
-        } else if (startVal > maxDataDate) {
-            startVal = maxDataDate
+    const handleStartTimeChange = (val) => {
+        if (!isNaN(val)) {
+            let startVal = val.getTime()
+            if (startVal < minDataDate) {
+                startVal = minDataDate
+            } else if (startVal > maxDataDate) {
+                startVal = maxDataDate
+            }
+            let timeVal = [
+                startVal,
+                startVal + 1000 * 60 * ( 60 * ( 24 * duration[0] + duration[1]) + duration[2])
+            ]
+            if (timeRange[1].getTime() === maxDataDate) {
+                timeVal[1] = maxDataDate
+            }
+            const delayDebounceFn = setTimeout(() => {
+                const filter = {"timestamp": {
+                        '$gt': timeVal[0],
+                        '$lt': timeVal[1]
+                    }}
+                dispatch(changeFilter([{type: "add", filter: [filter]}]))
+                dispatch(setCurrent({name: "timeRange", value: timeVal}))
+            }, 1000)
+
+            return () => clearTimeout(delayDebounceFn)
         }
-        const timeVal = [
-            startVal,
-            startVal + 1000 * 60 * ( 60 * ( 24 * duration[0] + duration[1]) + duration[2])
-        ]
+    }
+
+    const handleEndTimeChange = (val) => {
+        const timeVal = [timeRange[0].getTime(), val.getTime()]
+        if (timeVal[1] > maxDataDate) {
+            timeVal[1] = maxDataDate
+        }
         const delayDebounceFn = setTimeout(() => {
             const filter = {"timestamp": {
                     '$gt': timeVal[0],
@@ -188,23 +210,6 @@ export default function TimePicker() {
         dispatch(changeFilter([{type: "add", filter: [filter]}]))
     }
 
-    const handleTimeChange2 = (val) => {
-        const timeVal = [timeRange[0].getTime(), val.getTime()]
-        if (timeVal[1] > maxDataDate) {
-            timeVal[1] = maxDataDate
-        }
-        const delayDebounceFn = setTimeout(() => {
-            const filter = {"timestamp": {
-                    '$gt': timeVal[0],
-                    '$lt': timeVal[1]
-                }}
-            dispatch(changeFilter([{type: "add", filter: [filter]}]))
-            dispatch(setCurrent({name: "timeRange", value: timeVal}))
-        }, 1000)
-
-        return () => clearTimeout(delayDebounceFn)
-    }
-
     const setTimeRange = (newRange, isSelected) => {
         if (isSelected || isSelected === undefined) {
             const filter = {"timestamp": {
@@ -228,7 +233,8 @@ export default function TimePicker() {
                     minDate={minDataDate}
                     maxDate={maxDataDate}
                     value={timeRange[0]}
-                    onChange={handleTimeChange1}
+                    // onError={(e) => {console.log(e, "invalidDate", e === "invalidDate")}}
+                    onChange={handleStartTimeChange}
                     renderInput={(params) => <StyledTimeTextField size={"small"} {...params} />}
                 />
                 <DateTimePicker
@@ -240,7 +246,8 @@ export default function TimePicker() {
                     minDate={timeRange[0]}
                     maxDate={maxDataDate}
                     value={timeRange[1]}
-                    onChange={handleTimeChange2}
+                    // onError={(e) => {console.log(e)}}
+                    onChange={handleEndTimeChange}
                 />
                 <p style={{fontSize: "14px", marginTop: "-12px"}}>or</p>
                 <p style={{fontSize: "14px", marginTop: "-5px"}}>Duration (from start time)</p>

@@ -5,7 +5,6 @@ import TimePicker from "./TimePicker";
 import AreaSelector from "./AreaSelector";
 import NameSelector from "./NameSelector";
 import ColorSelector from "./ColorSelector";
-import HistogramOptions from "./HistogramOptions";
 import EndButtons from "./EndButtons";
 import ImageSelect from "./ImageSelect";
 import Settings from "../../shared/Settings";
@@ -48,7 +47,6 @@ const Sidebar = () => {
                         <TimePicker/>
                         <ImageSelect/>
                         <AreaSelector/>
-                        <HistogramOptions/>
                         <h2>Styling Options</h2>
                         <NameSelector/>
                         <ColorSelector/>

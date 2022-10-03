@@ -111,3 +111,22 @@ export const StyledButton = styled(Button)({
         boxShadow: "1px 1px grey"
     }
 })
+
+export const CancelButton = styled(Button)({
+    border: "2px solid black",
+    padding: "2px 8px",
+    color: "black",
+    "&:hover": {
+        backgroundColor: "#eaeaea"
+    }
+})
+
+export const DeleteButton = styled(Button)({
+    border: "2px solid black",
+    padding: "2px 8px",
+    backgroundColor: "#e84242",
+    color: "white",
+    "&:hover": {
+        backgroundColor: "#d44c4c",
+    }
+})

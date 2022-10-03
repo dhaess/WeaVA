@@ -1,40 +1,13 @@
 import React, {useEffect, useRef, useState} from "react";
 import * as d3 from "d3";
 import {useDispatch, useSelector} from "react-redux";
-import {Button, CircularProgress} from "@mui/material";
-import $ from 'jquery';
-import {changeFilter, setCurrent} from "../shared/features/SavingsSlice";
-import {changeFocusedTimeRange} from "../shared/features/MapSlice";
-import {styled} from "@mui/material/styles";
-import Arrow from "../../static/images/left-arrow.png";
-
-const StyledButton = styled(Button)({
-    backgroundColor: "var(--opacity-bg-color)",
-    border: "var(--main-bg-color) 2px solid",
-    marginTop: "18px",
-    marginBottom: "0px",
-    color: "black",
-    fontSize: "12px",
-    width: "93px",
-    height: "52px",
-    "&:hover": {
-        backgroundColor: "var(--opacity2-bg-color);",
-    },
-    "&.Mui-disabled": {
-        border: "2px solid #b9b9b9",
-    }
-})
+import {setCurrent} from "../../shared/features/SavingsSlice";
+import {changeFocusedTimeRange} from "../../shared/features/MapSlice";
 
 const Histogram = ({dimensions}) => {
     const dispatch = useDispatch()
 
-    const [isLoading,
-        binCount
-    ] = useSelector(state => {
-        const savings = state.savings
-        return [savings.status==="loading",
-            savings.current.histogram.bins
-        ]})
+    const binCount = useSelector(state => state.savings.current.histogram.bins)
 
     const [data,
         timeRange
@@ -44,65 +17,7 @@ const Histogram = ({dimensions}) => {
             histogram.timeRange
         ]})
 
-    const [focusedTimeRange,
-        focusedData
-    ] = useSelector(state => {
-        const map = state.map
-        return [
-            map.focusedTimeRange,
-            map.focusedPoints
-        ]})
-
-    const [showHistogram, setHistogram] = useState(true)
-
-    const handleCloseClick = () => {
-        setHistogram(false)
-    }
-
-    const handleOpenClick = () => {
-        setHistogram(true)
-    }
-
-    const resetSelection = () => {
-        dispatch(changeFocusedTimeRange([]))
-    }
-
-    const zoomSelection = () => {
-        const filter = {"timestamp": {
-                '$gt': focusedTimeRange[0],
-                '$lt': focusedTimeRange[1]
-            }}
-        dispatch(changeFilter([{type: "add", filter: [filter]}]))
-        dispatch(setCurrent({name: "timeRange", value: focusedTimeRange}))
-    }
-
-    const styleDateString = (dateVal) => {
-        const date = new Date(dateVal)
-        const day = date.getDate()<10 ? "0" + date.getDate() : date.getDate()
-        const month = date.getMonth()+1<10 ? "0" + (date.getMonth()+1) : (date.getMonth()+1)
-        const year = date.getFullYear()
-        const hours = date.getHours()<10 ? "0" + date.getHours() : date.getHours()
-        const minutes = date.getMinutes()<10 ? "0" + date.getMinutes() : date.getMinutes()
-        return day + "." + month + "." + year + " (" + hours + ":" + minutes + ")"
-    }
-
-    useEffect(() => {
-        if (isLoading) {
-            $(".histogramLoading").css('display', "flex")
-        } else {
-            $(".histogramLoading").css('display', "none")
-        }
-    }, [isLoading])
-
-    useEffect(() => {
-        if (showHistogram) {
-            $(".histogramContent").css('display', "flex")
-            $(".histogramMini").css('display', "none")
-        } else {
-            $(".histogramContent").css('display', "none")
-            $(".histogramMini").css('display', "flex")
-        }
-    }, [showHistogram])
+    const focusedTimeRange = useSelector(state => state.map.focusedTimeRange)
 
     useEffect(() => {
         dispatch(setCurrent({name: "histogram", value: {bins: binCount, displayed: data.length!==0}}))
@@ -118,7 +33,7 @@ const Histogram = ({dimensions}) => {
     useEffect(() => {
 
         const getBinTimeRange = (x) => {
-            const rectList = document.querySelector('#Histogram').querySelectorAll('rect')
+            const rectList = document.querySelectorAll('rect')
             let rectBound = []
             for (let rect of rectList) {
                 rectBound.push({
@@ -264,56 +179,9 @@ const Histogram = ({dimensions}) => {
 
     }, [data, binCount, height, margin.bottom, margin.left, margin.right, margin.top, width, focusedTimeRange, dispatch, dragStart, timeRange]);
 
-    if (data.length === 0) {
-        return (
-            <>
-                <div style={{margin: "25px"}} className="histogramContent">
-                    <Button id={"histogramButton"} onClick={handleCloseClick}><img src={Arrow} width={16} alt={"close"}/></Button>
-                    <div className={"histogramLoading"} style={{display: "none"}}>
-                        <CircularProgress size={80}/>
-                    </div>
-                    <div style={{"fontSize": "40px", "flex": "1"}}>No Data</div>
-                </div>
-                <div style={{position: "relative"}} className={"histogramMini"}>
-                    <Button id={"histogramButton"} onClick={handleOpenClick}><img src={Arrow} width={16} alt={"open"} style={{transform: "rotate(180deg)"}}/></Button>
-                </div>
-            </>
-        )
-    } else {
-        return <>
-            <div className="histogramContent">
-                <Button id={"histogramButton"} onClick={handleCloseClick}><img src={Arrow} width={16} alt={"close"}/></Button>
-                <div className={"histogramLoading"} style={{display: "none"}}>
-                    <CircularProgress size={80}/>
-                </div>
-                <div style={{flexDirection: "column"}}>
-                    <p style={{marginTop: "10px"}}>Total reports: {data.length}</p>
-                    <p hidden={focusedTimeRange.length===0}>Selected reports: {focusedData.length}</p>
-                    <p hidden={focusedTimeRange.length===0}>Time range: {styleDateString(focusedTimeRange[0])} to {styleDateString(focusedTimeRange[1])}</p>
-                </div>
-                <div>
-                    <svg ref={svgRef} width={dimensions.width} height={dimensions.height} style={{flexShrink: "0"}} />
-                    <div className="histogramButtons">
-                        <StyledButton
-                            disabled={focusedTimeRange.length===0}
-                            onClick={resetSelection}
-                        >
-                            Reset selection
-                        </StyledButton>
-                        <StyledButton
-                            disabled={focusedTimeRange.length===0}
-                            onClick={zoomSelection}
-                        >
-                            Zoom selection
-                        </StyledButton>
-                    </div>
-                </div>
-            </div>
-            <div style={{position: "relative"}} className={"histogramMini"}>
-                <Button id={"histogramButton"} onClick={handleOpenClick}><img src={Arrow} width={16} alt={"open"} style={{transform: "rotate(180deg)"}}/></Button>
-            </div>
-        </>
-    }
+    return <>
+        <svg ref={svgRef} width={dimensions.width} height={dimensions.height} style={{flexShrink: "0"}} />
+    </>
 }
 
 export default Histogram;

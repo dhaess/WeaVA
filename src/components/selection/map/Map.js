@@ -9,7 +9,7 @@ import {
 } from 'react-leaflet';
 import {getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
 import {useDispatch, useSelector} from "react-redux";
-import {Box, Button, CircularProgress, Popper, ToggleButton, ToggleButtonGroup} from "@mui/material";
+import {Box, Button, CircularProgress, Popover, Popper, ToggleButton, ToggleButtonGroup} from "@mui/material";
 import {useEffect, useRef, useState} from "react";
 import $ from "jquery";
 import {EditControl} from "react-leaflet-draw";
@@ -33,7 +33,13 @@ import Proximity from "../../../static/images/proximity.png";
 import Save from "../../../static/images/save.png";
 import Reset from "../../../static/images/reset.png";
 import {styled} from "@mui/material/styles";
-import {StyledInputField, StyledSlider, StyledTooltip} from "../../../static/style/muiStyling";
+import {
+    CancelButton,
+    DeleteButton,
+    StyledInputField,
+    StyledSlider,
+    StyledTooltip
+} from "../../../static/style/muiStyling";
 import L from "leaflet";
 import MiniMap from "./MiniMap";
 import Arrow from "../../../static/images/left-arrow.png";
@@ -160,11 +166,6 @@ const Map = () => {
                     setProximitySelection(true)
                     break
                 case "deleteAll":
-                    if (isMapFocused) {
-                        featureRef.current.clearLayers()
-                        dispatch(deleteAllAreas())
-                    }
-                    setButton(null)
                     break
                 case "editAll":
                     Object.keys(featureRef.current._layers).forEach(e => {
@@ -314,20 +315,6 @@ const Map = () => {
         setButton(null)
     }
 
-    const handleSliderChange = (event) => {
-        dispatch(changeProximityDistance(event.target.value))
-    }
-
-    const handleInputChange = (event) => {
-        let inputValue = Number(event.target.value)
-        if (inputValue === "" || inputValue < 0.001) {
-            inputValue = 0.001
-        } else if (inputValue > 100) {
-            inputValue = 100
-        }
-        dispatch(changeProximityDistance(inputValue))
-    }
-
     let isTooLarge
     let markerData = []
     let unfocusedData = []
@@ -384,6 +371,28 @@ const Map = () => {
             setTools(true)
         }
 
+        const handleSliderChange = (event) => {
+            dispatch(changeProximityDistance(event.target.value))
+        }
+
+        const handleInputChange = (event) => {
+            let inputValue = Number(event.target.value)
+            if (inputValue === "" || inputValue < 0.001) {
+                inputValue = 0.001
+            } else if (inputValue > 100) {
+                inputValue = 100
+            }
+            dispatch(changeProximityDistance(inputValue))
+        }
+
+        const handleDeleteClose = (response) => {
+            setButton(null)
+            if (response && isMapFocused) {
+                featureRef.current.clearLayers()
+                dispatch(deleteAllAreas())
+            }
+        }
+
         if (showTools) {
             return (
                 <div id={"SelectionButtons"}>
@@ -419,7 +428,12 @@ const Map = () => {
                                 </div>
                             </StyledTooltip>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"canton"} disabled={true}>
+                        <StyledToggleButton value={"editAll"} disabled={!isMapFocused}>
+                            <StyledTooltip title={"Edit all unsaved map area filters"} arrow enterDelay={500}>
+                                <div className={"selectionButtonsContent"}>
+                                    <img src={Edit} width={20} alt={"Edit all"}/>
+                                </div>
+                            </StyledTooltip>
                         </StyledToggleButton>
                         <StyledToggleButton value={"save"} disabled={!isFocused}>
                             <StyledTooltip title={"Save map filters"} arrow enterDelay={500}>
@@ -435,12 +449,7 @@ const Map = () => {
                                 </div>
                             </StyledTooltip>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"editAll"} disabled={!isMapFocused}>
-                            <StyledTooltip title={"Edit all unsaved map area filters"} arrow enterDelay={500}>
-                                <div className={"selectionButtonsContent"}>
-                                    <img src={Edit} width={20} alt={"Edit all"}/>
-                                </div>
-                            </StyledTooltip>
+                        <StyledToggleButton value={"canton"} disabled={true}>
                         </StyledToggleButton>
                         <StyledToggleButton value={"proximity"} disabled={markerData.length===0}>
                             <StyledTooltip title={"Select point to get all points with maximal given distance"} arrow enterDelay={500}>
@@ -506,6 +515,27 @@ const Map = () => {
                             </Box>
                         </Popper>
                     }
+                    { anchorEl &&
+                        <Popover
+                            id={id}
+                            open={selectionButton === "deleteAll"}
+                            anchorEl={anchorEl}
+                            onClose={() => handleDeleteClose(false)}
+                            anchorOrigin={{
+                                vertical: 'bottom',
+                                horizontal: 'left',
+                            }}
+                            sx={{marginTop: "2px"}}
+                        >
+                            <Box sx={{margin: "8px"}}>
+                                <p>Do you want to delete all shapes?</p>
+                                <div style={{display: "flex", justifyContent: "flex-end", marginTop: "5px"}}>
+                                    <CancelButton sx={{marginRight: "5px"}} onClick={() => handleDeleteClose(false)} autoFocus>Cancel</CancelButton>
+                                    <DeleteButton onClick={() => handleDeleteClose(true)}>Delete</DeleteButton>
+                                </div>
+                            </Box>
+                        </Popover>
+                    }
                 </div>
             )
         } else {
@@ -518,7 +548,7 @@ const Map = () => {
     }
 
     return <div style={{width: "100%", height: "100vh"}}>
-        {/*<MapSelection/>*/}
+        <MapSelection/>
         <MiniMap
             markerData={markerData}
             color={color}
@@ -534,32 +564,32 @@ const Map = () => {
                 {mapTile === "NationalMapColor" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg" />}
                 {mapTile === "NationalMapGrey" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-grau/default/current/3857/{z}/{x}/{y}.jpeg" />}
                 {mapTile === "SWISSIMAGE" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg" />}
-                {/*{unfocusedData.map(e => (*/}
-                {/*    <Marker opacity={0.5} zIndexOffset={-1000}*/}
-                {/*            key={e.coordinates[0] + "," + e.coordinates[1]}*/}
-                {/*            position={e.coordinates}*/}
-                {/*            icon={getMapIcon(e.category, "var(--gray-bg-color)")}*/}
-                {/*            eventHandlers={{*/}
-                {/*                click: e => {*/}
-                {/*                    addPoint(false, e)*/}
-                {/*                    addProximity(e)*/}
-                {/*                }*/}
-                {/*            }}*/}
-                {/*    />*/}
-                {/*))}*/}
-                {/*{markerData.map(e => (*/}
-                {/*    <Marker key={e.coordinates[0] + "," + e.coordinates[1]}*/}
-                {/*            position={e.coordinates}*/}
-                {/*            icon={getMapIcon(e.category, color)}*/}
-                {/*            eventHandlers={{*/}
-                {/*                click: e => {*/}
-                {/*                    addPoint(true, e)*/}
-                {/*                    addProximity(e)*/}
-                {/*                }*/}
-                {/*            }}*/}
-                {/*    >*/}
-                {/*    </Marker>*/}
-                {/*))}*/}
+                {unfocusedData.map(e => (
+                    <Marker opacity={0.5} zIndexOffset={-1000}
+                            key={e.coordinates[0] + "," + e.coordinates[1]}
+                            position={e.coordinates}
+                            icon={getMapIcon(e.category, "var(--gray-bg-color)")}
+                            eventHandlers={{
+                                click: e => {
+                                    addPoint(false, e)
+                                    addProximity(e)
+                                }
+                            }}
+                    />
+                ))}
+                {markerData.map(e => (
+                    <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
+                            position={e.coordinates}
+                            icon={getMapIcon(e.category, color)}
+                            eventHandlers={{
+                                click: e => {
+                                    addPoint(true, e)
+                                    addProximity(e)
+                                }
+                            }}
+                    >
+                    </Marker>
+                ))}
                 {markerData.map(e => (
                     <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
                             position={e.coordinates}

@@ -2,7 +2,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {setCurrent} from "../../shared/features/SavingsSlice";
 import {StyledInputField, StyledSlider} from "../../../static/style/muiStyling";
 
-export default function HistogramOptions() {
+const HistogramOptions = () => {
     const dispatch = useDispatch()
 
     const isDisplayed = useSelector(state => {
@@ -56,3 +56,5 @@ export default function HistogramOptions() {
         </div>
     )
 }
+
+export default HistogramOptions;

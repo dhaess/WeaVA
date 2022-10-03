@@ -1,8 +1,8 @@
-import Histogram from "./Histogram";
 import Map from "./map/Map";
 import Sidebar from "./sidebar/Sidebar";
 import {useDispatch, useSelector} from "react-redux";
 import {initNewCurrent} from "../shared/features/SavingsSlice";
+import HistogramBox from "./histogram/HistogramBox";
 
 const dimensions = {
     width: 500,
@@ -32,7 +32,7 @@ const Selection = () => {
             <div id="Map">
                 <Map/>
                 <div id="Histogram">
-                    <Histogram
+                    <HistogramBox
                         dimensions={dimensions}
                     />
                 </div>

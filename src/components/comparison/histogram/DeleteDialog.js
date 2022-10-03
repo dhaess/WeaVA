@@ -1,23 +1,6 @@
-import {Button, Dialog, DialogActions, DialogContent} from "@mui/material";
+import {Dialog, DialogActions, DialogContent} from "@mui/material";
 import PropTypes from "prop-types";
-import {styled} from "@mui/material/styles";
-
-const CancelButton = styled(Button)({
-    border: "2px solid black",
-    color: "black",
-    "&:hover": {
-        backgroundColor: "#eaeaea"
-    }
-})
-
-const DeleteButton = styled(Button)({
-    border: "2px solid black",
-    backgroundColor: "#e84242",
-    color: "white",
-    "&:hover": {
-        backgroundColor: "#d44c4c",
-    }
-})
+import {CancelButton, DeleteButton} from "../../../static/style/muiStyling";
 
 const DeleteDialog = (props) => {
     const { onClose, name, open } = props
