@@ -482,7 +482,7 @@ const Map = () => {
                         </StyledToggleButton>
                         <StyledToggleButton value={"canton"} disabled={true}>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"proximity"} disabled={MarkerMode["Location"] || (singleData.focused.length===0 && singleData.unfocused.length===0 && multiData.length===0)}>
+                        <StyledToggleButton value={"proximity"} disabled={markerMode!==MarkerMode["Location"] || (singleData.focused.length===0 && singleData.unfocused.length===0 && multiData.length===0)}>
                             <StyledTooltip title={"Select point to get all points with maximal given distance"} arrow enterDelay={500}>
                                 <div className={"selectionButtonsContent"}>
                                     <img src={Proximity} width={20} alt={"Proximity"}/>
