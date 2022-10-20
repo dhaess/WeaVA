@@ -36,7 +36,10 @@ const OpenCloseButton = styled(Button)({
     padding: "4px",
     background: "var(--shadow-bg-color)",
     borderRadius: "0",
-    zIndex: "1000"
+    zIndex: "1000",
+    "&:hover": {
+        backgroundColor: "var(--main-bg-color)"
+    }
 })
 
 const SettingsButton = styled(Button)({
@@ -49,7 +52,15 @@ const SettingsButton = styled(Button)({
 const HistogramBox = ({dimensions}) => {
     const dispatch = useDispatch()
 
-    const isLoading = useSelector(state => state.savings.status==="loading")
+    const [isLoading,
+        binCount
+    ] = useSelector(state => {
+        const savings = state.savings
+        return [
+            savings.status === "loading",
+            savings.current.histogram.bins
+        ]
+    })
 
     const data = useSelector(state => state.histogram.data)
 
@@ -59,13 +70,13 @@ const HistogramBox = ({dimensions}) => {
         const map = state.map
         return [
             map.focusedTimeRange,
-            map.focusedPoints
+            map.singlePoints.focused
         ]})
 
     const [showHistogram, setHistogram] = useState(true)
 
     let anchorRef = useRef()
-    const [anchorEl, setAnchorEl] = useState()
+    const [anchorEl, setAnchorEl] = useState(null)
     const [open, setOpen] = useState(false)
 
     useEffect(() => {
@@ -74,6 +85,8 @@ const HistogramBox = ({dimensions}) => {
 
     const handleCloseClick = () => {
         setHistogram(false)
+        setOpen(false)
+        setAnchorEl(null)
     }
 
     const handleOpenClick = () => {
@@ -82,6 +95,11 @@ const HistogramBox = ({dimensions}) => {
 
     const resetSelection = () => {
         dispatch(changeFocusedTimeRange([]))
+    }
+
+    const openSettings = (e) => {
+        setAnchorEl(e.currentTarget)
+        setOpen(!open)
     }
 
     const zoomSelection = () => {
@@ -121,6 +139,10 @@ const HistogramBox = ({dimensions}) => {
         }
     }, [showHistogram])
 
+    useEffect(() => {
+        dispatch(setCurrent({name: "histogram", value: {bins: binCount, displayed: data.length!==0}}))
+    }, [binCount, data, dispatch])
+
     if (data.length === 0) {
         return (
             <>
@@ -131,7 +153,7 @@ const HistogramBox = ({dimensions}) => {
                     </div>
                     <div style={{"fontSize": "40px", "flex": "1"}}>No Data</div>
                 </div>
-                <div style={{position: "relative"}} className={"histogramMini"}>
+                <div style={{position: "relative", display: "none"}} className={"histogramMini"}>
                     <OpenCloseButton onClick={handleOpenClick}><img src={Arrow} width={16} alt={"open"} style={{transform: "rotate(180deg)"}}/></OpenCloseButton>
                 </div>
             </>
@@ -143,8 +165,8 @@ const HistogramBox = ({dimensions}) => {
                 <div className={"histogramLoading"} style={{display: "none"}}>
                     <CircularProgress size={80}/>
                 </div>
-                <div>
-                    <SettingsButton onClick={() => {setOpen(!open)}} sx={{minWidth: "0", margin: "2px", marginRight: "25px"}}><img src={SettingsIcon} width={20} alt={"Settings"}/></SettingsButton>
+                <div style={{alignItems: "flex-start"}}>
+                    <SettingsButton onClick={openSettings} sx={{minWidth: "0", margin: "2px", marginRight: "25px"}}><img src={SettingsIcon} width={20} alt={"Settings"}/></SettingsButton>
                     <div style={{flexDirection: "column", alignItems: "flex-start", padding: "6px 0px"}}>
                         <p style={{marginTop: "10px"}}>Total reports: {data.length}</p>
                         <p hidden={focusedTimeRange.length===0}>Selected reports: {focusedData.length}</p>
@@ -178,14 +200,15 @@ const HistogramBox = ({dimensions}) => {
                         borderLeft: "0",
                         p: 1,
                         backgroundColor: 'white',
-                        marginBottom: "1px",
-                        width: "280px"
+                        width: "280px",
+                        marginBottom: "3px",
+                        marginLeft: "-2px"
                     }}>
                         <HistogramOptions/>
                     </Box>
                 </Popper>
             }
-            <div style={{position: "relative"}} className={"histogramMini"}>
+            <div style={{position: "relative", display: "none"}} className={"histogramMini"}>
                 <OpenCloseButton onClick={handleOpenClick}><img src={Arrow} width={16} alt={"open"} style={{transform: "rotate(180deg)"}}/></OpenCloseButton>
             </div>
         </>

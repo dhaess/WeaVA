@@ -5,7 +5,8 @@ import {
     Popup,
     TileLayer,
     useMap,
-    useMapEvent, ZoomControl
+    useMapEvent, ZoomControl,
+    LayersControl, LayerGroup, ScaleControl, useMapEvents
 } from 'react-leaflet';
 import {getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
 import {useDispatch, useSelector} from "react-redux";
@@ -21,7 +22,13 @@ import {
     changeFocusedProximityPoints, changeProximityDistance,
     deleteAllAreas
 } from "../../shared/features/MapSlice";
-import {pointInCircle, pointInPolygon, pointInRectangle} from "../../shared/functions/MapFunctions";
+import {
+    createClusterCustomIcon, getDistance, getGridData,
+    MultiMarkerPopup,
+    pointInCircle,
+    pointInPolygon,
+    pointInRectangle
+} from "../../shared/functions/MapFunctions";
 import {changeMapFilters, resetMapFilters} from "../../shared/features/SavingsSlice";
 import Delete from "../../../static/images/delete.png";
 import Edit from "../../../static/images/edit.png";
@@ -36,16 +43,16 @@ import {styled} from "@mui/material/styles";
 import {
     CancelButton,
     DeleteButton,
-    StyledInputField,
+    StyledInputField, StyledPopup,
     StyledSlider,
     StyledTooltip
 } from "../../../static/style/muiStyling";
 import L from "leaflet";
 import MiniMap from "./MiniMap";
 import Arrow from "../../../static/images/left-arrow.png";
-import PieMarker from "../../shared/functions/PieMarker";
-
-const maxDataPoints = 1000
+import {getCategoryName, getIntensityName} from "../../shared/functions/WeatherCategories";
+import MarkerClusterGroup from "../../shared/functions/MarkerClusterGroup";
+import MarkerMode from "../../../static/data/MarkerMode.json";
 
 const StyledPopupButtons = styled(Button)({
     width: "32px",
@@ -97,11 +104,11 @@ const Map = () => {
 
     const mapRef = useRef()
     let featureRef = useRef()
+    let clusterRef = useRef()
 
     const [allData,
-        mapPoints,
-        focusedPoints,
-        unfocusedPoints,
+        singlePoints,
+        multiplePoints,
         focusedArea,
         proximityDistance,
         isFocused,
@@ -109,9 +116,8 @@ const Map = () => {
     ] = useSelector(state => {
         const map = state.map
         return [map.allData,
-            map.mapPoints,
-            map.focusedPoints,
-            map.unfocusedPoints,
+            map.singlePoints,
+            map.multiplePoints,
             map.mapFilters.focusedArea,
             map.mapFilters.proximityDistance,
             map.isFocused,
@@ -132,11 +138,22 @@ const Map = () => {
 
     const mapTile = useSelector(state => state.settings.mapTile)
 
-    const [selectionButton, setButton] = useState(null);
-    const [pointSelection, setPointSelection] = useState(false);
-    const [changedPoint, setPoint] = useState(null);
-    const [proximitySelection, setProximitySelection] = useState(false);
-    const [changedProximity, setProximity] = useState(null);
+    const [selectionButton, setButton] = useState(null)
+    const [pointSelection, setPointSelection] = useState(false)
+    const [changedPoint, setPoint] = useState(null)
+    const [proximitySelection, setProximitySelection] = useState(false)
+    const [changedProximity, setProximity] = useState(null)
+
+    const [singleData, setSingleData] = useState({focused: [], unfocused: []})
+    const [multiData, setMultiData] = useState([])
+    const [markerMode, setMarkerMode] = useState("Grid Marker")
+
+    const [markerPos, setMarkerPos] = useState(null)
+    const [clusterPopup, setClusterPopup] = useState(null)
+    const [clusterData, setClusterData] = useState(null)
+
+    const [zoomLevel, setZoomLevel] = useState(8)
+    const [gridData, setGridData] = useState([])
 
     useEffect(() => {
         if (mapRef.current !== undefined) {
@@ -215,6 +232,33 @@ const Map = () => {
         setProximity(null)
     }, [changedProximity, dispatch, proximitySelection])
 
+    useEffect(() => {
+        setSingleData(singlePoints)
+        setMultiData(multiplePoints)
+    }, [multiplePoints, singlePoints])
+
+    useEffect(() => {
+        setGridData(getGridData(allData, zoomLevel))
+    }, [allData, zoomLevel])
+
+    //todo: fix issue: Color change doesn't work on cluster icons
+
+    // useEffect(() => {
+    //     if (mapRef.current !== undefined && clusterRef.current !== undefined) {
+    //         let clusters = []
+    //         mapRef.current._map.eachLayer((l) => {
+    //             if( l instanceof L.Marker && l._childCount !== undefined )
+    //                 clusters.push(l)
+    //         })
+    //         clusters.forEach(e => {
+    //             e.refreshIconOptions((d) => {
+    //                     return createClusterCustomIcon(d)
+    //                 })
+    //         })
+    //         clusterRef.current.refreshClusters()
+    //     }
+    // }, [color, mapRef])
+
     const pointInArea = (coords) => {
         return Object.keys(focusedArea).filter(k => {
             switch (focusedArea[k].type) {
@@ -256,6 +300,10 @@ const Map = () => {
         dispatch(changeFocusedArea("delete", clickedAreas))
     }
 
+    const updateProgressBar = (processed, total, elapsed, layersArray) => {
+        console.log(processed,total, elapsed, Math.round(processed/total*100) + '%')
+    }
+
     const EditPopup = () => {
         const [position, setPosition] = useState(null)
         const [clickedAreas, setAreas] = useState(null)
@@ -288,25 +336,28 @@ const Map = () => {
 
     const handleMounted = (e) => {
         mapRef.current = e
+        e._map.on("baselayerchange", e => {
+            setMarkerMode(e.name)
+        })
     }
 
     const handleCreated = e => {
         switch (e.layerType) {
             case "rectangle":
                 dispatch(changeFocusedArea("add", e.layer._leaflet_id, {type: "rectangle", northEast: e.layer._bounds._northEast, southWest: e.layer._bounds._southWest}))
-                e.layer.on("edit", function(e) {
+                e.layer.on("edit", (e) => {
                     dispatch(changeFocusedArea("add", e.target._leaflet_id, {type: "rectangle", northEast: e.target._bounds._northEast, southWest: e.target._bounds._southWest}))
                 })
                 break
             case "circle":
                 dispatch(changeFocusedArea("add", e.layer._leaflet_id, {type: "circle", center: e.layer._latlng, radius: e.layer._mRadius}))
-                e.layer.on("edit", function(e) {
+                e.layer.on("edit", (e) => {
                     dispatch(changeFocusedArea("add", e.target._leaflet_id, {type: "circle", center: e.target._latlng, radius: e.target._mRadius}))
                 })
                 break
             case "polygon":
                 dispatch(changeFocusedArea("add", e.layer._leaflet_id, {type: "polygon", coordinates: e.layer._latlngs[0].map(e => [e.lat, e.lng])}))
-                e.layer.on("edit", function(e) {
+                e.layer.on("edit", (e) => {
                     dispatch(changeFocusedArea("add", e.target._leaflet_id, {type: "polygon", coordinates: e.target._latlngs[0].map(e => [e.lat, e.lng])}))
                 })
                 break
@@ -315,38 +366,18 @@ const Map = () => {
         setButton(null)
     }
 
-    let isTooLarge
-    let markerData = []
-    let unfocusedData = []
-    let infoLength
-    if (isFocused) {
-        if (focusedPoints.length > maxDataPoints) {
-            infoLength = focusedPoints.length
-            isTooLarge = true
-        } else {
-            isTooLarge = false
-            markerData = focusedPoints
-        }
-        unfocusedData = unfocusedPoints
-    } else {
-        markerData = mapPoints
-        infoLength = allData.length
-        isTooLarge = allData.length > maxDataPoints
-    }
-
-    let mapBoxStyle = {zIndex: "-1", width: "0px", height: "0px"}
-    if (isLoading) {
-        mapBoxStyle.display = "none"
-    } else if (isTooLarge) {
-        mapBoxStyle.width = "270px"
-        mapBoxStyle.height = "120px"
-        mapBoxStyle.zIndex = "1"
-        mapBoxStyle.fontSize = "23px"
-    }
-
-    let mapBoxText = ["", "", ""]
-    if (isTooLarge) {
-        mapBoxText = ["Too many data points", "(found " + infoLength + ", max. 1000),", "refine your search!"]
+    const showClusterPopup = (event) => {
+        let markerList = event.layer.getAllChildMarkers().map(e => e.options.data)
+        let dataList = markerList.map(e => {
+            if (e.count === undefined) {
+                return e
+            } else {
+                return e.focused
+            }
+        }).flat()
+        setClusterData(dataList)
+        setMarkerPos(event.latlng)
+        setClusterPopup(true)
     }
 
     const MapSelection = () => {
@@ -421,7 +452,7 @@ const Map = () => {
                                 </div>
                             </StyledTooltip>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"points"} disabled={markerData.length===0}>
+                        <StyledToggleButton value={"points"} disabled={markerMode!==MarkerMode["Location"] || (singleData.focused.length===0 && singleData.unfocused.length===0 && multiData.length===0)}>
                             <StyledTooltip title={"Select individual points"} arrow enterDelay={500}>
                                 <div className={"selectionButtonsContent"}>
                                     <img src={Point} width={14} alt={"Point"}/>
@@ -451,7 +482,7 @@ const Map = () => {
                         </StyledToggleButton>
                         <StyledToggleButton value={"canton"} disabled={true}>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"proximity"} disabled={markerData.length===0}>
+                        <StyledToggleButton value={"proximity"} disabled={MarkerMode["Location"] || (singleData.focused.length===0 && singleData.unfocused.length===0 && multiData.length===0)}>
                             <StyledTooltip title={"Select point to get all points with maximal given distance"} arrow enterDelay={500}>
                                 <div className={"selectionButtonsContent"}>
                                     <img src={Proximity} width={20} alt={"Proximity"}/>
@@ -474,7 +505,7 @@ const Map = () => {
                         </StyledToggleButton>
                     </StyledToggleButtonGroup>
                     { anchorEl &&
-                        <Popper open={selectionButton === "proximity" && markerData.length!==0} anchorEl={anchorEl} placement={"bottom-start"}>
+                        <Popper open={selectionButton === "proximity" && (singleData.focused.length!==0 || singleData.unfocused.length!==0 || multiData.length!==0)} anchorEl={anchorEl} placement={"bottom-start"}>
                             <Box sx={{
                                 border: "2px solid var(--main-bg-color)",
                                 p: 1,
@@ -547,62 +578,212 @@ const Map = () => {
         }
     }
 
+     const ZoomLevel = () => {
+        const mapEvents = useMapEvents({
+            zoomend: () => {
+                setZoomLevel(mapEvents.getZoom())
+            },
+        });
+        return null
+    }
+
     return <div style={{width: "100%", height: "100vh"}}>
         <MapSelection/>
         <MiniMap
-            markerData={markerData}
             color={color}
             id={id}
+            markerMode={markerMode}
         />
-        {/*<PieMarker/>*/}
         <div style={{display: "contents"}}>
-            <MapContainer style={{width: "100%", height: "100vh", zIndex: "0"}} center={[46.3985, 8.2318]} zoom={8}  zoomControl={false}>
+            <MapContainer
+                style={{width: "100%", height: "100vh", zIndex: "0"}}
+                center={[46.3985, 8.2318]}
+                zoom={8}
+                zoomControl={false}
+            >
                 <MapResizer/>
+                <ScaleControl imperial={false} position="bottomright" />
                 <ZoomControl position="bottomright" />
+                <ZoomLevel/>
                 {mapTile === "CH" && <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://tile.osm.ch/switzerland/{z}/{x}/{y}.png" />}
                 {mapTile === "OSM" && <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />}
                 {mapTile === "NationalMapColor" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg" />}
                 {mapTile === "NationalMapGrey" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-grau/default/current/3857/{z}/{x}/{y}.jpeg" />}
                 {mapTile === "SWISSIMAGE" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg" />}
-                {unfocusedData.map(e => (
-                    <Marker opacity={0.5} zIndexOffset={-1000}
-                            key={e.coordinates[0] + "," + e.coordinates[1]}
-                            position={e.coordinates}
-                            icon={getMapIcon(e.category, "var(--gray-bg-color)")}
+                <LayersControl position="bottomright">
+                    <LayersControl.BaseLayer checked name={MarkerMode["Grid"]}>
+                        <LayerGroup>
+                            {gridData.map(e => {
+                                if (e.count === 1) {
+                                    const singlePoint = e.focused[0]
+                                    return (
+                                        <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
+                                                position={e.coordinates}
+                                                icon={getMapIcon(singlePoint.category, color)}
+                                                eventHandlers={{
+                                                    click: e => {
+                                                        addPoint(true, e)
+                                                        addProximity(e)
+                                                    }
+                                                }}
+                                        >
+                                            <StyledPopup>
+                                                <p>{getCategoryName(singlePoint.category)}: {getIntensityName(singlePoint.category, singlePoint.auspraegung)}</p>
+                                            </StyledPopup>
+                                        </Marker>
+                                    )
+                                } else {
+                                    return (
+                                        <Marker opacity={1}  key={e.coordinates[0] + "," + e.coordinates[1]}
+                                                color={color}
+                                                data={e}
+                                                position={e.coordinates}
+                                                icon={getPieIcon(e.focused, {color: color, sum: e.focused.length})}
+                                                eventHandlers={{
+                                                    click: e => {
+                                                        addPoint(true, e)
+                                                        addProximity(e)
+                                                    }
+                                                }}
+                                        >
+                                            <MultiMarkerPopup data={e}/>
+                                        </Marker>
+                                    )
+                                }
+                            })}
+                        </LayerGroup>
+                    </LayersControl.BaseLayer>
+                    <LayersControl.BaseLayer name={MarkerMode["Cluster"]}>
+                        <MarkerClusterGroup
+                            ref={clusterRef}
+                            iconCreateFunction={d => createClusterCustomIcon(d)}
+                            zoomToBoundsOnClick={false}
+                            chunkedLoading={true}
+                            // chunkProgress={(processed, total, elapsed, layersArray) => updateProgressBar(processed, total, elapsed, layersArray)}
                             eventHandlers={{
-                                click: e => {
-                                    addPoint(false, e)
-                                    addProximity(e)
+                                clusterclick: e => {
+                                    showClusterPopup(e)
                                 }
                             }}
-                    />
-                ))}
-                {markerData.map(e => (
-                    <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
-                            position={e.coordinates}
-                            icon={getMapIcon(e.category, color)}
-                            eventHandlers={{
-                                click: e => {
-                                    addPoint(true, e)
-                                    addProximity(e)
+                        >
+                            {singleData.focused.map(e => (
+                                <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
+                                        color={color}
+                                        data={e}
+                                        position={e.coordinates}
+                                        icon={getMapIcon(e.category, color)}
+                                        eventHandlers={{
+                                            click: e => {
+                                                addPoint(true, e)
+                                                addProximity(e)
+                                            }
+                                        }}
+                                >
+                                    <StyledPopup>
+                                        <p>{getCategoryName(e.category)}: {getIntensityName(e.category, e.auspraegung)}</p>
+                                    </StyledPopup>
+                                </Marker>
+                            ))}
+                            {multiData.filter(e => e.focused.length !== 0).map(e => (
+                                <Marker opacity={1}  key={e.coordinates[0] + "," + e.coordinates[1]}
+                                        color={color}
+                                        data={e}
+                                        position={e.coordinates}
+                                        icon={getPieIcon(e.focused, {color: color})}
+                                        eventHandlers={{
+                                            click: e => {
+                                                addPoint(true, e)
+                                                addProximity(e)
+                                            }
+                                        }}
+                                >
+                                    <MultiMarkerPopup data={e}/>
+                                </Marker>
+                            ))}
+                        </MarkerClusterGroup>
+                        {clusterPopup &&
+                            <MultiMarkerPopup
+                                position={markerPos}
+                                data={clusterData}
+                                isCluster={true}
+                            />
+                        }
+                    </LayersControl.BaseLayer>
+                    <LayersControl.BaseLayer name={MarkerMode["Location"]}>
+                        <LayerGroup>
+                            {singleData.unfocused.map(e => (
+                                <Marker opacity={0.5} zIndexOffset={-1000}
+                                        key={e.coordinates[0] + "," + e.coordinates[1]}
+                                        position={e.coordinates}
+                                        icon={getMapIcon(e.category, "var(--gray-bg-color)")}
+                                        eventHandlers={{
+                                            click: e => {
+                                                addPoint(false, e)
+                                                addProximity(e)
+                                            }
+                                        }}
+                                >
+                                    <StyledPopup>
+                                        <p>{getCategoryName(e.category)}: {getIntensityName(e.category, e.auspraegung)}</p>
+                                    </StyledPopup>
+                                </Marker>
+                            ))}
+                            {singleData.focused.map(e => {
+                                return (
+                                    <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
+                                            position={e.coordinates}
+                                            icon={getMapIcon(e.category, color)}
+                                            eventHandlers={{
+                                                click: e => {
+                                                    addPoint(true, e)
+                                                    addProximity(e)
+                                                }
+                                            }}
+                                    >
+                                        <StyledPopup>
+                                            <p>{getCategoryName(e.category)}: {getIntensityName(e.category, e.auspraegung)}</p>
+                                        </StyledPopup>
+                                    </Marker>
+                                )
+                            })}
+                            {multiData.map(e => {
+                                if (e.focused.length === 0) {
+                                    return (
+                                        <Marker opacity={0.5} zIndexOffset={-1000}
+                                                key={e.coordinates[0] + "," + e.coordinates[1]}
+                                                position={e.coordinates}
+                                                icon={getPieIcon(e.focused, {color: "var(--gray-bg-color)"})}
+                                                eventHandlers={{
+                                                    click: e => {
+                                                        addPoint(false, e)
+                                                        addProximity(e)
+                                                    }
+                                                }}
+                                        >
+                                            <MultiMarkerPopup data={e}/>
+                                        </Marker>
+                                    )
+                                } else {
+                                    return (
+                                        <Marker opacity={1}  key={e.coordinates[0] + "," + e.coordinates[1]}
+                                                position={e.coordinates}
+                                                icon={getPieIcon(e.focused, {color: color})}
+                                                eventHandlers={{
+                                                    click: e => {
+                                                        addPoint(true, e)
+                                                        addProximity(e)
+                                                    }
+                                                }}
+                                        >
+                                            <MultiMarkerPopup data={e}/>
+                                        </Marker>
+                                    )
                                 }
-                            }}
-                    >
-                    </Marker>
-                ))}
-                {markerData.map(e => (
-                    <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
-                            position={e.coordinates}
-                            icon={getPieIcon(e.category)}
-                            eventHandlers={{
-                                click: e => {
-                                    addPoint(true, e)
-                                    addProximity(e)
-                                }
-                            }}
-                    >
-                    </Marker>
-                ))}
+                            })}
+
+                        </LayerGroup>
+                    </LayersControl.BaseLayer>
+                </LayersControl>
                 <FeatureGroup ref={featureRef}>
                     <EditControl
                         position="topright"
@@ -642,11 +823,6 @@ const Map = () => {
                 </FeatureGroup>
                 <EditPopup/>
             </MapContainer>
-            <div id={"MapOverloadBox"} style={mapBoxStyle}>
-                <p>{mapBoxText[0]}</p>
-                <p style={{fontSize: "18px"}}>{mapBoxText[1]}</p>
-                <p>{mapBoxText[2]}</p>
-            </div>
             <div className={"mapLoading"}>
                 <CircularProgress size={120}/>
             </div>

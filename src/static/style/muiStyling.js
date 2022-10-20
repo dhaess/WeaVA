@@ -1,5 +1,6 @@
 import {styled} from "@mui/material/styles";
 import {Button, Input, Radio, Slider, TextField, Tooltip, tooltipClasses} from "@mui/material";
+import {Popup} from "react-leaflet";
 
 export const StyledTextField = styled(TextField)({
     '& label.Mui-focused': {
@@ -129,4 +130,8 @@ export const DeleteButton = styled(Button)({
     "&:hover": {
         backgroundColor: "#d44c4c",
     }
+})
+
+export const StyledPopup = styled(Popup)({
+    marginBottom: 26 + "px"
 })

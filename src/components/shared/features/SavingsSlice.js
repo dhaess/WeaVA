@@ -57,34 +57,26 @@ const getNewProximityPoints = (initialProximityPoints, data, distance) => {
         } else {
             existIndex = -1
         }
-        if (existIndex === -1 && data.findIndex(e => e.coordinates[0] === p.coordinates[0] && e.coordinates[1] === p.coordinates[1]) !== -1) {
-            newProximityPoints.push(getProximityPoints(p.coordinates, data, distance))
+        if (existIndex === -1 && data.findIndex(c => c[0] === p[0] && c[1] === p[1]) !== -1) {
+            newProximityPoints.push(getProximityPoints(p, data, distance))
         }
     })
     return newProximityPoints
 }
 
 const applyMapFilters = (data, areas, points, proximityPoints) => {
-    let newData
-    let isAreaFocused
-    let isPointFocused
+    let [newData, isAreaFocused] = focusArea(data, areas)
+
     let isProximityFocused
-    [newData, isAreaFocused] = focusArea(data, areas)
-    if (isAreaFocused) {
-        [newData, isPointFocused] = focusPoints(newData, data, points)
-    } else {
-        [newData, isPointFocused] = focusPoints(data, data, points)
-    }
-    if (isAreaFocused || isPointFocused) {
-        [newData, isProximityFocused] = focusProximity(newData, proximityPoints, true)
-    } else {
-        [newData, isProximityFocused] = focusProximity(data, proximityPoints, false)
-    }
+    [newData, isProximityFocused] = focusProximity(newData, data, proximityPoints, isAreaFocused)
+
+    let isPointFocused
+    [newData, isPointFocused] = focusPoints(newData, data, points)
+
     return [newData, isAreaFocused || isPointFocused || isProximityFocused]
 }
 
 const getData = async (filter, areaFilter) => {
-    console.log(filter)
     return await fetch('/getData/', {
         'method': 'POST',
         headers: {
@@ -99,25 +91,15 @@ const getData = async (filter, areaFilter) => {
                 return a
             }))
         .then(data => {
-            let isAreaFocused
-            let newData;
+            let [newData, isAreaFocused] = focusArea(data, areaFilter.focusedArea)
 
-            [newData, isAreaFocused] = focusArea(data, areaFilter.focusedArea)
+            const coordsList = data.map(e => e.coordinates)
+            const newPoints = getNewProximityPoints(areaFilter.focusedProximityPoints, coordsList, areaFilter.proximityDistance)
+            let isProximityFocused
+            [newData, isProximityFocused] = focusProximity(newData, data, newPoints, isAreaFocused)
 
             let isPointFocused
-            if (isAreaFocused) {
-                [newData, isPointFocused] = focusPoints(newData, data, areaFilter.focusedSpecialPoints)
-            } else {
-                [newData, isPointFocused] = focusPoints(data, data, areaFilter.focusedSpecialPoints)
-            }
-
-            const newPoints = getNewProximityPoints(areaFilter.focusedProximityPoints, data, areaFilter.proximityDistance)
-            let isProximityFocused
-            if (isAreaFocused || isPointFocused) {
-                [newData, isProximityFocused] = focusProximity(newData, newPoints, true)
-            } else {
-                [newData, isProximityFocused] = focusProximity(data, newPoints, false)
-            }
+            [newData, isPointFocused] = focusPoints(newData, data, areaFilter.focusedSpecialPoints)
 
             if (isAreaFocused || isPointFocused || isProximityFocused) {
                 newData = [...new Map(newData.map(item => [item.id, item])).values()]
@@ -127,6 +109,17 @@ const getData = async (filter, areaFilter) => {
             return newData
         })
 }
+
+// const getMSPhate = async (data) => {
+//     return await fetch('/getMSPhate/', {
+//         'method': 'POST',
+//         headers: {
+//             'Content-Type': 'application/json'
+//         },
+//         body: JSON.stringify(data)
+//     })
+//         .then(response => response.json())
+// }
 
 export const changeFilter = createAsyncThunk('posts/changeFilter',
     async (filterData, {getState,dispatch}) => {
@@ -160,6 +153,8 @@ export const changeFilter = createAsyncThunk('posts/changeFilter',
         }
         if (isChanged) {
             const data = await getData(filter, areaFilter)
+            // const ms_phate = await getMSPhate(data)
+            // console.log(ms_phate)
             dispatch(setHistogramData(data, timeRange))
             dispatch(setMapData(data))
         }
@@ -168,11 +163,14 @@ export const changeFilter = createAsyncThunk('posts/changeFilter',
 
 export const reset = createAsyncThunk('posts/resetData',
     async (_,{dispatch, getState}) => {
-        dispatch(resetState())
-        const savedState = getState()
-        const data = await getData(savedState.savings.current.filter, savedState.savings.current.mapFilter)
-        dispatch(setHistogramData(data, savedState.savings.current.timeRange))
-        dispatch(setMapData(data))
+    let resetCurrent = {...initalCurrent}
+        const current = getState().savings.current
+        resetCurrent.name = current.name
+        resetCurrent.id = current.id
+        resetCurrent.color = current.color
+        dispatch(resetState(resetCurrent))
+        dispatch(setHistogramData([], current.timeRange))
+        dispatch(setMapData([]))
     })
 
 export const revert = createAsyncThunk('posts/revertData',
@@ -298,8 +296,8 @@ export const initNewCurrent = () => {
 }
 
 
-const initialTimeRange = [new Date("2021-10-07T08:00").getTime(), new Date("2022-06-02T20:00").getTime()]
-// const initialTimeRange = [new Date("2022-01-01T09:00").getTime(), new Date("2022-01-01T10:00").getTime()]
+// const initialTimeRange = [new Date("2021-10-07T08:00").getTime(), new Date("2022-06-02T20:00").getTime()]
+const initialTimeRange = [new Date("2022-01-01T09:00").getTime(), new Date("2022-01-01T10:00").getTime()]
 
 const initalCurrent = {
     id: 0,
@@ -360,8 +358,8 @@ export const savingsSlice = createSlice({
             state.saved = {...state.current}
             state.savedData = action.payload
         },
-        resetState: (state) => {
-            state.current = initalCurrent
+        resetState: (state, action) => {
+            state.current = action.payload
         },
         revertState: (state) => {
             state.isSaved = false

@@ -9,11 +9,7 @@ import Snowfall from "../../../static/images/snowfall.png";
 import SnowLayer from "../../../static/images/snowLayer.png";
 import Wind from "../../../static/images/wind.png";
 import Tornado from "../../../static/images/tornado.png";
-import {useRef} from "react";
-import * as d3 from "d3";
-import PieMarker from "./PieMarker";
-import {renderToString} from "react-dom/server";
-
+import {renderToStaticMarkup} from "react-dom/server";
 const iconData = [
     {idName: "BEWOELKUNG", url: "../../static/images/cloud.png", icon: Cloud, names: ["BEWOELKUNG"]},
     {idName: "NEBEL", url: "../../static/images/fog.png", icon: Fog, names: ["NEBEL"]},
@@ -31,28 +27,84 @@ export const getIcon = (category) => {
     return iconData.find(e => e.names.includes(category)).icon
 }
 
+const MapIcon = (props) => {
+    const [category, size, color] = [props.category, props.size, props.color]
+    const imgSize = 0.7*size
+    return (
+        <span
+            className="circle"
+            style={{
+                width: size.toString() + "px",
+                height: size.toString() + "px",
+                backgroundColor: color
+            }}>
+            <img src={getIcon(category)} height={imgSize} alt={category}/>
+        </span>
+    )
+}
+
 export const getMapIcon = (category, color, size= 26, className = '') => {
-    let imgSize = 0.7*size
-    let halfSize = 0.5*size
+    let icon = <MapIcon
+        category = {category}
+        size = {size}
+        color = {color}
+    />
+    const htmlIcon = renderToStaticMarkup(icon)
     return L.divIcon({
-        html: `<span class="circle" style="width: ` + size + `px; height: ` + size + `px; margin-left: -` + halfSize + `px; margin-right: -` + halfSize + `px; background-color: ` + color + `"><img src="${getIcon(category)}" height="` + imgSize + `"/></span>`,
+        html: htmlIcon,
         className: className,
         iconSize: [size, size],
     })
 }
 
-export const getNames = (idName) => {
-    return iconData.find(e => e.idName === idName).names
+const PieIcon = (props) => {
+    let [size, data, sum] = [props.size, props.data, props.sum]
+    let pies = ""
+    let percent1 = 0
+    let percent2 = 0
+    data.forEach(e => {
+        percent2 = percent1 + 100*e.value/sum
+        pies = pies + e.color + " " + percent1.toString() + "% " + percent2.toString() + "%,"
+        percent1 = percent2
+    })
+    pies = pies.slice(0, -1)
+    return (
+        <div
+            style={{height: size.toString() + "px", width: size.toString() + "px", background: "conic-gradient(" + pies + ")"}}
+            className={"pieChart"}>
+            <p style={{fontSize: (size/3).toString() + "px"}}>{sum}</p>
+        </div>
+    )
 }
 
-export const getPieIcon = (data, size= 26, className = '') => {
-    let icon = <
-        PieMarker
-        size={size}
+export const getPieIcon = (data, props = {}) => {
+    let pieData
+    if (props.color !== undefined) {
+        pieData = [{color: props.color, value: data.length}]
+    } else {
+        const groupById = data.reduce((group, el) => {
+            const { eventId } = el
+            group[eventId] = group[eventId] ?? []
+            group[eventId].push(el)
+            return group
+        }, {})
+        pieData = Object.entries(groupById).map(e => {
+            return {color: e[1][0].color, value: e[1].length}
+        })
+    }
+
+    const sum = pieData.map(e => e.value).reduce((a, b) => a + b, 0)
+    const sizeBasic = props.size === undefined ? 26 : props.size
+    const size = sum === 0 ? sizeBasic : sizeBasic*(1+0.3*Math.log(sum))
+    const className = props.className === undefined ? "" : props.className
+
+    let icon = <PieIcon
+        size = {size}
+        data = {pieData}
+        sum = {sum}
     />
-    // console.log(icon)
-    let htmlIcon = renderToString(icon)
-    // console.log(htmlIcon)
+    const htmlIcon = renderToStaticMarkup(icon)
+
     return L.divIcon({
         html: htmlIcon,
         className: className,

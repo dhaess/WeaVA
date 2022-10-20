@@ -10,10 +10,14 @@ const Histogram = ({dimensions}) => {
     const binCount = useSelector(state => state.savings.current.histogram.bins)
 
     const [data,
+        isFocused,
+        focusedData,
         timeRange
     ] = useSelector(state => {
         const histogram = state.histogram
         return [histogram.data,
+            histogram.isFocused,
+            histogram.focusedData,
             histogram.timeRange
         ]})
 
@@ -70,11 +74,6 @@ const Histogram = ({dimensions}) => {
             }
         }
 
-        const setFillColor = (d) => {
-            return (focusedTimeRange.length > 0 && (d.x0 < focusedTimeRange[0] || d.x1 > focusedTimeRange[1])) ?
-                "var(--light-bg-color)" : "var(--main-bg-color)"
-        }
-
         if (document.getElementsByTagName('g').length>0) {
             d3.select(svgRef.current).select('g').remove()
         }
@@ -88,11 +87,11 @@ const Histogram = ({dimensions}) => {
             const binDataRange = d3
                 .bin()
                 .thresholds(binTimeStart)
-            const histData = binDataRange(data);
 
             let binTimeBorder = [...binTimeStart]
             binTimeBorder.push(timeRange[1])
 
+            const histData = binDataRange(data)
             histData.map(a => {
                 a.x0 = d3.max(binTimeBorder.filter(e => e <= a.x0))
                 a.x1 = d3.min(binTimeBorder.filter(e => e >= a.x1))
@@ -111,35 +110,90 @@ const Histogram = ({dimensions}) => {
                 }
             }
 
+            const setHistData = (d) => {
+                if (d.length === 0) {
+                    return []
+                }
+                const binDataRange = d3
+                    .bin()
+                    .thresholds(binTimeStart)
+                let histData = binDataRange(d)
+                histData.map(a => {
+                    a.x0 = d3.max(binTimeBorder.filter(e => e <= a.x0))
+                    a.x1 = d3.min(binTimeBorder.filter(e => e >= a.x1))
+                    return a
+                })
+                for (let i in binTimeBorder) {
+                    let iP = Number(i)+1
+                    if (i < binTimeBorder.length-1) {
+                        const binStart = histData.find(e => e.x0 === binTimeBorder[i])
+                        if (binStart === undefined) {
+                            const newBin = []
+                            newBin.x0 = binTimeBorder[i]
+                            newBin.x1 = binTimeBorder[iP]
+                            histData.push(newBin)
+                        }
+                    }
+                }
+                return histData
+            }
+
+            const [histDataFocused, histDataUnfocused] = isFocused ?
+                [setHistData(focusedData), setHistData(data)] : [setHistData(data), []]
+
             const x = d3
                 .scaleTime()
                 .domain(timeRange)
                 .range([0, width-25]);
 
-            const yMax = d3.max(histData, function(d) { return d.length; })
+            const yMax = d3.max(isFocused ? histDataUnfocused: histDataFocused, function(d) { return d.length; })
             const y = d3.scaleLinear()
-                .domain([0, yMax]).nice() // d3.hist has to be called before the Y axis obviously
+                .domain([0, yMax]).nice()
                 .range([height, 0]);
 
-            svg.append("svg")
-                .on("mousedown", (event) => {
-                    handleMouseDown(event)
-                })
-                .on("mousemove", (event) => {
-                    if (event.buttons === 1) {
-                        handleMouseOver(event)
-                    }
-                })
-                .attr("cursor", "pointer")
-                .selectAll("rect")
-                .data(histData)
-                .enter()
-                .append("rect")
-                .attr("x", 1)
-                .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
-                .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
-                .attr("height", function(d) { return height - y(d.length); })
-                .style("fill", d => setFillColor(d))
+            if (isFocused) {
+                svg.append("svg")
+                    .on("mousedown", (event) => {
+                        handleMouseDown(event)
+                    })
+                    .on("mousemove", (event) => {
+                        if (event.buttons === 1) {
+                            handleMouseOver(event)
+                        }
+                    })
+                    .attr("cursor", "pointer")
+                    .selectAll("rect")
+                    .data(histDataUnfocused)
+                    .enter()
+                    .append("rect")
+                    .attr("x", 1)
+                    .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
+                    .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
+                    .attr("height", function(d) { return height - y(d.length); })
+                    .style("fill", "var(--light-bg-color)")
+            }
+
+            if (histDataFocused.length !== 0) {
+                svg.append("svg")
+                    .on("mousedown", (event) => {
+                        handleMouseDown(event)
+                    })
+                    .on("mousemove", (event) => {
+                        if (event.buttons === 1) {
+                            handleMouseOver(event)
+                        }
+                    })
+                    .attr("cursor", "pointer")
+                    .selectAll("rect")
+                    .data(histDataFocused)
+                    .enter()
+                    .append("rect")
+                    .attr("x", 1)
+                    .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
+                    .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
+                    .attr("height", function(d) { return height - y(d.length); })
+                    .style("fill", "var(--main-bg-color)")
+            }
 
             let formatDate = d3.timeFormat("%d.%m.%y");
             if (d3.timeMonth.count(timeRange[0], timeRange[1])===0) {
@@ -177,7 +231,7 @@ const Histogram = ({dimensions}) => {
                 .text("Number of Reports");
         }
 
-    }, [data, binCount, height, margin.bottom, margin.left, margin.right, margin.top, width, focusedTimeRange, dispatch, dragStart, timeRange]);
+    }, [data, binCount, height, margin, width, focusedTimeRange, dispatch, dragStart, timeRange, isFocused, focusedData]);
 
     return <>
         <svg ref={svgRef} width={dimensions.width} height={dimensions.height} style={{flexShrink: "0"}} />

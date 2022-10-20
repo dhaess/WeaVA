@@ -1,3 +1,7 @@
+import {getCategoryName, getIntensityName} from "./WeatherCategories";
+import {StyledPopup} from "../../../static/style/muiStyling";
+import {getPieIcon} from "./WeatherIcons";
+
 export const getDistance = (c1, c2) => {
     const R = 6371e3; // metres
     const phi1 = c1[0] * Math.PI / 180; // φ, λ in radians
@@ -38,7 +42,19 @@ export const pointInRectangle = (point, rectangle) => {
         point[1] >= rectangle.southWest.lng
 }
 
-export const focusArea = (focused, areas) => {
+const arrangeMultiArea = (allPoints, focused) => {
+    let newAll = [...allPoints]
+    focused.forEach(e => {
+        const index = newAll.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
+        let changing = {...newAll[index]}
+        changing.focused = changing.focused.concat(changing.unfocused)
+        changing.unfocused = []
+        newAll[index] = changing
+    })
+    return newAll
+}
+
+export const focusArea = (focused, areas, isSinglePoint = true) => {
     if (Object.keys(areas).length === 0) {
         return [focused, false]
     }
@@ -60,19 +76,33 @@ export const focusArea = (focused, areas) => {
                 return []
         }
     }).flat()
-    newFocused = [...new Map(newFocused.map(item => [item.id, item])).values()]
+
+    if (isSinglePoint) {
+        newFocused = [...new Map(newFocused.map(item => [item.id, item])).values()]
+    } else {
+        newFocused = arrangeMultiArea(focused, newFocused)
+    }
+
     return [newFocused, true]
 }
+export const focusPoints = (focused, allData, points, isSinglePoint=true) => {
+    if (isSinglePoint) {
+        return focusSinglePoints(focused, allData, points)
+    } else {
+        return focusMultiPoints(focused, allData, points)
+    }
+}
 
-export const focusPoints = (focused, allData, points) => {
+const focusSinglePoints = (focused, allData, points) => {
     if (points["add"].length === 0 && points["delete"].length === 0) {
         return [focused, false]
     }
     let newFocused = [...focused]
     points["delete"].forEach(c => {
-        for (let i = 0; i < newFocused.length; i++)
-            if (newFocused[i].coordinates[0] === c.lat && newFocused[i].coordinates[1] === c.lng)
-                newFocused.splice(i, 1)
+        const index = newFocused.findIndex(e => e.coordinates[0] === c.lat && e.coordinates[1] === c.lng)
+        if (index !== -1) {
+            newFocused.splice(index, 1)
+        }
     })
     const addedPoints = points["add"].map(c => {
         return allData.filter(f => f.coordinates[0] === c.lat && f.coordinates[1] === c.lng)
@@ -82,36 +112,224 @@ export const focusPoints = (focused, allData, points) => {
     return [newFocused, true]
 }
 
-export const focusProximity = (focused, proximityPoints, isFocused) => {
+const focusMultiPoints = (focused, allData, points) => {
+    if (points["add"].length === 0 && points["delete"].length === 0) {
+        return [focused, false]
+    }
+    let newFocused = [...focused]
+    points["delete"].forEach(c => {
+        const index = newFocused.findIndex(e => e.coordinates[0] === c.lat && e.coordinates[1] === c.lng)
+        if (index !== -1) {
+            const el = {...newFocused[index]}
+            el.unfocused = el.focused.concat(el.unfocused)
+            el.focused = []
+            newFocused[index] = el
+        }
+    })
+    points["add"].forEach(c => {
+        const index = newFocused.findIndex(e => e.coordinates[0] === c.lat && e.coordinates[1] === c.lng)
+        if (index !== -1) {
+            const el = {...newFocused[index]}
+            el.focused = el.focused.concat(el.unfocused)
+            el.unfocused = []
+            newFocused[index] = el
+        }
+    })
+    return [newFocused, true]
+}
+
+export const focusProximity = (focused, allData, proximityPoints, isFocused, isSinglePoint = true) => {
+    if (isSinglePoint) {
+        return focusSingleProximity(focused, allData, proximityPoints, isFocused)
+    } else {
+        return focusMultiProximity(focused, proximityPoints)
+    }
+}
+
+const focusSingleProximity = (focused, allData, proximityPoints, isFocused) => {
     if (proximityPoints.length === 0) {
         return [focused, false]
     }
-
     let newFocused = isFocused ? [...focused] : []
-    newFocused = newFocused.concat(proximityPoints).flat()
+    proximityPoints.flat().forEach(c => {
+        const index = allData.findIndex(v => [0, 1].every(k => v.coordinates[k]===c[k]))
+        if (index!==-1) {
+            newFocused.push(allData[index])
+        }
+    })
+
     newFocused = [...new Map(newFocused.map(item => [item.id, item])).values()]
     return [newFocused, true]
 }
-export const getProximityPoints = (coords, allData, distance) => {
+
+const focusMultiProximity = (data, proximityPoints) => {
+    if (proximityPoints.length === 0) {
+        return [data, false]
+    }
+    let newData = [...data]
+    proximityPoints.flat().forEach(c => {
+        const index = newData.findIndex(v => [0, 1].every(k => v.coordinates[k]===c[k]))
+        if (index!==-1) {
+            const el = newData[index]
+            el.focused = el.focused.concat(el.unfocused)
+            el.unfocused = []
+            newData[index] = el
+        }
+    })
+    return [newData, true]
+}
+
+export const getProximityPoints = (coords, coordsList, distance) => {
     let queue = []
     let visited = []
     let proximityList = []
 
-    let startPoints = allData.filter(f => f.coordinates[0] === coords[0] && f.coordinates[1] === coords[1])
-    startPoints.forEach(p => {
-        queue.push(p)
-        visited[p.id] = true
-    })
+    queue.push(coords)
+    let index = coordsList.findIndex(c => [0, 1].every(k => c[k]===coords[k]))
+    if (index !== -1) {
+        visited[index] = true
+    }
 
     while (queue.length > 0) {
         let node = queue.shift()
-        allData.forEach(e => {
-            if (!visited[e.id] && getDistance(e.coordinates, node.coordinates) <= distance*1000) {
+        coordsList.forEach((e, i) => {
+            if (!visited[i] && getDistance(e, node) <= distance*1000) {
                 queue.push(e)
-                visited[e.id] = true
+                visited[i] = true
             }
         })
         proximityList.push(node)
     }
     return proximityList
+}
+
+const arrangeIntensityInfo = (array) => {
+    const groupByCategory = array.reduce((group, el) => {
+        const { category } = el
+        group[category] = group[category] ?? []
+        group[category].push(el)
+        return group
+    }, {})
+    return Object.entries(groupByCategory).map(e => {
+        const groupByIntensity = e[1].reduce((group, el) => {
+            const {auspraegung} = el
+            group[auspraegung] = group[auspraegung] ?? []
+            group[auspraegung].push(el)
+            return group
+        }, {})
+        const intensities = Object.entries(groupByIntensity).map(i => {
+            return {intensity: i[0], count: i[1].length}
+        })
+        return {category: e[0], intensities: intensities}
+    })
+}
+
+export const MultiMarkerPopup = ({data, isCluster, position}) => {
+    let focusedIntensityInfo
+    let unfocusedIntensityInfo
+    if (isCluster === undefined) {
+        focusedIntensityInfo = arrangeIntensityInfo(data.focused)
+        unfocusedIntensityInfo = arrangeIntensityInfo(data.unfocused)
+    } else {
+        focusedIntensityInfo = arrangeIntensityInfo(data)
+    }
+
+    return <StyledPopup position={position}>
+        {focusedIntensityInfo.map(c => {
+            return (
+                <div className={"multiPopup"} key={c.category}>
+                    <p>{getCategoryName(c.category)}: </p>
+                    <div>
+                        {c.intensities.map(i => <p key={i.intensity}>{getIntensityName(c.category, i.intensity)}:</p>)}
+                    </div>
+                    <div style={{display: "flex", flexDirection: "column", alignItems: "flex-end"}}>
+                        {c.intensities.map(i => <p key={i.intensity}>{i.count}</p>)}
+                    </div>
+                </div>
+            )
+        })}
+        {isCluster === undefined && unfocusedIntensityInfo.map(c => {
+            return (
+                <div className={"multiPopup"} style={{opacity: "0.5"}} key={c.category}>
+                    <p>{getCategoryName(c.category)}: </p>
+                    <div>
+                        {c.intensities.map(i => <p key={i.intensity}>{getIntensityName(c.category, i.intensity)}:</p>)}
+                    </div>
+                    <div style={{display: "flex", flexDirection: "column", alignItems: "flex-end"}}>
+                        {c.intensities.map(i => <p key={i.intensity}>{i.count}</p>)}
+                    </div>
+                </div>
+            )
+        })}
+    </StyledPopup>
+}
+
+export const createClusterCustomIcon = (cluster, size) => {
+    const color = cluster.getAllChildMarkers()[0].options.color
+    const pieSize = size===undefined ? 26 : size
+    const markerList = cluster.getAllChildMarkers().map(e => e.options.data)
+    const dataList = markerList.map(e => {
+        if (e.count === undefined) {
+            return e
+        } else {
+            return e.focused
+        }
+    }).flat()
+    if (color !== undefined) {
+        return getPieIcon(dataList, {color: color, size: pieSize})
+    } else {
+        return getPieIcon(dataList, {size: pieSize})
+    }
+}
+
+export const getGridData = (allData, zoomLevel) => {
+    // console.log(allData)
+    const gridData = []
+
+    if (allData.length===1) {
+        return [{focused: allData, unfocused: [], count: 1, coordinates: allData[0].coordinates}]
+    }
+    else if (allData.length>1) {
+        const latList = allData.map(e => e.coordinates[0])
+        const minLat = Math.min(...latList)
+        const maxLat = Math.max(...latList)
+        const lngList = allData.map(e => e.coordinates[1])
+        const minLng = Math.min(...lngList)
+        const maxLng = Math.max(...lngList)
+
+        const latDist = getDistance([minLat, minLng], [maxLat, minLng])
+        const lngDist = getDistance([minLat, minLng], [minLat, maxLng])
+
+        const maxGridSize = 10240 * 1000 / (Math.pow(2, zoomLevel))
+        const latGrid = Math.ceil(latDist/maxGridSize)
+        const lngGrid = Math.ceil(lngDist/maxGridSize)
+        const latGridSize = (maxLat-minLat+0.005) / Math.ceil(latDist/maxGridSize)
+        const lngGridSize = (maxLng-minLng+0.005) / Math.ceil(lngDist/maxGridSize)
+
+        const grid = new Array(latGrid)
+        for (let i=0; i<latGrid; i++) {
+            grid[i] = new Array(lngGrid)
+        }
+
+        allData.forEach(e => {
+            const x = Math.floor((e.coordinates[0]-minLat) / latGridSize)
+            const y = Math.floor((e.coordinates[1]-minLng) / lngGridSize)
+            if (grid[x][y] === undefined) {
+                grid[x][y] = []
+            }
+            grid[x][y].push(e)
+        })
+
+        for (let i=0; i<latGrid; i++) {
+            for (let j=0; j<lngGrid; j++) {
+                const gridContent = grid[i][j]
+                if (gridContent !== undefined) {
+                    const avgLat =  gridContent.map(e => e.coordinates[0]).reduce((a, b) => a + b, 0) / gridContent.length
+                    const avgLng =  gridContent.map(e => e.coordinates[1]).reduce((a, b) => a + b, 0) / gridContent.length
+                    gridData.push({focused: gridContent, unfocused: [], count: gridContent.length, coordinates: [avgLat, avgLng]})
+                }
+            }
+        }
+    }
+    return gridData
 }
