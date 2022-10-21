@@ -1,6 +1,7 @@
 import {getCategoryName, getIntensityName} from "./WeatherCategories";
 import {StyledPopup} from "../../../static/style/muiStyling";
 import {getPieIcon} from "./WeatherIcons";
+import {ChanConvexHull} from "./ConvexHull";
 
 export const getDistance = (c1, c2) => {
     const R = 6371e3; // metres
@@ -283,7 +284,6 @@ export const createClusterCustomIcon = (cluster, size) => {
 }
 
 export const getGridData = (allData, zoomLevel) => {
-    // console.log(allData)
     const gridData = []
 
     if (allData.length===1) {
@@ -324,9 +324,10 @@ export const getGridData = (allData, zoomLevel) => {
             for (let j=0; j<lngGrid; j++) {
                 const gridContent = grid[i][j]
                 if (gridContent !== undefined) {
-                    const avgLat =  gridContent.map(e => e.coordinates[0]).reduce((a, b) => a + b, 0) / gridContent.length
-                    const avgLng =  gridContent.map(e => e.coordinates[1]).reduce((a, b) => a + b, 0) / gridContent.length
-                    gridData.push({focused: gridContent, unfocused: [], count: gridContent.length, coordinates: [avgLat, avgLng]})
+                    const convexHull = ChanConvexHull.calculate(gridContent.map(e => e.coordinates)).convexHull
+                    const avgLat =  convexHull.map(e => e[0]).reduce((a, b) => a + b, 0) / convexHull.length
+                    const avgLng =  convexHull.map(e => e[1]).reduce((a, b) => a + b, 0) / convexHull.length
+                    gridData.push({focused: gridContent, unfocused: [], count: gridContent.length, coordinates: [avgLat, avgLng], convexHull: convexHull})
                 }
             }
         }

@@ -310,7 +310,7 @@ const initalCurrent = {
     },
     images: "all",
     histogram: {
-        bins: 10,
+        bins: 40,
         displayed: false
     },
     name: "",

@@ -6,7 +6,7 @@ import {
     TileLayer,
     useMap,
     useMapEvent, ZoomControl,
-    LayersControl, LayerGroup, ScaleControl, useMapEvents
+    LayersControl, LayerGroup, ScaleControl, useMapEvents, Polygon
 } from 'react-leaflet';
 import {getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
 import {useDispatch, useSelector} from "react-redux";
@@ -23,7 +23,7 @@ import {
     deleteAllAreas
 } from "../../shared/features/MapSlice";
 import {
-    createClusterCustomIcon, getDistance, getGridData,
+    createClusterCustomIcon, getGridData,
     MultiMarkerPopup,
     pointInCircle,
     pointInPolygon,
@@ -32,7 +32,7 @@ import {
 import {changeMapFilters, resetMapFilters} from "../../shared/features/SavingsSlice";
 import Delete from "../../../static/images/delete.png";
 import Edit from "../../../static/images/edit.png";
-import Polygon from "../../../static/images/polygon.png";
+import PolygonIcon from "../../../static/images/polygon.png";
 import Rectangle from "../../../static/images/rectangle.png";
 import Circle from "../../../static/images/circle.png";
 import Point from "../../../static/images/point.png";
@@ -154,6 +154,7 @@ const Map = () => {
 
     const [zoomLevel, setZoomLevel] = useState(8)
     const [gridData, setGridData] = useState([])
+    const [hoverPoint, setHoverPoint] = useState(null)
 
     useEffect(() => {
         if (mapRef.current !== undefined) {
@@ -300,10 +301,6 @@ const Map = () => {
         dispatch(changeFocusedArea("delete", clickedAreas))
     }
 
-    const updateProgressBar = (processed, total, elapsed, layersArray) => {
-        console.log(processed,total, elapsed, Math.round(processed/total*100) + '%')
-    }
-
     const EditPopup = () => {
         const [position, setPosition] = useState(null)
         const [clickedAreas, setAreas] = useState(null)
@@ -441,7 +438,7 @@ const Map = () => {
                         <StyledToggleButton value={"polygon"}>
                             <StyledTooltip title={"Select polygon"} arrow enterDelay={500}>
                                 <div className={"selectionButtonsContent"}>
-                                    <img src={Polygon} width={24} alt={"Polygon"}/>
+                                    <img src={PolygonIcon} width={24} alt={"Polygon"}/>
                                 </div>
                             </StyledTooltip>
                         </StyledToggleButton>
@@ -643,7 +640,9 @@ const Map = () => {
                                                     click: e => {
                                                         addPoint(true, e)
                                                         addProximity(e)
-                                                    }
+                                                    },
+                                                    mouseover: e => setHoverPoint(e.target.options.data),
+                                                    mouseout: () => setHoverPoint(null)
                                                 }}
                                         >
                                             <MultiMarkerPopup data={e}/>
@@ -652,6 +651,9 @@ const Map = () => {
                                 }
                             })}
                         </LayerGroup>
+                        {hoverPoint && <Polygon pathOptions={{fillColor: 'blue', zIndex: "2000"}} positions={hoverPoint.convexHull} pane={"markerPane"}>
+                            <MultiMarkerPopup data={hoverPoint}/>
+                        </Polygon>}
                     </LayersControl.BaseLayer>
                     <LayersControl.BaseLayer name={MarkerMode["Cluster"]}>
                         <MarkerClusterGroup
@@ -659,7 +661,6 @@ const Map = () => {
                             iconCreateFunction={d => createClusterCustomIcon(d)}
                             zoomToBoundsOnClick={false}
                             chunkedLoading={true}
-                            // chunkProgress={(processed, total, elapsed, layersArray) => updateProgressBar(processed, total, elapsed, layersArray)}
                             eventHandlers={{
                                 clusterclick: e => {
                                     showClusterPopup(e)
