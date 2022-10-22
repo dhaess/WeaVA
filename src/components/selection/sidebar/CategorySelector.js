@@ -13,19 +13,19 @@ const StyledToggleButtonGroup = styled(ToggleButtonGroup)({
     flexWrap: "wrap",
     '& .MuiToggleButtonGroup-grouped': {
         '&:not(:first-of-type)': {
-            border: "var(--main-bg-color) solid 2px",
+            border: "var(--border-bg-color) solid 2px",
             borderRadius: "4px",
             "&.Mui-selected": {
-                border: "var(--main-bg-color) solid 2px !important",
+                border: "var(--border-bg-color) solid 2px !important",
                 color: "black"
             },
         },
         '&:first-of-type': {
-            border: "var(--main-bg-color) solid 2px",
+            border: "var(--border-bg-color) solid 2px",
             borderRadius: "4px",
             marginLeft: "0",
             "&.Mui-selected": {
-                border: "var(--main-bg-color) solid 2px",
+                border: "var(--border-bg-color) solid 2px",
                 color: "black"
             },
         },
@@ -33,7 +33,7 @@ const StyledToggleButtonGroup = styled(ToggleButtonGroup)({
 })
 
 const StyledToggleButton = styled(ToggleButton)({
-    border: "var(--main-bg-color) solid 2px",
+    border: "var(--border-bg-color) solid 2px",
     width: "49%",
     height: "42px",
     margin: "1px",
@@ -42,15 +42,16 @@ const StyledToggleButton = styled(ToggleButton)({
     fontSize: "0.74em",
     lineHeight: "18px",
     "&.Mui-selected": {
-        backgroundColor: "var(--shadow-bg-color)",
+        backgroundColor: "var(--main-bg-color)",
         color: "black"
     },
     "&.Mui-selected:hover": {
-        backgroundColor: "var(--main-bg-color)"
+        backgroundColor: "var(--border-bg-color)",
+        boxShadow: "1px 1px var(--shadow-bg-color)"
     },
     "&:hover": {
-        backgroundColor: "var(--opacity-bg-color)",
-        boxShadow: "1px 1px var(--shadow-bg-color)"
+        backgroundColor: "var(--light-bg-color)",
+        boxShadow: "1px 1px var(--border-bg-color)"
     }
 })
 

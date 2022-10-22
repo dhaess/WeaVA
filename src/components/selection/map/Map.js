@@ -70,14 +70,14 @@ const StyledToggleButtonGroup = styled(ToggleButtonGroup)({
 })
 
 const StyledToggleButton = styled(ToggleButton)({
-    border: "1px solid var(--main-bg-color)",
+    border: "1px solid var(--border-bg-color)",
     borderRadius: "0",
     backgroundColor: "white",
     padding: "0",
     marginLeft: "-1px",
     borderLeft: "1px solid transparent",
     "&.Mui-disabled": {
-        border: "1px solid var(--main-bg-color)",
+        border: "1px solid var(--border-bg-color)",
         backgroundColor: "var(--gray-bg-color)"
     },
     "&.Mui-disabled div": {
@@ -651,7 +651,7 @@ const Map = () => {
                                 }
                             })}
                         </LayerGroup>
-                        {hoverPoint && <Polygon pathOptions={{fillColor: 'blue', zIndex: "2000"}} positions={hoverPoint.convexHull} pane={"markerPane"}>
+                        {hoverPoint && <Polygon pathOptions={{color: 'var(--border-bg-color)', fillOpacity: "0.4", zIndex: "2000"}} positions={hoverPoint.convexHull} pane={"markerPane"}>
                             <MultiMarkerPopup data={hoverPoint}/>
                         </Polygon>}
                     </LayersControl.BaseLayer>

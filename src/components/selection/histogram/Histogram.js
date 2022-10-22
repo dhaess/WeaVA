@@ -28,13 +28,13 @@ const Histogram = ({dimensions}) => {
     }, [binCount, data, dispatch])
 
     const svgRef = useRef(null);
-    const margin = {top: 10, right: 50, bottom: 50, left: 40},
-        width = dimensions.width - dimensions.margin.left - dimensions.margin.right,
+    const width = dimensions.width - dimensions.margin.left - dimensions.margin.right,
         height = dimensions.height - dimensions.margin.top - dimensions.margin.bottom;
 
     const [dragStart, setDrag] = useState(undefined)
 
     useEffect(() => {
+        const margin = {top: 10, right: 50, bottom: 50, left: 40}
 
         const getBinTimeRange = (x) => {
             const rectList = document.querySelectorAll('rect')
@@ -170,7 +170,7 @@ const Histogram = ({dimensions}) => {
                     .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
                     .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
                     .attr("height", function(d) { return height - y(d.length); })
-                    .style("fill", "var(--light-bg-color)")
+                    .style("fill", "var(--opacity-bg-color)")
             }
 
             if (histDataFocused.length !== 0) {
@@ -231,7 +231,7 @@ const Histogram = ({dimensions}) => {
                 .text("Number of Reports");
         }
 
-    }, [data, binCount, height, margin, width, focusedTimeRange, dispatch, dragStart, timeRange, isFocused, focusedData]);
+    }, [data, binCount, height, width, focusedTimeRange, dispatch, dragStart, timeRange, isFocused, focusedData]);
 
     return <>
         <svg ref={svgRef} width={dimensions.width} height={dimensions.height} style={{flexShrink: "0"}} />

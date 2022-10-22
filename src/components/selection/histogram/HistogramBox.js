@@ -11,8 +11,8 @@ import SettingsIcon from "../../../static/images/settings.png";
 import HistogramOptions from "./HistogramOptions";
 
 const StyledButton = styled(Button)({
-    backgroundColor: "var(--opacity-bg-color)",
-    border: "var(--main-bg-color) 2px solid",
+    backgroundColor: "var(--light-bg-color)",
+    border: "var(--border-bg-color) 2px solid",
     marginTop: "18px",
     marginBottom: "0px",
     color: "black",
@@ -20,7 +20,8 @@ const StyledButton = styled(Button)({
     width: "93px",
     height: "52px",
     "&:hover": {
-        backgroundColor: "var(--opacity2-bg-color);",
+        backgroundColor: "var(--light-bg-color)",
+        boxShadow: "1px 1px var(--border-bg-color)"
     },
     "&.Mui-disabled": {
         border: "2px solid #b9b9b9",
@@ -34,18 +35,20 @@ const OpenCloseButton = styled(Button)({
     minWidth: "16px",
     marginBottom: "-3px",
     padding: "4px",
-    background: "var(--shadow-bg-color)",
+    background: "var(--main-bg-color)",
     borderRadius: "0",
     zIndex: "1000",
     "&:hover": {
-        backgroundColor: "var(--main-bg-color)"
+        backgroundColor: "var(--border-bg-color)",
+        boxShadow: "1px 1px var(--shadow-bg-color)"
     }
 })
 
 const SettingsButton = styled(Button)({
     color: "var(--main-bg-color)",
     "&:hover": {
-        backgroundColor: "var(--opacity-bg-color)"
+        backgroundColor: "var(--light-bg-color)",
+        boxShadow: "1px 1px var(--border-bg-color)"
     }
 })
 
@@ -196,13 +199,12 @@ const HistogramBox = ({dimensions}) => {
             { anchorEl &&
                 <Popper open={open} anchorEl={anchorEl} placement={"top-start"}>
                     <Box sx={{
-                        border: "2px solid var(--main-bg-color)",
+                        border: "2px solid var(--border-bg-color)",
                         borderLeft: "0",
                         p: 1,
                         backgroundColor: 'white',
                         width: "280px",
-                        marginBottom: "3px",
-                        marginLeft: "-2px"
+                        marginBottom: "1px"
                     }}>
                         <HistogramOptions/>
                     </Box>

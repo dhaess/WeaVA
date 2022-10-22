@@ -14,10 +14,11 @@ export const StyledTextField = styled(TextField)({
             borderColor: '#00000080',
         },
         '&:hover fieldset': {
-            borderColor: 'var(--main-bg-color)',
+            borderColor: 'var(--border-bg-color)',
+            boxShadow: "1px 1px var(--shadow-bg-color)"
         },
         '&.Mui-focused fieldset': {
-            borderColor: 'var(--main-bg-color)',
+            borderColor: 'var(--border-bg-color)',
         },
         '&.Mui-disabled:hover fieldset': {
             borderColor: '#b3b3b3',
@@ -26,12 +27,12 @@ export const StyledTextField = styled(TextField)({
 })
 
 export const StyledInputField = styled(Input)({
-    border: "solid 2px var(--main-bg-color)",
+    border: "solid 2px var(--border-bg-color)",
     borderRadius: "4px",
     flexShrink: "0",
     marginLeft: "12px",
     "&.Mui-focused": {
-        border: "solid 2px var(--main-bg-color)",
+        border: "solid 2px var(--border-bg-color)",
     },
     "&.Mui-disabled": {
         borderColor: "#8080805e"
@@ -40,7 +41,7 @@ export const StyledInputField = styled(Input)({
         textAlign: "end",
     },
     '&:after': {
-        borderBottom: "2px solid var(--main-bg-color)",
+        borderBottom: "2px solid var(--border-bg-color)",
     },
     '&:hover:not(.Mui-disabled):before': {
         borderBottom: "1px solid rgba(0, 0, 0, 0.42)"
@@ -108,7 +109,7 @@ export const StyledButton = styled(Button)({
     marginTop: "10px",
     color: "black",
     "&:hover": {
-        backgroundColor: "var(--opacity-bg-color)",
+        backgroundColor: "var(--light-bg-color)",
         boxShadow: "1px 1px grey"
     }
 })

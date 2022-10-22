@@ -54,10 +54,11 @@ const StyledSelect = styled(Select)({
         padding: "0 5px 0 5px",
     },
     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-        borderColor: 'var(--main-bg-color)',
+        borderColor: 'var(--border-bg-color)',
     },
     '&:hover .MuiOutlinedInput-notchedOutline': {
-        borderColor: 'var(--main-bg-color)',
+        borderColor: 'var(--border-bg-color)',
+        boxShadow: "1px 1px var(--shadow-bg-color)"
     },
 })
 
@@ -69,10 +70,11 @@ const timePaperProps = {
         },
         "& .MuiPickersDay-root.Mui-selected:hover": {
             backgroundColor: "var(--main-bg-color)",
+            boxShadow: "1px 1px var(--shadow-bg-color)"
         },
         "& .css-118whkv": {
             backgroundColor: "var(--main-bg-color)",
-            border: "16px solid var(--main-bg-color)",
+            border: "16px solid var(--border-bg-color)",
         },
         "& .css-7lip4c": {
             backgroundColor: "var(--main-bg-color)",
@@ -84,7 +86,7 @@ const timePaperProps = {
             backgroundColor: "var(--main-bg-color)",
         },
         "& .css-2ujp1m": {
-            border: "16px solid var(--main-bg-color)",
+            border: "16px solid var(--border-bg-color)",
         }
     }
 }
