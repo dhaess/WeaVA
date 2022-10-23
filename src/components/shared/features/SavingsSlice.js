@@ -110,17 +110,6 @@ const getData = async (filter, areaFilter) => {
         })
 }
 
-// const getMSPhate = async (data) => {
-//     return await fetch('/getMSPhate/', {
-//         'method': 'POST',
-//         headers: {
-//             'Content-Type': 'application/json'
-//         },
-//         body: JSON.stringify(data)
-//     })
-//         .then(response => response.json())
-// }
-
 export const changeFilter = createAsyncThunk('posts/changeFilter',
     async (filterData, {getState,dispatch}) => {
         const state = getState()
@@ -153,8 +142,6 @@ export const changeFilter = createAsyncThunk('posts/changeFilter',
         }
         if (isChanged) {
             const data = await getData(filter, areaFilter)
-            // const ms_phate = await getMSPhate(data)
-            // console.log(ms_phate)
             dispatch(setHistogramData(data, timeRange))
             dispatch(setMapData(data))
         }
@@ -310,6 +297,7 @@ const initalCurrent = {
     },
     images: "all",
     histogram: {
+        type: "number",
         bins: 40,
         displayed: false
     },

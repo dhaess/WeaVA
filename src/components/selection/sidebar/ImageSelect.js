@@ -1,7 +1,7 @@
 import {StyledRadio} from "../../../static/style/muiStyling";
 import {useDispatch, useSelector} from "react-redux";
-import $ from "jquery";
 import {changeFilter, setCurrent} from "../../shared/features/SavingsSlice";
+import {useEffect, useState} from "react";
 
 export default function ImageSelect() {
     const dispatch = useDispatch()
@@ -15,26 +15,30 @@ export default function ImageSelect() {
         handleClick(val)
     }
 
+    const [allStyle, setAllStyle] = useState({})
+    const [withStyle, setWithStyle] = useState({})
+    const [withoutStyle, setWithoutStyle] = useState({})
+
+    useEffect(() => {
+        const grayOut = {color: "rgb(0,0,0,68%)"}
+        setAllStyle(grayOut)
+        setWithStyle(grayOut)
+        setWithoutStyle(grayOut)
+        switch (images) {
+            case "all":
+                setAllStyle({})
+                break
+            case "with":
+                setWithStyle({})
+                break
+            case "without":
+                setWithoutStyle({})
+                break
+            default:
+        }
+    }, [images])
+
     const handleClick = (val) => {
-        if (val === "all") {
-            $("#AllImages").css("color", "")
-        } else {
-            $("#AllImages").css("color", "rgb(0,0,0,68%)")
-        }
-        if (val === "with") {
-            $("#WithPictures")
-                .css("color", "")
-        } else {
-            $("#WithPictures")
-                .css("color", "rgb(0,0,0,68%)")
-        }
-        if (val === "without") {
-            $("#WithoutPictures")
-                .css("color", "")
-        } else {
-            $("#WithoutPictures")
-                .css("color", "rgb(0,0,0,68%)")
-        }
         dispatch(setCurrent({name: "images", value: val}))
         switch (val) {
             case "with":
@@ -62,7 +66,7 @@ export default function ImageSelect() {
                         margin: "4px 7px 0px 0px;",
                     }}
                 />
-                <p id="AllImages" className="singleAreaChoice" onClick={() => handleClick("all")}>With & without pictures</p>
+                <p className="singleAreaChoice" style={allStyle} onClick={() => handleClick("all")}>With & without pictures</p>
             </div>
             <div className="areaOptions">
                 <StyledRadio
@@ -75,7 +79,7 @@ export default function ImageSelect() {
                         margin: "4px 7px 0px 0px;",
                     }}
                 />
-                <p id="WithPictures" className="singleAreaChoice" style={{color: "rgb(0,0,0,68%)"}}
+                <p className="singleAreaChoice" style={withStyle}
                    onClick={() => handleClick("with")}>With pictures</p>
             </div>
             <div className="areaOptions">
@@ -89,7 +93,7 @@ export default function ImageSelect() {
                         margin: "4px 7px 0px 0px;",
                     }}
                 />
-                <p id="WithoutPictures" className="singleAreaChoice" style={{color: "rgb(0,0,0,68%)"}}
+                <p className="singleAreaChoice" style={withoutStyle}
                    onClick={() => handleClick("without")}>Without pictures</p>
             </div>
         </div>

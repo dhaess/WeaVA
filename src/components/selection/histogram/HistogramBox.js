@@ -9,6 +9,7 @@ import Arrow from "../../../static/images/left-arrow.png";
 import Histogram from "./Histogram";
 import SettingsIcon from "../../../static/images/settings.png";
 import HistogramOptions from "./HistogramOptions";
+import * as d3 from "d3";
 
 const StyledButton = styled(Button)({
     backgroundColor: "var(--light-bg-color)",
@@ -55,18 +56,17 @@ const SettingsButton = styled(Button)({
 const HistogramBox = ({dimensions}) => {
     const dispatch = useDispatch()
 
-    const [isLoading,
-        binCount
-    ] = useSelector(state => {
-        const savings = state.savings
-        return [
-            savings.status === "loading",
-            savings.current.histogram.bins
-        ]
-    })
+    const isLoading = useSelector(state => state.savings.status === "loading")
 
     const data = useSelector(state => state.histogram.data)
 
+    const [binType,
+        binCount]
+        = useSelector(state => {
+        const histogram = state.savings.current.histogram
+        return [histogram.type,
+            histogram.bins]
+    })
     const [focusedTimeRange,
         focusedData
     ] = useSelector(state => {
@@ -105,13 +105,35 @@ const HistogramBox = ({dimensions}) => {
         setOpen(!open)
     }
 
-    const zoomSelection = () => {
-        const filter = {"timestamp": {
+    const zoomSelection = async () => {
+        const filter = {
+            "timestamp": {
                 '$gt': focusedTimeRange[0],
                 '$lt': focusedTimeRange[1]
-            }}
-        dispatch(changeFilter([{type: "add", filter: [filter]}]))
-        dispatch(setCurrent({name: "timeRange", value: focusedTimeRange}))
+            }
+        }
+        const response = await dispatch(changeFilter([{type: "add", filter: [filter]}]))
+        if (response) {
+            dispatch(setCurrent({name: "timeRange", value: focusedTimeRange}))
+            switch (binType) {
+                case "month":
+                    if (d3.timeDay.count(d3.timeDay.floor(focusedTimeRange[0]), d3.timeDay.ceil(focusedTimeRange[1])) <= 100) {
+                        dispatch(setCurrent({name: "histogram", value: {type: "day", bins: binCount}}))
+                    }
+                    break
+                case "day":
+                    if (d3.timeHour.count(d3.timeHour.floor(focusedTimeRange[0]), d3.timeHour.ceil(focusedTimeRange[1])) <= 100) {
+                        dispatch(setCurrent({name: "histogram", value: {type: "hour", bins: binCount}}))
+                    }
+                    break
+                case "hour":
+                    if (d3.timeMinute.count(d3.timeMinute.floor(focusedTimeRange[0]), d3.timeMinute.ceil(focusedTimeRange[1])) <= 100) {
+                        dispatch(setCurrent({name: "histogram", value: {type: "minute", bins: binCount}}))
+                    }
+                    break
+                default:
+            }
+        }
     }
 
     const styleDateString = (dateVal) => {
@@ -141,10 +163,6 @@ const HistogramBox = ({dimensions}) => {
             $(".histogramMini").css('display', "flex")
         }
     }, [showHistogram])
-
-    useEffect(() => {
-        dispatch(setCurrent({name: "histogram", value: {bins: binCount, displayed: data.length!==0}}))
-    }, [binCount, data, dispatch])
 
     if (data.length === 0) {
         return (
@@ -203,8 +221,8 @@ const HistogramBox = ({dimensions}) => {
                         borderLeft: "0",
                         p: 1,
                         backgroundColor: 'white',
-                        width: "280px",
-                        marginBottom: "1px"
+                        marginBottom: "3px",
+                        marginLeft: "-2px"
                     }}>
                         <HistogramOptions/>
                     </Box>

@@ -1,10 +1,10 @@
 import {Autocomplete} from "@mui/material";
 import {useDispatch, useSelector} from "react-redux";
 import locations from "../../../static/data/PLZO_CSV_WGS84.json"
-import $ from 'jquery';
 import {styled} from "@mui/material/styles";
 import {StyledRadio, StyledTextField} from "../../../static/style/muiStyling";
 import {setCurrent, changeFilter} from "../../shared/features/SavingsSlice";
+import {useEffect, useState} from "react";
 
 const StyledAutocomplete = styled(Autocomplete)({
     width: "100%",
@@ -56,19 +56,25 @@ export default function AreaSelector() {
     const cantonValue = dimension === "cantons" ? locElements : []
     const placeValue = dimension === "places" ? locElements : []
 
+    const [allStyle, setAllStyle] = useState({})
+    const [allSwitzerlandStyle, setAllSwitzerlandStyle] = useState({})
+
+    useEffect(() => {
+        const grayOut = {color: "rgb(0,0,0,68%)"}
+        setAllStyle(grayOut)
+        setAllSwitzerlandStyle(grayOut)
+        switch (dimension) {
+            case "all":
+                setAllStyle({})
+                break
+            case "allSwitzerland":
+                setAllSwitzerlandStyle({})
+                break
+            default:
+        }
+    }, [dimension])
+
     const handleClick = (val) => {
-        if (val === "all") {
-            $("#AllPlaces").css("color", "")
-        } else {
-            $("#AllPlaces").css("color", "rgb(0,0,0,68%)")
-        }
-        if (val === "allSwitzerland") {
-            $("#AllSwitzerland")
-                .css("color", "")
-        } else {
-            $("#AllSwitzerland")
-                .css("color", "rgb(0,0,0,68%)")
-        }
         switch (val) {
             case "cantons":
                 dispatch(setCurrent({name: "area", value: {dimension: val, entries: []}}))
@@ -133,7 +139,9 @@ export default function AreaSelector() {
                         margin: "4px 7px 0px 0px;",
                     }}
                 />
-                <p id="AllPlaces" className="singleAreaChoice" onClick={() => handleClick("all")}>Everywhere</p>
+                <p className="singleAreaChoice"
+                   style={allStyle} onClick={() =>
+                    handleClick("all")}>Everywhere</p>
             </div>
             <div className="areaOptions">
                 <StyledRadio
@@ -146,8 +154,8 @@ export default function AreaSelector() {
                         margin: "4px 7px 0px 0px;",
                     }}
                 />
-                <p id="AllSwitzerland" className="singleAreaChoice"
-                   style={{color: "rgb(0,0,0,68%)"}}
+                <p className="singleAreaChoice"
+                   style={allSwitzerlandStyle}
                    onClick={() => handleClick("allSwitzerland")}>All Switzerland</p>
             </div>
             <div className="areaOptions">
