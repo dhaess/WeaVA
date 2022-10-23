@@ -1,7 +1,7 @@
 import {LayerGroup, MapContainer, Marker, TileLayer} from "react-leaflet";
 import {getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
 import {useSelector} from "react-redux";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Button} from "@mui/material";
 import Arrow from "../../../static/images/left-arrow.png"
 import MarkerClusterGroup from "../../shared/functions/MarkerClusterGroup";
@@ -15,6 +15,9 @@ const MiniMap = ({color, id, markerMode}) => {
     const data = useSelector(state => state.map.focusedData)
 
     const [showMap, setMap] = useState(true)
+    const [singleData, setSingleData] = useState([])
+    const [multipleData, setMultipleData] = useState([])
+    const [gridData, setGridData] = useState([])
 
     const handleCloseClick = () => {
         setMap(false)
@@ -24,48 +27,54 @@ const MiniMap = ({color, id, markerMode}) => {
         setMap(true)
     }
 
-    let mapData = data.map(d => {
-        let e = {...d}
-        e.color = color
-        e.id = id
-        return e
-    }).concat(
-        events.filter(event => event.info.id !== id && !event.hidden)
-            .map(event => {
-            return event.data.map(e => {
-                const e2 = {...e}
-                e2.color = event.info.color
-                e2.id = event.info.id
-                return e2
-            })
-        })
-    ).flat()
+    useEffect(() => {
+        let mapData = data.map(d => {
+            let e = {...d}
+            e.color = color
+            return e
+        }).concat(
+            events.filter(event => event.info.id !== id && !event.hidden)
+                .map(event => {
+                    return event.data.map(e => {
+                        const e2 = {...e}
+                        e2.color = event.info.color
+                        return e2
+                    })
+                })
+        ).flat()
 
-    let coordsList = []
-    let singleData = []
-    let multipleData = []
-    mapData.forEach(e => {
-        let index = coordsList.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
-        if (index === -1) {
-            const e2 = {...e}
-            singleData.push(e2)
-            coordsList.push({coordinates: e.coordinates, isSingle: true})
-        } else {
-            if (coordsList[index].isSingle) {
-                let newDouble = singleData.splice(singleData.findIndex(s => [0, 1].every(k => e.coordinates[k] === s.coordinates[k])), 1)
+        let coordsList = []
+        let newSingleData = []
+        let newMultipleData = []
+        mapData.forEach(e => {
+            let index = coordsList.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
+            if (index === -1) {
                 const e2 = {...e}
-                multipleData.push({coordinates: e.coordinates, count: 2, focused: [newDouble[0], e2]})
-                coordsList[index].isSingle = false
+                newSingleData.push(e2)
+                coordsList.push({coordinates: e.coordinates, isSingle: true})
             } else {
-                let multiIndex = multipleData.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
-                multipleData[multiIndex].count += 1
-                multipleData[multiIndex].focused.push(e)
+                if (coordsList[index].isSingle) {
+                    let newDouble = newSingleData.splice(newSingleData.findIndex(s => [0, 1].every(k => e.coordinates[k] === s.coordinates[k])), 1)
+                    const e2 = {...e}
+                    newMultipleData.push({coordinates: e.coordinates, count: 2, focused: [newDouble[0], e2]})
+                    coordsList[index].isSingle = false
+                } else {
+                    let multiIndex = newMultipleData.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
+                    newMultipleData[multiIndex].count += 1
+                    newMultipleData[multiIndex].focused.push(e)
+                }
             }
-        }
-    })
+        })
+        setSingleData(newSingleData)
+        setMultipleData(newMultipleData)
+    }, [color, data, events, id])
 
-    const gridInput = singleData.concat(multipleData.map(e => e.focused).flat())
-    const gridData = getGridData(gridInput, 8)
+    useEffect(() => {
+        if (markerMode===MarkerMode["Grid"]) {
+            const gridInput = singleData.concat(multipleData.map(e => e.focused).flat())
+            setGridData(getGridData(gridInput, 8))
+        }
+    }, [markerMode, multipleData, singleData])
 
     if (showMap) {
         return (

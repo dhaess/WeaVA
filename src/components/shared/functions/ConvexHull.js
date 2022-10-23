@@ -163,7 +163,7 @@ export const ChanConvexHull = function () {
             } else {
                 mid = split;
                 leftSplit = split - 1;
-                rightSplit = split + 1;
+                rightSplit = (split+1)===hull.length ? split : split + 1;
             }
 
             let leftAngle = findAngle(leftSplit);

@@ -106,8 +106,7 @@ const Map = () => {
     let featureRef = useRef()
     let clusterRef = useRef()
 
-    const [allData,
-        singlePoints,
+    const [singlePoints,
         multiplePoints,
         focusedArea,
         proximityDistance,
@@ -115,8 +114,7 @@ const Map = () => {
         isMapFocused
     ] = useSelector(state => {
         const map = state.map
-        return [map.allData,
-            map.singlePoints,
+        return [map.singlePoints,
             map.multiplePoints,
             map.mapFilters.focusedArea,
             map.mapFilters.proximityDistance,
@@ -144,8 +142,6 @@ const Map = () => {
     const [proximitySelection, setProximitySelection] = useState(false)
     const [changedProximity, setProximity] = useState(null)
 
-    const [singleData, setSingleData] = useState({focused: [], unfocused: []})
-    const [multiData, setMultiData] = useState([])
     const [markerMode, setMarkerMode] = useState("Grid Marker")
 
     const [markerPos, setMarkerPos] = useState(null)
@@ -234,13 +230,9 @@ const Map = () => {
     }, [changedProximity, dispatch, proximitySelection])
 
     useEffect(() => {
-        setSingleData(singlePoints)
-        setMultiData(multiplePoints)
-    }, [multiplePoints, singlePoints])
-
-    useEffect(() => {
-        setGridData(getGridData(allData, zoomLevel))
-    }, [allData, zoomLevel])
+        const focusedData = singlePoints.focused.concat(multiplePoints.map(e => e.focused)).flat()
+        setGridData(getGridData(focusedData, zoomLevel))
+    }, [multiplePoints, singlePoints, zoomLevel])
 
     //todo: fix issue: Color change doesn't work on cluster icons
 
@@ -449,7 +441,7 @@ const Map = () => {
                                 </div>
                             </StyledTooltip>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"points"} disabled={markerMode!==MarkerMode["Location"] || (singleData.focused.length===0 && singleData.unfocused.length===0 && multiData.length===0)}>
+                        <StyledToggleButton value={"points"} disabled={markerMode!==MarkerMode["Location"] || (singlePoints.focused.length===0 && singlePoints.unfocused.length===0 && multiplePoints.length===0)}>
                             <StyledTooltip title={"Select individual points"} arrow enterDelay={500}>
                                 <div className={"selectionButtonsContent"}>
                                     <img src={Point} width={14} alt={"Point"}/>
@@ -479,7 +471,7 @@ const Map = () => {
                         </StyledToggleButton>
                         <StyledToggleButton value={"canton"} disabled={true}>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"proximity"} disabled={markerMode!==MarkerMode["Location"] || (singleData.focused.length===0 && singleData.unfocused.length===0 && multiData.length===0)}>
+                        <StyledToggleButton value={"proximity"} disabled={markerMode!==MarkerMode["Location"] || (singlePoints.focused.length===0 && singlePoints.unfocused.length===0 && multiplePoints.length===0)}>
                             <StyledTooltip title={"Select point to get all points with maximal given distance"} arrow enterDelay={500}>
                                 <div className={"selectionButtonsContent"}>
                                     <img src={Proximity} width={20} alt={"Proximity"}/>
@@ -502,7 +494,7 @@ const Map = () => {
                         </StyledToggleButton>
                     </StyledToggleButtonGroup>
                     { anchorEl &&
-                        <Popper open={selectionButton === "proximity" && (singleData.focused.length!==0 || singleData.unfocused.length!==0 || multiData.length!==0)} anchorEl={anchorEl} placement={"bottom-start"}>
+                        <Popper open={selectionButton === "proximity" && (singlePoints.focused.length!==0 || singlePoints.unfocused.length!==0 || multiplePoints.length!==0)} anchorEl={anchorEl} placement={"bottom-start"}>
                             <Box sx={{
                                 border: "2px solid var(--main-bg-color)",
                                 p: 1,
@@ -667,7 +659,7 @@ const Map = () => {
                                 }
                             }}
                         >
-                            {singleData.focused.map(e => (
+                            {singlePoints.focused.map(e => (
                                 <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
                                         color={color}
                                         data={e}
@@ -685,7 +677,7 @@ const Map = () => {
                                     </StyledPopup>
                                 </Marker>
                             ))}
-                            {multiData.filter(e => e.focused.length !== 0).map(e => (
+                            {multiplePoints.filter(e => e.focused.length !== 0).map(e => (
                                 <Marker opacity={1}  key={e.coordinates[0] + "," + e.coordinates[1]}
                                         color={color}
                                         data={e}
@@ -712,7 +704,7 @@ const Map = () => {
                     </LayersControl.BaseLayer>
                     <LayersControl.BaseLayer name={MarkerMode["Location"]}>
                         <LayerGroup>
-                            {singleData.unfocused.map(e => (
+                            {singlePoints.unfocused.map(e => (
                                 <Marker opacity={0.5} zIndexOffset={-1000}
                                         key={e.coordinates[0] + "," + e.coordinates[1]}
                                         position={e.coordinates}
@@ -729,7 +721,7 @@ const Map = () => {
                                     </StyledPopup>
                                 </Marker>
                             ))}
-                            {singleData.focused.map(e => {
+                            {singlePoints.focused.map(e => {
                                 return (
                                     <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
                                             position={e.coordinates}
@@ -747,7 +739,7 @@ const Map = () => {
                                     </Marker>
                                 )
                             })}
-                            {multiData.map(e => {
+                            {multiplePoints.map(e => {
                                 if (e.focused.length === 0) {
                                     return (
                                         <Marker opacity={0.5} zIndexOffset={-1000}
