@@ -42,13 +42,13 @@ export default function ImageSelect() {
         dispatch(setCurrent({name: "images", value: val}))
         switch (val) {
             case "with":
-                dispatch(changeFilter([{type: "add", filter: [{"imageUrl": {'$ne': null}}, {"timesReportedForImage": {'$lt': 1}}]}]))
+                dispatch(changeFilter([{type: "add", filter: [{"imageUrl": {'$ne': null}}, {"timesReportedForImage": {'$lt': 1}}]}, {type: "remove", filter: ["$or"]}]))
                 break
             case "without":
-                dispatch(changeFilter([{type: "add", filter: [{"imageUrl": null}]}, {type: "remove", filter: ["timesReportedForImage"]}]))
+                dispatch(changeFilter([{type: "add", filter: [{"$or": [{"properties.imageUrl": null}, {"properties.timesReportedForImage": {'$gt': 1}}]}]}, {type: "remove", filter: ["timesReportedForImage", "imageUrl"]}]))
                 break
             default:
-                dispatch(changeFilter([{type: "remove", filter: ["imageUrl", "timesReportedForImage"]}]))
+                dispatch(changeFilter([{type: "remove", filter: ["imageUrl", "timesReportedForImage", "$or"]}]))
         }
     }
 

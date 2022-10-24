@@ -11,7 +11,7 @@ const configureAddFilter = (query, filter) => {
     const dictValue = Object.values(filter)[0]
     if (dictKey==="coordinates") {
         dictKey = 'geometry.coordinates'
-    } else{
+    } else if (dictKey!=="$or") {
         dictKey = 'properties.' + dictKey
     }
 
@@ -28,7 +28,7 @@ const configureAddFilter = (query, filter) => {
 const configureRemoveFilter = (query, filter) => {
     if (filter==="coordinates") {
         filter = 'geometry.coordinates'
-    } else{
+    } else if (filter!=="$or") {
         filter = 'properties.' + filter
     }
 
