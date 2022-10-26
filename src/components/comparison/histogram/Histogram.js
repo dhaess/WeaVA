@@ -107,27 +107,7 @@ const Histogram = ({dimensions, id}) => {
                     .append("g")
                     .attr("transform", "translate(" + marginLeft + "," + margin.top + ")")
 
-                svg.append("svg")
-                    // .on("mousedown", (event) => {
-                    //     handleMouseDown(event)
-                    // })
-                    // .on("mousemove", (event) => {
-                    //     if (event.buttons === 1) {
-                    //         handleMouseOver(event)
-                    //     }
-                    // })
-                    .attr("cursor", "pointer")
-                    .selectAll("rect")
-                    .data(histData)
-                    .enter()
-                    .append("rect")
-                    .attr("x", 1)
-                    .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
-                    .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
-                    .attr("height", function(d) { return height - y(d.length); })
-                    .style("fill", "var(--main-bg-color)")
-
-                if (divided && histImageData.length!==0) {
+                const appendHistData = (data, color, opacity) => {
                     svg.append("svg")
                         // .on("mousedown", (event) => {
                         //     handleMouseDown(event)
@@ -139,14 +119,20 @@ const Histogram = ({dimensions, id}) => {
                         // })
                         .attr("cursor", "pointer")
                         .selectAll("rect")
-                        .data(histImageData)
+                        .data(data)
                         .enter()
                         .append("rect")
                         .attr("x", 1)
                         .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
                         .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
                         .attr("height", function(d) { return height - y(d.length); })
-                        .style("fill", "var(--shadow-bg-color)")
+                        .style("fill", color)
+                        .style("opacity", opacity)
+                }
+
+                appendHistData(histData, "var(--main-bg-color)", "1")
+                if (divided && histImageData.length!==0) {
+                    appendHistData(histImageData, "var(--shadow-bg-color)", "1")
                 }
 
                 let formatDate = d3.timeFormat("%d.%m.%y");

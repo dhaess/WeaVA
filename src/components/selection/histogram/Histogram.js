@@ -110,71 +110,38 @@ const Histogram = ({dimensions}) => {
                     .append("g")
                     .attr("transform", "translate(" + marginLeft + "," + margin.top + ")")
 
+                const appendData = (data, color, opacity) => {
+                    svg.append("svg")
+                        .on("mousedown", (event) => {
+                            handleMouseDown(event)
+                        })
+                        .on("mousemove", (event) => {
+                            if (event.buttons === 1) {
+                                handleMouseOver(event)
+                            }
+                        })
+                        .attr("cursor", "pointer")
+                        .selectAll("rect")
+                        .data(data)
+                        .enter()
+                        .append("rect")
+                        .attr("x", 1)
+                        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
+                        .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
+                        .attr("height", function(d) { return height - y(d.length); })
+                        .style("fill", color)
+                        .style("opacity", opacity)
+                }
+
+
                 if (isFocused) {
-                    svg.append("svg")
-                        .on("mousedown", (event) => {
-                            handleMouseDown(event)
-                        })
-                        .on("mousemove", (event) => {
-                            if (event.buttons === 1) {
-                                handleMouseOver(event)
-                            }
-                        })
-                        .attr("cursor", "pointer")
-                        .selectAll("rect")
-                        .data(histDataUnfocused)
-                        .enter()
-                        .append("rect")
-                        .attr("x", 1)
-                        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
-                        .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
-                        .attr("height", function(d) { return height - y(d.length); })
-                        .style("fill", "var(--opacity-bg-color)")
-                        .style("opacity", "0.4")
+                    appendData(histDataUnfocused, "var(--opacity-bg-color)", "0.4")
                 }
-
                 if (histDataFocused.length !== 0) {
-                    svg.append("svg")
-                        .on("mousedown", (event) => {
-                            handleMouseDown(event)
-                        })
-                        .on("mousemove", (event) => {
-                            if (event.buttons === 1) {
-                                handleMouseOver(event)
-                            }
-                        })
-                        .attr("cursor", "pointer")
-                        .selectAll("rect")
-                        .data(histDataFocused)
-                        .enter()
-                        .append("rect")
-                        .attr("x", 1)
-                        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
-                        .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
-                        .attr("height", function(d) { return height - y(d.length); })
-                        .style("fill", "var(--main-bg-color)")
+                    appendData(histDataFocused, "var(--main-bg-color)", "1")
                 }
-
                 if (divided && imageHistData.length !== 0) {
-                    svg.append("svg")
-                        .on("mousedown", (event) => {
-                            handleMouseDown(event)
-                        })
-                        .on("mousemove", (event) => {
-                            if (event.buttons === 1) {
-                                handleMouseOver(event)
-                            }
-                        })
-                        .attr("cursor", "pointer")
-                        .selectAll("rect")
-                        .data(imageHistData)
-                        .enter()
-                        .append("rect")
-                        .attr("x", 1)
-                        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
-                        .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
-                        .attr("height", function(d) { return height - y(d.length); })
-                        .style("fill", "var(--shadow-bg-color)")
+                    appendData(imageHistData, "var(--shadow-bg-color)", "1")
                 }
 
                 let formatDate = d3.timeFormat("%d.%m.%y");
