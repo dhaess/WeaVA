@@ -1,6 +1,6 @@
-import {Dialog, DialogActions, DialogContent} from "@mui/material";
 import PropTypes from "prop-types";
 import {styled} from "@mui/material/styles";
+import {Dialog, DialogActions, DialogContent} from "@mui/material";
 import {StyledButton} from "../../../static/style/muiStyling";
 
 const StyledDialog = styled(Dialog)({

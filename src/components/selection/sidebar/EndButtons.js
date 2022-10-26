@@ -1,10 +1,10 @@
 import {useDispatch, useSelector} from "react-redux";
-import {changeMapFilters, checkChanges, reset, revert, save, saveAllChanges} from "../../shared/features/SavingsSlice";
 import {useNavigate} from "react-router-dom";
-import {saveEvent} from "../../shared/features/ComparisonSlice";
-import {StyledButton} from "../../../static/style/muiStyling";
 import {useState} from "react";
+import {changeMapFilters, checkChanges, reset, revert, save, saveAllChanges} from "../../shared/features/SavingsSlice";
+import {saveEvent} from "../../shared/features/ComparisonSlice";
 import GoToDialog from "./GoToDialog";
+import {StyledButton} from "../../../static/style/muiStyling";
 
 export default function EndButtons() {
     const dispatch = useDispatch()
@@ -73,7 +73,7 @@ export default function EndButtons() {
                 <StyledButton onClick={handleSave}>Save</StyledButton>
                 <StyledButton onClick={handleReset}>Reset</StyledButton>
             </div>
-            <StyledButton sx={{width: "65%"}} onClick={handleRevert} disabled={isSaved}>Revert Changes</StyledButton>
+            <StyledButton sx={{width: "65%"}} onClick={handleRevert} disabled={isSaved}>Set last save</StyledButton>
             <StyledButton sx={{marginBottom: "15px", width: "100%"}} onClick={handleGoTo}>Go to Comparison View</StyledButton>
             <GoToDialog
                 open={open}

@@ -1,6 +1,3 @@
-import {getCategoryName, getIntensityName} from "./WeatherCategories";
-import {StyledPopup} from "../../../static/style/muiStyling";
-import {getPieIcon} from "./WeatherIcons";
 import {ChanConvexHull} from "./ConvexHull";
 
 export const getDistance = (c1, c2) => {
@@ -204,85 +201,6 @@ export const getProximityPoints = (coords, coordsList, distance) => {
     return proximityList
 }
 
-const arrangeIntensityInfo = (array) => {
-    const groupByCategory = array.reduce((group, el) => {
-        const { category } = el
-        group[category] = group[category] ?? []
-        group[category].push(el)
-        return group
-    }, {})
-    return Object.entries(groupByCategory).map(e => {
-        const groupByIntensity = e[1].reduce((group, el) => {
-            const {auspraegung} = el
-            group[auspraegung] = group[auspraegung] ?? []
-            group[auspraegung].push(el)
-            return group
-        }, {})
-        const intensities = Object.entries(groupByIntensity).map(i => {
-            return {intensity: i[0], count: i[1].length}
-        })
-        return {category: e[0], intensities: intensities}
-    })
-}
-
-export const MultiMarkerPopup = ({data, isCluster, position}) => {
-    let focusedIntensityInfo
-    let unfocusedIntensityInfo
-    if (isCluster === undefined) {
-        focusedIntensityInfo = arrangeIntensityInfo(data.focused)
-        unfocusedIntensityInfo = arrangeIntensityInfo(data.unfocused)
-    } else {
-        focusedIntensityInfo = arrangeIntensityInfo(data)
-    }
-
-    return <StyledPopup position={position}>
-        {focusedIntensityInfo.map(c => {
-            return (
-                <div className={"multiPopup"} key={c.category}>
-                    <p>{getCategoryName(c.category)}: </p>
-                    <div>
-                        {c.intensities.map(i => <p key={i.intensity}>{getIntensityName(c.category, i.intensity)}:</p>)}
-                    </div>
-                    <div style={{display: "flex", flexDirection: "column", alignItems: "flex-end"}}>
-                        {c.intensities.map(i => <p key={i.intensity}>{i.count}</p>)}
-                    </div>
-                </div>
-            )
-        })}
-        {isCluster === undefined && unfocusedIntensityInfo.map(c => {
-            return (
-                <div className={"multiPopup"} style={{opacity: "0.5"}} key={c.category}>
-                    <p>{getCategoryName(c.category)}: </p>
-                    <div>
-                        {c.intensities.map(i => <p key={i.intensity}>{getIntensityName(c.category, i.intensity)}:</p>)}
-                    </div>
-                    <div style={{display: "flex", flexDirection: "column", alignItems: "flex-end"}}>
-                        {c.intensities.map(i => <p key={i.intensity}>{i.count}</p>)}
-                    </div>
-                </div>
-            )
-        })}
-    </StyledPopup>
-}
-
-export const createClusterCustomIcon = (cluster, size) => {
-    const color = cluster.getAllChildMarkers()[0].options.color
-    const pieSize = size===undefined ? 26 : size
-    const markerList = cluster.getAllChildMarkers().map(e => e.options.data)
-    const dataList = markerList.map(e => {
-        if (e.count === undefined) {
-            return e
-        } else {
-            return e.focused
-        }
-    }).flat()
-    if (color !== undefined) {
-        return getPieIcon(dataList, {color: color, size: pieSize})
-    } else {
-        return getPieIcon(dataList, {size: pieSize})
-    }
-}
-
 export const getGridData = (allData, zoomLevel) => {
     const gridData = []
 
@@ -333,4 +251,15 @@ export const getGridData = (allData, zoomLevel) => {
         }
     }
     return gridData
+}
+
+export const getClusterList = (event) => {
+    let markerList = event.layer.getAllChildMarkers().map(e => e.options.data)
+    return markerList.map(e => {
+        if (e.count === undefined) {
+            return e
+        } else {
+            return e.focused
+        }
+    }).flat()
 }

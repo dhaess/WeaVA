@@ -1,19 +1,26 @@
 import {useDispatch, useSelector} from "react-redux";
-import {useState} from "react";
-import { HexColorPicker } from "react-colorful";
-import $ from "jquery";
-import {StyledTextField} from "../../../static/style/muiStyling";
+import {useEffect, useState} from "react";
+import {HexColorPicker} from "react-colorful";
 import {setCurrent} from "../../shared/features/SavingsSlice";
 import {Box, Popper} from "@mui/material";
+import {StyledTextField} from "../../../static/style/muiStyling";
 
 export default function ColorSelector() {
     const dispatch = useDispatch()
 
     const color = useSelector(state => {
-        const c = state.savings.current.color
-        $("#colorBox").css("backgroundColor", c)
-        return c
+        return state.savings.current.color
     })
+
+    const [colorStyle, setColorStyle] = useState({})
+
+    const [boxFocus, setBoxFocus] = useState(false)
+    const [fieldFocus, setFieldFocus] = useState(false)
+    const [pickerFocus, setPickerFocus] = useState(false)
+
+    useEffect(() => {
+        setColorStyle({backgroundColor: color})
+    }, [color])
 
     const handleTextChange = (event) => {
         dispatch(setCurrent({name: "color", value: event.target.value}))
@@ -23,15 +30,11 @@ export default function ColorSelector() {
         dispatch(setCurrent({name: "color", value: val}))
     }
 
-    const [boxFocus, setBoxFocus] = useState(false)
-    const [fieldFocus, setFieldFocus] = useState(false)
-    const [pickerFocus, setPickerFocus] = useState(false)
-
-
     return(
         <div id="colorAll">
             <Box id="colorOption">
                 <input id="colorBox"
+                       style={colorStyle}
                        onFocus={() => setBoxFocus(true)}
                        onBlur={() => setBoxFocus(false)}
                        readOnly

@@ -1,11 +1,10 @@
 import {useDispatch, useSelector} from "react-redux";
-
-import {FormControl, InputLabel, MenuItem, Select} from "@mui/material";
 import {changeFilter, setCurrent} from "../../shared/features/SavingsSlice";
 import {styled} from "@mui/material/styles";
-import {StyledRadio, StyledTextField} from "../../../static/style/muiStyling";
+import {FormControl, InputLabel, MenuItem, Select} from "@mui/material";
 import {DateTimePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
+import {StyledRadio, StyledTextField} from "../../../static/style/muiStyling";
 
 const minDataDate = new Date("2021-10-07T08:00").getTime()
 const maxDataDate = new Date("2022-06-02T20:00").getTime()
@@ -321,61 +320,3 @@ export default function TimePicker() {
         </div>
     )
 }
-
-
-
-
-// import $ from 'jquery';
-// import DateTimeRangePicker from '@wojtekmaj/react-datetimerange-picker';
-// import {useDispatch, useSelector} from "react-redux";
-// import {changeFilter, setCurrent} from "../../shared/features/SavingsSlice";
-//
-// const minDataDate = new Date("2021-10-07")
-// const maxDataDate = new Date("2022-06-02")
-//
-// export default function TimePicker() {
-//     const dispatch = useDispatch()
-//
-//     const timeRange = useSelector(state => {
-//         const stateTimeRange = state.savings.current.timeRange
-//         return [new Date(stateTimeRange[0]), new Date(stateTimeRange[1])]
-//     })
-//
-//     const handleChange = (val) => {
-//         const timeVal = [val[0].getTime(), val[1].getTime()]
-//         const delayDebounceFn = setTimeout(() => {
-//             if (val[0]<val[1]) {
-//                 $('.dateRangePicker').find(".react-datetimerange-picker__wrapper")
-//                     .css("border", "var(--main-bg-color) 2px solid")
-//                     .css("background-color", "rgb(171 42 42 / 0%")
-//                 const filter = {"timestamp": {
-//                         '$gt': timeVal[0],
-//                         '$lt': timeVal[1]
-//                     }}
-//                 dispatch(changeFilter([{type: "add", filter: [filter]}]))
-//                 dispatch(setCurrent({name: "timeRange", value: timeVal}))
-//             } else {
-//                 $('.dateRangePicker').find(".react-datetimerange-picker__wrapper")
-//                     .css("border", "2px solid #ac2a2a")
-//                     .css("background-color", "rgb(171 42 42 / 10%)")
-//             }
-//         }, 1000)
-//
-//         return () => clearTimeout(delayDebounceFn)
-//     }
-//
-//     return (
-//         <div>
-//             <p>Time range</p>
-//             <DateTimeRangePicker
-//                 onChange={handleChange}
-//                 value={timeRange}
-//                 showLeadingZeros={true}
-//                 disableClock={true}
-//                 minDate={minDataDate}
-//                 maxDate={maxDataDate}
-//                 clearIcon={null}
-//                 className={"dateRangePicker"}/>
-//         </div>
-//     );
-// }

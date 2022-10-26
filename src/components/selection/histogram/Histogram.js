@@ -1,64 +1,60 @@
 import React, {useEffect, useRef, useState} from "react";
-import * as d3 from "d3";
 import {useDispatch, useSelector} from "react-redux";
-import {setCurrent} from "../../shared/features/SavingsSlice";
+import * as d3 from "d3";
 import {changeFocusedTimeRange} from "../../shared/features/MapSlice";
+import {setBins} from "../../shared/features/SettingsSlice";
+import {
+    controlBinNumber,
+    getBinTimeRange,
+    setBinTimeBorders,
+    setHistData
+} from "../../shared/functions/HistogramFunctions";
 
 const Histogram = ({dimensions}) => {
     const dispatch = useDispatch()
 
     const [binType,
-        binCount]
+        binCount,
+        divided]
         = useSelector(state => {
-        const histogram = state.savings.current.histogram
+        const histogram = state.settings.histogram
         return [histogram.type,
-            histogram.bins]
+            histogram.bins,
+            histogram.divided]
     })
 
     const [data,
+        imageData,
         isFocused,
         focusedData,
+        focusedImageData,
         timeRange
     ] = useSelector(state => {
         const histogram = state.histogram
         return [histogram.data,
+            histogram.imageData,
             histogram.isFocused,
             histogram.focusedData,
+            histogram.focusedImageData,
             histogram.timeRange
         ]})
 
-    useEffect(() => {
-        dispatch(setCurrent({name: "histogram", value: {type: binType, bins: binCount}}))
-    }, [binCount, binType, data, dispatch])
-
     const svgRef = useRef(null);
-    const width = dimensions.width - dimensions.margin.left - dimensions.margin.right,
-        height = dimensions.height - dimensions.margin.top - dimensions.margin.bottom;
 
     const [dragStart, setDrag] = useState(undefined)
 
     useEffect(() => {
-        const margin = {top: 10, right: 50, bottom: 50, left: 40}
+        dispatch(setBins({type: binType, bins: binCount, divided: divided}))
+    }, [binCount, binType, data, dispatch, divided])
 
-        const getBinTimeRange = (x) => {
-            const rectList = document.querySelectorAll('rect')
-            let rectBound = []
-            for (let rect of rectList) {
-                rectBound.push({
-                    x: [rect.getBoundingClientRect().left, rect.getBoundingClientRect().right],
-                    t: [rect.__data__.x0, rect.__data__.x1]
-                })
-            }
-            const xRect = rectBound.find(rect => rect.x[0] <= x && rect.x[1] >= x)
-            if (xRect !== undefined) {
-                return xRect.t
-            } else {
-                return undefined
-            }
-        }
+    useEffect(() => {
+        const margin = {top: 10, right: 50, bottom: 50, left: 40}
+        const width = dimensions.width - dimensions.margin.left - dimensions.margin.right
+        const height = dimensions.height - dimensions.margin.top - dimensions.margin.bottom
 
         const handleMouseDown = (event) => {
-            const newTimeRange = getBinTimeRange(event.screenX)
+            const rectList = document.querySelectorAll('rect')
+            const newTimeRange = getBinTimeRange(event.screenX, rectList)
             if (newTimeRange !== undefined) {
                 setDrag(newTimeRange)
                 dispatch(changeFocusedTimeRange(newTimeRange))
@@ -66,7 +62,8 @@ const Histogram = ({dimensions}) => {
         }
 
         const handleMouseOver = (event) => {
-            const newTimeRange = getBinTimeRange(event.screenX)
+            const rectList = document.querySelectorAll('rect')
+            const newTimeRange = getBinTimeRange(event.screenX, rectList)
             if (newTimeRange !== undefined) {
                 if (dragStart !== undefined) {
                     const start = dragStart[0] < newTimeRange[0] ? dragStart[0] : newTimeRange[0]
@@ -78,152 +75,25 @@ const Histogram = ({dimensions}) => {
             }
         }
 
-        let toDelay = false
-        switch (binType) {
-            case "day":
-                if (d3.timeDay.count(d3.timeDay.floor(timeRange[0]), d3.timeDay.ceil(timeRange[1])) > 100) {
-                    toDelay = true
-                    dispatch(setCurrent({name: "histogram", value: {type: "month", bins: binCount}}))
-                }
-                break
-            case "hour":
-                if (d3.timeHour.count(d3.timeHour.floor(timeRange[0]), d3.timeHour.ceil(timeRange[1])) > 100) {
-                    toDelay = true
-                    dispatch(setCurrent({name: "histogram", value: {type: "day", bins: binCount}}))
-                }
-                break
-            case "minute":
-                if (d3.timeMinute.count(d3.timeMinute.floor(timeRange[0]), d3.timeMinute.ceil(timeRange[1])) > 100) {
-                    toDelay = true
-                    dispatch(setCurrent({name: "histogram", value: {type: "hour", bins: binCount}}))
-                }
-                break
-            default:
-        }
+        const toDelay = controlBinNumber(timeRange, binType, binCount, divided, dispatch)
 
         if (!toDelay) {
             if (document.getElementsByTagName('g').length>0) {
                 d3.select(svgRef.current).select('g').remove()
             }
-            const marginLeft = margin.left+20
             if (data.length !== 0) {
-                const svg = d3.select(svgRef.current)
-                    .append("g")
-                    .attr("transform", "translate(" + marginLeft + "," + margin.top + ")")
+                const [binTimeStart, binTimeBorder] = setBinTimeBorders(binType, binCount, timeRange)
 
-                let binTimeStart
-                let binTimeBorder, startTime, endTime
-                switch (binType) {
-                    case "month":
-                        binTimeStart = d3.timeMonths(timeRange[0], timeRange[1])
-                        startTime = d3.timeMonth.floor(new Date(timeRange[0]))
-                        if (binTimeStart.length === 0 || startTime.getTime() !== binTimeStart[0].getTime()) {
-                            binTimeStart.unshift(startTime)
-                        }
-                        binTimeStart = binTimeStart.map(e => e.getTime())
-                        binTimeBorder = [...binTimeStart]
-                        endTime = d3.timeMonth.ceil(new Date(timeRange[1])).getTime()
-                        if (endTime !== binTimeBorder.slice(-1)) {
-                            binTimeBorder.push(new Date(endTime).getTime())
-                        }
-                        break
-                    case "day":
-                        binTimeStart = d3.timeDays(timeRange[0], timeRange[1])
-                        startTime = d3.timeDay.floor(new Date(timeRange[0]))
-                        if (binTimeStart.length === 0 || startTime.getTime() !== binTimeStart[0].getTime()) {
-                            binTimeStart.unshift(startTime)
-                        }
-                        binTimeStart = binTimeStart.map(e => e.getTime())
-                        binTimeBorder = [...binTimeStart]
-                        endTime = d3.timeDay.ceil(new Date(timeRange[1])).getTime()
-                        if (endTime !== binTimeBorder.slice(-1)) {
-                            binTimeBorder.push(endTime)
-                        }
-                        break
-                    case "hour":
-                        binTimeStart = d3.timeHours(timeRange[0], timeRange[1])
-                        startTime = d3.timeHour.floor(new Date(timeRange[0]))
-                        if (binTimeStart.length === 0 || startTime.getTime() !== binTimeStart[0].getTime()) {
-                            binTimeStart.unshift(startTime)
-                        }
-                        binTimeStart = binTimeStart.map(e => e.getTime())
-                        binTimeBorder = [...binTimeStart]
-                        endTime = d3.timeHour.ceil(new Date(timeRange[1])).getTime()
-                        if (endTime !== binTimeBorder.slice(-1)) {
-                            binTimeBorder.push(endTime)
-                        }
-                        break
-                    case "minute":
-                        binTimeStart = d3.timeMinutes(timeRange[0], timeRange[1])
-                        startTime = d3.timeMinute.floor(new Date(timeRange[0]))
-                        if (binTimeStart.length === 0 || startTime.getTime() !== binTimeStart[0].getTime()) {
-                            binTimeStart.unshift(startTime)
-                        }
-                        binTimeStart = binTimeStart.map(e => e.getTime())
-                        binTimeBorder = [...binTimeStart]
-                        endTime = d3.timeMinute.ceil(new Date(timeRange[1])).getTime()
-                        if (endTime !== binTimeBorder.slice(-1)) {
-                            binTimeBorder.push(endTime)
-                        }
-                        break
-                    default:
-                        binTimeStart = d3.range(binCount).map(t => timeRange[0] + (t / binCount) * (timeRange[1] - timeRange[0]))
-                        binTimeBorder = [...binTimeStart]
-                        binTimeBorder.push(timeRange[1])
-                }
-                const binDataRange = d3
-                    .bin()
-                    .thresholds(binTimeStart)
+                const histDataFocused = isFocused ?
+                    setHistData(focusedData, binTimeStart, binTimeBorder) :
+                    setHistData(data, binTimeStart, binTimeBorder)
 
-                const histData = binDataRange(data)
-                histData.map(a => {
-                    a.x0 = d3.max(binTimeBorder.filter(e => e <= a.x0))
-                    a.x1 = d3.min(binTimeBorder.filter(e => e >= a.x1))
-                    return a
-                })
-                for (let i in binTimeBorder) {
-                    let iP = Number(i)+1
-                    if (i < binTimeBorder.length-1) {
-                        const binStart = histData.find(e => e.x0 === binTimeBorder[i])
-                        if (binStart === undefined) {
-                            const newBin = []
-                            newBin.x0 = binTimeBorder[i]
-                            newBin.x1 = binTimeBorder[iP]
-                            histData.push(newBin)
-                        }
-                    }
-                }
+                const histDataUnfocused = isFocused ?
+                    setHistData(data, binTimeStart, binTimeBorder) : []
 
-                const setHistData = (d) => {
-                    if (d.length === 0) {
-                        return []
-                    }
-                    const binDataRange = d3
-                        .bin()
-                        .thresholds(binTimeStart)
-                    let histData = binDataRange(d)
-                    histData.map(a => {
-                        a.x0 = d3.max(binTimeBorder.filter(e => e <= a.x0))
-                        a.x1 = d3.min(binTimeBorder.filter(e => e >= a.x1))
-                        return a
-                    })
-                    for (let i in binTimeBorder) {
-                        let iP = Number(i)+1
-                        if (i < binTimeBorder.length-1) {
-                            const binStart = histData.find(e => e.x0 === binTimeBorder[i])
-                            if (binStart === undefined) {
-                                const newBin = []
-                                newBin.x0 = binTimeBorder[i]
-                                newBin.x1 = binTimeBorder[iP]
-                                histData.push(newBin)
-                            }
-                        }
-                    }
-                    return histData
-                }
-
-                const [histDataFocused, histDataUnfocused] = isFocused ?
-                    [setHistData(focusedData), setHistData(data)] : [setHistData(data), []]
+                const imageHistData = isFocused ?
+                    setHistData(focusedImageData, binTimeStart, binTimeBorder) :
+                    setHistData(imageData, binTimeStart, binTimeBorder)
 
                 const x = d3
                     .scaleTime()
@@ -234,6 +104,11 @@ const Histogram = ({dimensions}) => {
                 const y = d3.scaleLinear()
                     .domain([0, yMax]).nice()
                     .range([height, 0]);
+
+                const marginLeft = margin.left+20
+                const svg = d3.select(svgRef.current)
+                    .append("g")
+                    .attr("transform", "translate(" + marginLeft + "," + margin.top + ")")
 
                 if (isFocused) {
                     svg.append("svg")
@@ -255,6 +130,7 @@ const Histogram = ({dimensions}) => {
                         .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
                         .attr("height", function(d) { return height - y(d.length); })
                         .style("fill", "var(--opacity-bg-color)")
+                        .style("opacity", "0.4")
                 }
 
                 if (histDataFocused.length !== 0) {
@@ -277,6 +153,28 @@ const Histogram = ({dimensions}) => {
                         .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
                         .attr("height", function(d) { return height - y(d.length); })
                         .style("fill", "var(--main-bg-color)")
+                }
+
+                if (divided && imageHistData.length !== 0) {
+                    svg.append("svg")
+                        .on("mousedown", (event) => {
+                            handleMouseDown(event)
+                        })
+                        .on("mousemove", (event) => {
+                            if (event.buttons === 1) {
+                                handleMouseOver(event)
+                            }
+                        })
+                        .attr("cursor", "pointer")
+                        .selectAll("rect")
+                        .data(imageHistData)
+                        .enter()
+                        .append("rect")
+                        .attr("x", 1)
+                        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
+                        .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
+                        .attr("height", function(d) { return height - y(d.length); })
+                        .style("fill", "var(--shadow-bg-color)")
                 }
 
                 let formatDate = d3.timeFormat("%d.%m.%y");
@@ -315,7 +213,7 @@ const Histogram = ({dimensions}) => {
                     .text("Number of Reports");
             }
         }
-    }, [binCount, binType, data, dispatch, dragStart, focusedData, height, isFocused, timeRange, width]);
+    }, [binCount, binType, data, dimensions, dispatch, divided, dragStart, focusedData, focusedImageData, imageData, isFocused, timeRange]);
 
     return <>
         <svg ref={svgRef} width={dimensions.width} height={dimensions.height} style={{flexShrink: "0"}} />

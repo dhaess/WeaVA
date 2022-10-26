@@ -1,11 +1,12 @@
 import {useDispatch, useSelector} from "react-redux";
 import {useRef, useEffect, useState} from "react";
-import {Box, Button, Menu, MenuItem, Modal} from "@mui/material";
-import SettingsIcon from "../../static/images/settings.png";
-import {NestedMenuItem} from "mui-nested-menu";
+import {setMapTile, setTheme} from "../features/SettingsSlice";
 import Credits from "./Credits";
+import HistogramOptions from "./HistogramOptions";
+import {NestedMenuItem} from "mui-nested-menu";
 import {styled} from "@mui/material/styles";
-import {setMapTile, setTheme} from "./features/SettingsSlice";
+import {Box, Button, Menu, MenuItem, Modal, Popper} from "@mui/material";
+import SettingsIcon from "../../../static/images/settings.png";
 
 const creditStyle = {
     background: "var(--main-bg-color)",
@@ -41,7 +42,7 @@ const StyledInnerMenuItem = styled(MenuItem)({
     }
 })
 
-const Settings = () => {
+const Settings = ({additional, boxAnchor}) => {
     const dispatch = useDispatch()
 
     let menuRef = useRef()
@@ -49,17 +50,24 @@ const Settings = () => {
     const theme = useSelector(state => state.settings.theme)
 
     const [open, setOpen] = useState(false)
-    const [modal, setModal] = useState(false);
+    const [modal, setModal] = useState(false)
+    const [openHistOptions, setOpenHistOptions] = useState(false)
 
     useEffect(() => {
         document.documentElement.className = theme
     }, [theme])
 
+    const handleOpenHistogramOptions = () => {
+        setOpen(false)
+        setOpenHistOptions(true)
+    }
+
     const handleOpenCredits = () => {
         setModal(true)
         setOpen(false)
-    };
-    const handleCloseCredits = () => setModal(false);
+    }
+
+    const handleCloseCredits = () => setModal(false)
 
     const closeColorMenu = (theme) => {
         if (theme !== "") {
@@ -118,6 +126,9 @@ const Settings = () => {
                 <StyledInnerMenuItem onClick={() => closeMapMenu("SWISSIMAGE")}>SWISSIMAGE</StyledInnerMenuItem>
             </NestedMenuItem>
             <StyledOuterMenuItem onClick={handleOpenCredits}>Credits</StyledOuterMenuItem>
+            {additional!==undefined &&
+                <StyledOuterMenuItem onClick={handleOpenHistogramOptions}>Open Histogram Options</StyledOuterMenuItem>
+            }
         </Menu>
         <Modal
             open={modal}
@@ -129,6 +140,19 @@ const Settings = () => {
                 <Credits/>
             </Box>
         </Modal>
+        { boxAnchor &&
+            <Popper open={openHistOptions} anchorEl={boxAnchor} placement={"left-end"}>
+                <Box sx={{
+                    border: "2px solid var(--border-bg-color)",
+                    p: 1,
+                    backgroundColor: 'white',
+                    marginBottom: "0px",
+                    marginLeft: "1px"
+                }}>
+                    <HistogramOptions additional setOpenHistOptions={setOpenHistOptions}/>
+                </Box>
+            </Popper>
+        }
     </>)
 }
 

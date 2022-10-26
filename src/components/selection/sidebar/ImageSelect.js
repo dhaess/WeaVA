@@ -1,7 +1,11 @@
-import {StyledRadio} from "../../../static/style/muiStyling";
 import {useDispatch, useSelector} from "react-redux";
 import {changeFilter, setCurrent} from "../../shared/features/SavingsSlice";
-import {useEffect, useState} from "react";
+import {RadioGroup} from "@mui/material";
+import {
+    StyledFormControl,
+    StyledFormControlLabel,
+    StyledRadio
+} from "../../../static/style/muiStyling";
 
 export default function ImageSelect() {
     const dispatch = useDispatch()
@@ -12,33 +16,6 @@ export default function ImageSelect() {
 
     const handleChange = (event) => {
         const val = event.target.value
-        handleClick(val)
-    }
-
-    const [allStyle, setAllStyle] = useState({})
-    const [withStyle, setWithStyle] = useState({})
-    const [withoutStyle, setWithoutStyle] = useState({})
-
-    useEffect(() => {
-        const grayOut = {color: "rgb(0,0,0,68%)"}
-        setAllStyle(grayOut)
-        setWithStyle(grayOut)
-        setWithoutStyle(grayOut)
-        switch (images) {
-            case "all":
-                setAllStyle({})
-                break
-            case "with":
-                setWithStyle({})
-                break
-            case "without":
-                setWithoutStyle({})
-                break
-            default:
-        }
-    }, [images])
-
-    const handleClick = (val) => {
         dispatch(setCurrent({name: "images", value: val}))
         switch (val) {
             case "with":
@@ -55,47 +32,27 @@ export default function ImageSelect() {
     return (
         <div>
             <p>Containing Images</p>
-            <div className="areaOptions">
-                <StyledRadio
-                    checked={images === 'all'}
+            <StyledFormControl>
+                <RadioGroup
+                    aria-labelledby="image-group-label"
+                    value={images}
                     onChange={handleChange}
-                    value="all"
-                    name="image-buttons"
-                    inputProps={{ 'aria-label': 'all' }}
-                    sx={{
-                        margin: "4px 7px 0px 0px;",
-                    }}
-                />
-                <p className="singleAreaChoice" style={allStyle} onClick={() => handleClick("all")}>With & without pictures</p>
-            </div>
-            <div className="areaOptions">
-                <StyledRadio
-                    checked={images === 'with'}
-                    onChange={handleChange}
-                    value="with"
-                    name="image-buttons"
-                    inputProps={{ 'aria-label': 'with' }}
-                    sx={{
-                        margin: "4px 7px 0px 0px;",
-                    }}
-                />
-                <p className="singleAreaChoice" style={withStyle}
-                   onClick={() => handleClick("with")}>With pictures</p>
-            </div>
-            <div className="areaOptions">
-                <StyledRadio
-                    checked={images === 'without'}
-                    onChange={handleChange}
-                    value="without"
-                    name="image-buttons"
-                    inputProps={{ 'aria-label': 'without' }}
-                    sx={{
-                        margin: "4px 7px 0px 0px;",
-                    }}
-                />
-                <p className="singleAreaChoice" style={withoutStyle}
-                   onClick={() => handleClick("without")}>Without pictures</p>
-            </div>
+                    name="image-group"
+                >
+                    <StyledFormControlLabel
+                        value="all"
+                        control={<StyledRadio />}
+                        label="With & without pictures" />
+                    <StyledFormControlLabel
+                        value="with"
+                        control={<StyledRadio />}
+                        label="With pictures" />
+                    <StyledFormControlLabel
+                        value="without"
+                        control={<StyledRadio />}
+                        label="Without pictures" />
+                </RadioGroup>
+            </StyledFormControl>
         </div>
     )
 }

@@ -1,16 +1,16 @@
-import Histogram from "./Histogram";
+import {useDispatch, useSelector} from "react-redux";
+import {useState} from "react";
+import {useNavigate} from "react-router-dom";
 import {changeVisibility, deleteEvent} from "../../shared/features/ComparisonSlice";
 import {setSelection} from "../../shared/features/SavingsSlice";
-import {useDispatch, useSelector} from "react-redux";
-import {useNavigate} from "react-router-dom";
 import {getIcon} from "../../shared/functions/WeatherIcons";
+import Histogram from "./Histogram";
+import DeleteDialog from "./DeleteDialog";
+import {styled} from "@mui/material/styles";
+import {ImageButton, StyledButton} from "../../../static/style/muiStyling";
 import Hide from "../../../static/images/hide.png";
 import Show from "../../../static/images/show.png";
 import Delete from "../../../static/images/delete.png";
-import {styled} from "@mui/material/styles";
-import {StyledButton} from "../../../static/style/muiStyling";
-import {useState} from "react";
-import DeleteDialog from "./DeleteDialog";
 
 const LocalStyledButton = styled(StyledButton)({
     width: "94px",
@@ -20,13 +20,6 @@ const LocalStyledButton = styled(StyledButton)({
     "&:disabled": {
         border: "2px solid #8080807a"
     }
-})
-
-const ImageButton = styled(StyledButton)({
-    border: "0",
-    width: "0",
-    marginTop: "0px",
-    minWidth: "35px"
 })
 
 const HistogramBox = ({dimensions, id}) => {

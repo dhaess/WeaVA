@@ -192,10 +192,10 @@ body {
 .histogramButtons {
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    justify-content: flex-end;
     margin-right: 20px;
     margin-left: -23px;
-    padding-top: 30px;
+    padding-bottom: 58px;
 }
 
 .circle {
@@ -207,6 +207,23 @@ body {
     border-style: solid;
     font-weight: bold;
     border-width: 1px;
+}
+
+.histLegend {
+    flex-direction: row;
+    display: flex;
+}
+
+.histLegend span {
+    height: 13px;
+    width: 13px;
+    border-radius: 50%;
+    margin-top: 7px;
+    margin-right: 5px;
+}
+
+.histLegend p {
+    font-size: 14px;
 }
 
 .flex-container {
@@ -232,6 +249,12 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+#EndButtonContainer {
+    border-top: 2px solid var(--border-bg-color);
+    background-color:var(--main-bg-color);
+    padding: 0 25px 0 25px;
 }
 
 .mapLoading {
@@ -380,17 +403,36 @@ body {
 }
 
 .multiPopup {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto auto auto;
+    padding: 5px;
 }
 
 .multiPopup p {
-    margin: 5px;
+    white-space: nowrap;
+    margin: 1px;
 }
-.multiPopup div {
-    margin: 5px 5px 5px 0;
+
+.multiPopup > div {
+    display: flex;
+    flex-direction: column;
 }
-.multiPopup div p {
-    margin: 0;
+
+.multiEventPopup {
+    display: grid;
+    gap: 3px;
+    grid-template-columns: auto auto auto auto;
+    padding: 5px;
+}
+
+.multiEventPopup p {
+    white-space: nowrap;
+    margin: 1px;
+}
+
+.multiEventPopup > div {
+    display: flex;
+    flex-direction: column;
 }
 
 a.leaflet-popup-close-button {
@@ -399,4 +441,10 @@ a.leaflet-popup-close-button {
 
 .leaflet-map-pane svg {
     z-index: 2000;
+}
+
+.dot {
+    height: 13px;
+    width: 13px;
+    border-radius: 50%;
 }

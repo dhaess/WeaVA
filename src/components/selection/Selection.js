@@ -1,7 +1,7 @@
-import Map from "./map/Map";
-import Sidebar from "./sidebar/Sidebar";
 import {useDispatch, useSelector} from "react-redux";
 import {initNewCurrent} from "../shared/features/SavingsSlice";
+import Map from "./map/Map";
+import Sidebar from "./sidebar/Sidebar";
 import HistogramBox from "./histogram/HistogramBox";
 
 const dimensions = {

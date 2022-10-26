@@ -1,12 +1,12 @@
 import {createSlice} from '@reduxjs/toolkit'
+import l from "lodash";
+import {setHistogramFocused} from "./HistogramSlice";
 import {
     focusArea,
     focusPoints,
     focusProximity,
     getProximityPoints,
 } from "../functions/MapFunctions";
-import l from "lodash";
-import {setHistogramFocused} from "./HistogramSlice";
 
 const maxDataPoints = 1000
 const standardProximity = 20
@@ -48,7 +48,8 @@ export const setMapData = (data) => {
         }))
         dispatch(setHistogramFocused({
             isFocused: isFocused,
-            focusedData: focusedData.map(e => e.timestamp)
+            focusedData: focusedData.map(e => e.timestamp),
+            focusedImageData: focusedData.filter(e => e.imageName !== null).map(e => e.timestamp)
         }))
     }
 }
@@ -213,7 +214,8 @@ export const changeFocusedTimeRange = (timeRange) => {
             }))
             dispatch(setHistogramFocused({
                 isFocused: isFocused,
-                focusedData: focusedData.map(e => e.timestamp)
+                focusedData: focusedData.map(e => e.timestamp),
+                focusedImageData: focusedData.filter(e => e.imageName !== null).map(e => e.timestamp)
             }))
         }
     }
@@ -246,7 +248,8 @@ export const changeFocusedArea = (type, id, newArea = {}) => {
         }))
         dispatch(setHistogramFocused({
             isFocused: isFocused,
-            focusedData: focusedData.map(e => e.timestamp)
+            focusedData: focusedData.map(e => e.timestamp),
+            focusedImageData: focusedData.filter(e => e.imageName !== null).map(e => e.timestamp)
         }))
     }
 }
@@ -296,7 +299,8 @@ export const changeFocusedPoints = (type, latLng) => {
         }))
         dispatch(setHistogramFocused({
             isFocused: isFocused,
-            focusedData: focusedData.map(e => e.timestamp)
+            focusedData: focusedData.map(e => e.timestamp),
+            focusedImageData: focusedData.filter(e => e.imageName !== null).map(e => e.timestamp)
         }))
     }
 }
@@ -337,7 +341,8 @@ export const changeFocusedProximityPoints = (latLng) => {
         }))
         dispatch(setHistogramFocused({
             isFocused: isFocused,
-            focusedData: focusedData.map(e => e.timestamp)
+            focusedData: focusedData.map(e => e.timestamp),
+            focusedImageData: focusedData.filter(e => e.imageName !== null).map(e => e.timestamp)
         }))
     }
 }
@@ -369,7 +374,8 @@ export const changeProximityDistance = (distance) => {
         }))
         dispatch(setHistogramFocused({
             isFocused: isFocused,
-            focusedData: focusedData.map(e => e.timestamp)
+            focusedData: focusedData.map(e => e.timestamp),
+            focusedImageData: focusedData.filter(e => e.imageName !== null).map(e => e.timestamp)
         }))
     }
 }
@@ -393,7 +399,8 @@ export const deleteAllAreas = () => {
         }))
         dispatch(setHistogramFocused({
             isFocused: isFocused,
-            focusedData: focusedData.map(e => e.timestamp)
+            focusedData: focusedData.map(e => e.timestamp),
+            focusedImageData: focusedData.filter(e => e.imageName !== null).map(e => e.timestamp)
         }))
     }
 }

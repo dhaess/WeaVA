@@ -1,10 +1,10 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
-import {setHistogramData} from "./HistogramSlice";
-import {deleteAllAreas, isMapFilterChanged, setMapData} from "./MapSlice";
-import {focusArea, focusPoints, focusProximity, getProximityPoints} from "../functions/MapFunctions";
 import l from "lodash";
 import randomColor from "randomcolor";
+import {setHistogramData} from "./HistogramSlice";
+import {deleteAllAreas, isMapFilterChanged, setMapData} from "./MapSlice";
 import {saveEvent} from "./ComparisonSlice";
+import {focusArea, focusPoints, focusProximity, getProximityPoints} from "../functions/MapFunctions";
 
 const configureAddFilter = (query, filter) => {
     let dictKey = Object.keys(filter)[0]
@@ -91,15 +91,28 @@ const getData = async (filter, areaFilter) => {
                 return a
             }))
         .then(data => {
-            let [newData, isAreaFocused] = focusArea(data, areaFilter.focusedArea)
-
+            let newData, isAreaFocused, isProximityFocused, isPointFocused
             const coordsList = data.map(e => e.coordinates)
-            const newPoints = getNewProximityPoints(areaFilter.focusedProximityPoints, coordsList, areaFilter.proximityDistance)
-            let isProximityFocused
-            [newData, isProximityFocused] = focusProximity(newData, data, newPoints, isAreaFocused)
 
-            let isPointFocused
-            [newData, isPointFocused] = focusPoints(newData, data, areaFilter.focusedSpecialPoints)
+            if (areaFilter.length === undefined) {
+                [newData, isAreaFocused] = focusArea(data, areaFilter.focusedArea)
+                const newPoints = getNewProximityPoints(areaFilter.focusedProximityPoints, coordsList, areaFilter.proximityDistance);
+                [newData, isProximityFocused] = focusProximity(newData, data, newPoints, isAreaFocused);
+                [newData, isPointFocused] = focusPoints(newData, data, areaFilter.focusedSpecialPoints)
+            } else if (areaFilter.length === 0) {
+                newData = data
+                isAreaFocused = false
+                isProximityFocused = false
+                isPointFocused = false
+            } else {
+                newData = data
+                areaFilter.forEach(e => {
+                    [newData, isAreaFocused] = focusArea(newData, e.focusedArea)
+                    const newPoints = getNewProximityPoints(e.focusedProximityPoints, coordsList, e.proximityDistance);
+                    [newData, isProximityFocused] = focusProximity(newData, data, newPoints, isAreaFocused);
+                    [newData, isPointFocused] = focusPoints(newData, data, e.focusedSpecialPoints)
+                })
+            }
 
             if (isAreaFocused || isPointFocused || isProximityFocused) {
                 newData = [...new Map(newData.map(item => [item.id, item])).values()]
@@ -239,7 +252,7 @@ export const saveAllChanges = () => {
         const proximityDistance = state.map.mapFilters.proximityDistance
         const current = {...state.savings.current}
 
-        const [newData, hasMapFilters] = applyMapFilters(data, areas, points, proximityPoints)
+        let [newData, hasMapFilters] = applyMapFilters(data, areas, points, proximityPoints)
 
         current.hasMapFilter = hasMapFilters
         current.mapFilter = {
@@ -296,11 +309,6 @@ const initalCurrent = {
         entries: []
     },
     images: "all",
-    histogram: {
-        type: "number",
-        bins: 40,
-        displayed: false
-    },
     name: "",
     color: '#ff8a65',
     filter: {'$and': [
@@ -310,15 +318,7 @@ const initalCurrent = {
             {'properties.timestamp': {$gt: initialTimeRange[0], $lt: initialTimeRange[1]}}
         ]},
     hasMapFilter: false,
-    mapFilter: {
-        focusedArea: {},
-        focusedSpecialPoints: {
-            add: [],
-            delete: []
-        },
-        focusedProximityPoints: [],
-        proximityDistance: 20
-    }
+    mapFilter: []
 }
 
 export const savingsSlice = createSlice({
@@ -350,7 +350,6 @@ export const savingsSlice = createSlice({
             state.current = action.payload
         },
         revertState: (state) => {
-            state.isSaved = false
             state.current = {...state.saved}
         },
         setCurrent: (state, action) => {
@@ -359,7 +358,9 @@ export const savingsSlice = createSlice({
         saveMapFilters: (state, action) => {
             state.current.hasMapFilter = action.payload.hasMapFilter
             if (action.payload.hasMapFilter) {
-                state.current.mapFilter = action.payload.mapFilter
+                state.current.mapFilter.push(action.payload.mapFilter)
+            } else {
+                state.current.mapFilter = []
             }
         },
         initCurrent: (state, action) => {

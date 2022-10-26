@@ -1,5 +1,4 @@
-import $ from 'jquery';
-import "../../../static/style/sidebar.css"
+import {useState} from "react";
 import ToggleButtonsMultiple from "./CategorySelector";
 import TimePicker from "./TimePicker";
 import AreaSelector from "./AreaSelector";
@@ -7,9 +6,13 @@ import NameSelector from "./NameSelector";
 import ColorSelector from "./ColorSelector";
 import EndButtons from "./EndButtons";
 import ImageSelect from "./ImageSelect";
-import Settings from "../../shared/Settings";
+import Settings from "../../shared/components/Settings";
+import "../../../static/style/sidebar.css"
 
 const Sidebar = () => {
+    const [containerStyle, setContainerStyle] = useState({})
+    const [sidebarStyle, setSidebarStyle] = useState({})
+
     const navStatus = () => {
         if (document.getElementById("hamburger").classList.contains('hamburger-active')) {
             navClose();
@@ -19,29 +22,29 @@ const Sidebar = () => {
     }
 
     const navClose = () => {
-        $('#SidebarContainer').css('opacity', '0');
+        setContainerStyle({opacity: "0"})
         setTimeout(function () {
             document.getElementById("hamburger").classList.remove('hamburger-active');
-            $('#SidebarAll').css('width', '63px');
+            setSidebarStyle({width: "63px"})
         }, 300);
     }
 
     const navOpen = () => {
         document.getElementById("hamburger").classList.add('hamburger-active');
-        $('#SidebarAll').css('width', '320px');
+        setSidebarStyle({width: "320px"})
         setTimeout(function () {
-            $('#SidebarContainer').css('opacity', '1');
+            setContainerStyle({opacity: "1"})
         }, 500)
     }
 
     return (
-        <div id="SidebarAll">
-            <aside id="SidebarContainer">
+        <div id="SidebarAll" style={sidebarStyle}>
+            <aside id="SidebarContainer" style={containerStyle}>
                 <div id="TopContainer">
                     <Settings/>
                 </div>
                 <div className="Sidebar h-100 scroll-shadows">
-                    <div id="filter" className="d-flex flex-column justify-content-between h-100" action="src/components/selection/Sidebar/Sidebar">
+                    <div id="filter" className="d-flex flex-column justify-content-between h-100">
                         <h2>Filter options</h2>
                         <ToggleButtonsMultiple/>
                         <TimePicker/>

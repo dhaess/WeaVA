@@ -1,15 +1,15 @@
 import React, {useEffect, useState, useRef} from "react";
 import {useDispatch, useSelector} from "react-redux";
-import {Box, Button, CircularProgress, Popper} from "@mui/material";
-import $ from 'jquery';
-import {changeFilter, setCurrent} from "../../shared/features/SavingsSlice";
-import {changeFocusedTimeRange} from "../../shared/features/MapSlice";
-import {styled} from "@mui/material/styles";
-import Arrow from "../../../static/images/left-arrow.png";
-import Histogram from "./Histogram";
-import SettingsIcon from "../../../static/images/settings.png";
-import HistogramOptions from "./HistogramOptions";
 import * as d3 from "d3";
+import {changeFilter, setCurrent} from "../../shared/features/SavingsSlice";
+import {setBins} from "../../shared/features/SettingsSlice";
+import {changeFocusedTimeRange} from "../../shared/features/MapSlice";
+import Histogram from "./Histogram";
+import {styled} from "@mui/material/styles";
+import {Box, Button, CircularProgress, Popper} from "@mui/material";
+import Arrow from "../../../static/images/left-arrow.png";
+import SettingsIcon from "../../../static/images/settings.png";
+import HistogramOptions from "../../shared/components/HistogramOptions";
 
 const StyledButton = styled(Button)({
     backgroundColor: "var(--light-bg-color)",
@@ -58,25 +58,43 @@ const HistogramBox = ({dimensions}) => {
 
     const isLoading = useSelector(state => state.savings.status === "loading")
 
-    const data = useSelector(state => state.histogram.data)
+    const [data,
+        imageData
+    ] = useSelector(state => {
+        const histogram = state.histogram
+        return [histogram.data,
+        histogram.imageData]
+    })
 
     const [binType,
-        binCount]
+        binCount,
+        divided]
         = useSelector(state => {
-        const histogram = state.savings.current.histogram
+        const histogram = state.settings.histogram
         return [histogram.type,
-            histogram.bins]
+            histogram.bins,
+            histogram.divided]
     })
-    const [focusedTimeRange,
-        focusedData
+    const [isFocused,
+        focusedTimeRange,
+        focusedData,
+        focusedImageData
     ] = useSelector(state => {
         const map = state.map
+        const fI = map.singlePoints.focused.concat(map.multiplePoints.map(e => e.focused).flat())
         return [
+            map.isFocused,
             map.focusedTimeRange,
-            map.singlePoints.focused
+            fI,
+            fI.filter(e => e.imageName!==null)
         ]})
 
     const [showHistogram, setHistogram] = useState(true)
+
+    const [legendStyle, setLegendStyle] = useState({})
+    const [histMiniStyle, setHistMiniStyle] = useState({})
+    const [histContentStyle, setHistContentStyle] = useState({})
+    const [histLoadingStyle, setHistLoadingStyle] = useState({})
 
     let anchorRef = useRef()
     const [anchorEl, setAnchorEl] = useState(null)
@@ -85,6 +103,24 @@ const HistogramBox = ({dimensions}) => {
     useEffect(() => {
         setTimeout(() => setAnchorEl(anchorRef?.current), 1)
     },  [anchorRef])
+
+    useEffect(() => {
+        divided ? setLegendStyle({}) : setLegendStyle({display: "none"})
+    }, [divided])
+
+    useEffect(() => {
+        isLoading ? setHistLoadingStyle({display: "flex"}) : setHistLoadingStyle({display: "none"})
+    }, [isLoading])
+
+    useEffect(() => {
+        if (showHistogram) {
+            setHistContentStyle({display: "flex"})
+            setHistMiniStyle({display: "none"})
+        } else {
+            setHistContentStyle({display: "none"})
+            setHistMiniStyle({display: "flex"})
+        }
+    }, [showHistogram])
 
     const handleCloseClick = () => {
         setHistogram(false)
@@ -118,17 +154,17 @@ const HistogramBox = ({dimensions}) => {
             switch (binType) {
                 case "month":
                     if (d3.timeDay.count(d3.timeDay.floor(focusedTimeRange[0]), d3.timeDay.ceil(focusedTimeRange[1])) <= 100) {
-                        dispatch(setCurrent({name: "histogram", value: {type: "day", bins: binCount}}))
+                        dispatch(setBins({type: "day", bins: binCount, divided: divided}))
                     }
                     break
                 case "day":
                     if (d3.timeHour.count(d3.timeHour.floor(focusedTimeRange[0]), d3.timeHour.ceil(focusedTimeRange[1])) <= 100) {
-                        dispatch(setCurrent({name: "histogram", value: {type: "hour", bins: binCount}}))
+                        dispatch(setBins({type: "hour", bins: binCount, divided: divided}))
                     }
                     break
                 case "hour":
                     if (d3.timeMinute.count(d3.timeMinute.floor(focusedTimeRange[0]), d3.timeMinute.ceil(focusedTimeRange[1])) <= 100) {
-                        dispatch(setCurrent({name: "histogram", value: {type: "minute", bins: binCount}}))
+                        dispatch(setBins({type: "minute", bins: binCount, divided: divided}))
                     }
                     break
                 default:
@@ -146,30 +182,15 @@ const HistogramBox = ({dimensions}) => {
         return day + "." + month + "." + year + " (" + hours + ":" + minutes + ")"
     }
 
-    useEffect(() => {
-        if (isLoading) {
-            $(".histogramLoading").css('display', "flex")
-        } else {
-            $(".histogramLoading").css('display', "none")
-        }
-    }, [isLoading])
-
-    useEffect(() => {
-        if (showHistogram) {
-            $(".histogramContent").css('display', "flex")
-            $(".histogramMini").css('display', "none")
-        } else {
-            $(".histogramContent").css('display', "none")
-            $(".histogramMini").css('display', "flex")
-        }
-    }, [showHistogram])
+    const imageInfo = imageData.length === 0 ? "" : ` (${imageData.length} with images)`
+    const focusedImageInfo = focusedImageData.length === 0 ? "" : ` (${focusedImageData.length} with images)`
 
     if (data.length === 0) {
         return (
             <>
-                <div style={{margin: "25px"}} className="histogramContent">
+                <div style={{margin: "25px", ...histContentStyle}} className="histogramContent">
                     <OpenCloseButton onClick={handleCloseClick}><img src={Arrow} width={16} alt={"close"}/></OpenCloseButton>
-                    <div className={"histogramLoading"} style={{display: "none"}}>
+                    <div className={"histogramLoading"} style={histLoadingStyle}>
                         <CircularProgress size={80}/>
                     </div>
                     <div style={{"fontSize": "40px", "flex": "1"}}>No Data</div>
@@ -189,8 +210,8 @@ const HistogramBox = ({dimensions}) => {
                 <div style={{alignItems: "flex-start"}}>
                     <SettingsButton onClick={openSettings} sx={{minWidth: "0", margin: "2px", marginRight: "25px"}}><img src={SettingsIcon} width={20} alt={"Settings"}/></SettingsButton>
                     <div style={{flexDirection: "column", alignItems: "flex-start", padding: "6px 0px"}}>
-                        <p style={{marginTop: "10px"}}>Total reports: {data.length}</p>
-                        <p hidden={focusedTimeRange.length===0}>Selected reports: {focusedData.length}</p>
+                        <p style={{marginTop: "10px"}}>Total reports: {data.length}{imageInfo}</p>
+                        <p hidden={!isFocused}>Selected reports: {focusedData.length}{focusedImageInfo}</p>
                         <p hidden={focusedTimeRange.length===0}>Time range: {styleDateString(focusedTimeRange[0])} to {styleDateString(focusedTimeRange[1])}</p>
                     </div>
                 </div>
@@ -199,6 +220,10 @@ const HistogramBox = ({dimensions}) => {
                         dimensions={dimensions}
                     />
                     <div className="histogramButtons">
+                        <div style={{flexDirection: "column", ...legendStyle}}>
+                            <div className="histLegend"><span style={{backgroundColor: "var(--main-bg-color)"}}></span><p>Without images</p></div>
+                            <div className="histLegend"><span style={{backgroundColor: "var(--shadow-bg-color)"}}></span><p>With images</p></div>
+                        </div>
                         <StyledButton
                             disabled={focusedTimeRange.length===0}
                             onClick={resetSelection}
@@ -224,11 +249,11 @@ const HistogramBox = ({dimensions}) => {
                         marginBottom: "3px",
                         marginLeft: "-2px"
                     }}>
-                        <HistogramOptions/>
+                        <HistogramOptions setOpenHistOptions={setOpen}/>
                     </Box>
                 </Popper>
             }
-            <div style={{position: "relative", display: "none"}} className={"histogramMini"}>
+            <div style={{position: "relative", ...histMiniStyle}} className={"histogramMini"}>
                 <OpenCloseButton onClick={handleOpenClick}><img src={Arrow} width={16} alt={"open"} style={{transform: "rotate(180deg)"}}/></OpenCloseButton>
             </div>
         </>

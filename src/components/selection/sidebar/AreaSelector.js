@@ -1,10 +1,14 @@
-import {Autocomplete} from "@mui/material";
 import {useDispatch, useSelector} from "react-redux";
-import locations from "../../../static/data/PLZO_CSV_WGS84.json"
-import {styled} from "@mui/material/styles";
-import {StyledRadio, StyledTextField} from "../../../static/style/muiStyling";
 import {setCurrent, changeFilter} from "../../shared/features/SavingsSlice";
-import {useEffect, useState} from "react";
+import locations from "../../../static/data/PLZO_CSV_WGS84.json";
+import {Autocomplete, FormGroup, RadioGroup} from "@mui/material";
+import {styled} from "@mui/material/styles";
+import {
+    StyledFormControl,
+    StyledFormControlLabel,
+    StyledRadio,
+    StyledTextField
+} from "../../../static/style/muiStyling";
 
 const StyledAutocomplete = styled(Autocomplete)({
     width: "100%",
@@ -54,25 +58,6 @@ export default function AreaSelector() {
     })
 
     const cantonValue = dimension === "cantons" ? locElements : []
-    const placeValue = dimension === "places" ? locElements : []
-
-    const [allStyle, setAllStyle] = useState({})
-    const [allSwitzerlandStyle, setAllSwitzerlandStyle] = useState({})
-
-    useEffect(() => {
-        const grayOut = {color: "rgb(0,0,0,68%)"}
-        setAllStyle(grayOut)
-        setAllSwitzerlandStyle(grayOut)
-        switch (dimension) {
-            case "all":
-                setAllStyle({})
-                break
-            case "allSwitzerland":
-                setAllSwitzerlandStyle({})
-                break
-            default:
-        }
-    }, [dimension])
 
     const handleClick = (val) => {
         switch (val) {
@@ -128,100 +113,81 @@ export default function AreaSelector() {
     return (
         <div>
             <p>Area</p>
-            <div className="areaOptions">
-                <StyledRadio
-                    checked={dimension === 'all'}
-                    onChange={handleRadioChange}
-                    value="all"
-                    name="area-buttons"
-                    inputProps={{ 'aria-label': 'all' }}
-                    sx={{
-                        margin: "4px 7px 0px 0px;",
-                    }}
-                />
-                <p className="singleAreaChoice"
-                   style={allStyle} onClick={() =>
-                    handleClick("all")}>Everywhere</p>
-            </div>
-            <div className="areaOptions">
-                <StyledRadio
-                    checked={dimension === 'allSwitzerland'}
-                    onChange={handleRadioChange}
-                    value="allSwitzerland"
-                    name="area-buttons"
-                    inputProps={{ 'aria-label': 'allSwitzerland' }}
-                    sx={{
-                        margin: "4px 7px 0px 0px;",
-                    }}
-                />
-                <p className="singleAreaChoice"
-                   style={allSwitzerlandStyle}
-                   onClick={() => handleClick("allSwitzerland")}>All Switzerland</p>
-            </div>
-            <div className="areaOptions">
-                <StyledRadio
-                    checked={dimension === 'cantons'}
-                    onChange={handleRadioChange}
-                    value="cantons"
-                    name="area-buttons"
-                    inputProps={{ 'aria-label': 'cantons' }}
-                />
-                <div style={{width: "100%", cursor: "pointer"}} onClick={() => handleFieldClick("cantons")}>
-                    <StyledAutocomplete
-                        disabled={dimension !== 'cantons'}
-                        multiple
-                        id="tags-outlined"
-                        options={cantonOptions}
-                        size="small"
-                        value={cantonValue}
-                        disableClearable
-                        renderInput={(params) => (
-                            <StyledTextField
-                                {...params}
-                                label="Cantons"
-                                placeholder="Add"
-                            />
-                        )}
-                        onChange={(event: any, newValue: string | null) => {
-                            handleTextChange(newValue);
-                        }}
-                    />
-                </div>
-            </div>
-            <div className="areaOptions">
-                <StyledRadio
-                    checked={dimension === 'places'}
-                    onChange={handleRadioChange}
-                    value="places"
-                    name="area-buttons"
-                    inputProps={{ 'aria-label': 'places' }}
-                />
-                <div style={{width: "100%", cursor: "pointer"}} onClick={() => handleFieldClick("places")}>
-                    <StyledAutocomplete
-                        // todo: work with given value
-                        disabled={dimension !== 'places'}
-                        multiple
-                        id="tags-outlined"
-                        // value={placeValue}
-                        options={placeOptions}
-                        groupBy={(option) => option.canton}
-                        getOptionLabel={(option) => option.place}
-                        isOptionEqualToValue={(option, value) => option.place === value.place && option.canton === value.canton}
-                        size="small"
-                        disableClearable
-                        renderInput={(params) => (
-                            <StyledTextField
-                                {...params}
-                                label="Places"
-                                placeholder="Add"
-                            />
-                        )}
-                        onChange={(event: any, newValue: string | null) => {
-                            handleTextChange(newValue);
-                        }}
-                    />
-                </div>
-            </div>
+                <StyledFormControl>
+                    <RadioGroup
+                        aria-labelledby="area-group-label"
+                        value={dimension}
+                        onChange={handleRadioChange}
+                        name="area-group"
+                    >
+                        <StyledFormControlLabel
+                            value="all"
+                            control={<StyledRadio />}
+                            label="Everywhere" />
+                        <StyledFormControlLabel
+                            value="allSwitzerland"
+                            control={<StyledRadio />}
+                            label="All Switzerland" />
+                        <FormGroup>
+                            <StyledFormControlLabel
+                                onClick={() => handleFieldClick("cantons")}
+                                value="cantons"
+                                control={<StyledRadio />}
+                                label={
+                                    <StyledAutocomplete
+                                        disabled={dimension !== 'cantons'}
+                                        multiple
+                                        id="tags-outlined"
+                                        options={cantonOptions}
+                                        size="small"
+                                        value={cantonValue}
+                                        disableClearable
+                                        renderInput={(params) => (
+                                            <StyledTextField
+                                                {...params}
+                                                label="Cantons"
+                                                placeholder="Add"
+                                            />
+                                        )}
+                                        onChange={(event: any, newValue: string | null) => {
+                                            handleTextChange(newValue);
+                                        }}
+                                    />
+                                } />
+                        </FormGroup>
+                        <FormGroup>
+                            <StyledFormControlLabel
+                                onClick={() => handleFieldClick("places")}
+                                value="places"
+                                control={<StyledRadio />}
+                                label={
+                                    <StyledAutocomplete
+                                        // todo: work with given value
+                                        disabled={dimension !== 'places'}
+                                        multiple
+                                        id="tags-outlined"
+                                        // value={placeValue}
+                                        options={placeOptions}
+                                        groupBy={(option) => option.canton}
+                                        getOptionLabel={(option) => option.place}
+                                        isOptionEqualToValue={(option, value) => option.place === value.place && option.canton === value.canton}
+                                        size="small"
+                                        disableClearable
+                                        renderInput={(params) => (
+                                            <StyledTextField
+                                                {...params}
+                                                label="Places"
+                                                placeholder="Add"
+                                            />
+                                        )}
+                                        onChange={(event: any, newValue: string | null) => {
+                                            handleTextChange(newValue);
+                                        }}
+                                    />
+                            } />
+                        </FormGroup>
+                    </RadioGroup>
+                </StyledFormControl>
         </div>
     )
 }

@@ -1,9 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit'
-import histogramReducer from './features/HistogramSlice'
-import mapReducer from './features/MapSlice'
-import savedReducer from './features/SavingsSlice'
-import comparisonReducer from './features/ComparisonSlice'
-import settingsReducer from './features/SettingsSlice'
+import histogramReducer from './HistogramSlice'
+import mapReducer from './MapSlice'
+import savedReducer from './SavingsSlice'
+import comparisonReducer from './ComparisonSlice'
+import settingsReducer from './SettingsSlice'
 
 export default configureStore({
     reducer: {

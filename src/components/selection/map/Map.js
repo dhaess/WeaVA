@@ -1,35 +1,41 @@
+import {useDispatch, useSelector} from "react-redux";
 import {
     FeatureGroup,
     MapContainer,
     Marker,
-    Popup,
     TileLayer,
     useMap,
-    useMapEvent, ZoomControl,
-    LayersControl, LayerGroup, ScaleControl, useMapEvents, Polygon
+    ZoomControl,
+    LayersControl, LayerGroup, ScaleControl, Polygon
 } from 'react-leaflet';
-import {getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
-import {useDispatch, useSelector} from "react-redux";
-import {Box, Button, CircularProgress, Popover, Popper, ToggleButton, ToggleButtonGroup} from "@mui/material";
-import {useEffect, useRef, useState} from "react";
-import $ from "jquery";
 import {EditControl} from "react-leaflet-draw";
-import "../../../static/tooltipHelper"
-import "leaflet-draw/dist/leaflet.draw.css"
+import L from "leaflet";
+import {createClusterCustomIcon, getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
+import {useEffect, useRef, useState} from "react";
 import {
     changeFocusedArea,
     changeFocusedPoints,
     changeFocusedProximityPoints, changeProximityDistance,
     deleteAllAreas
 } from "../../shared/features/MapSlice";
-import {
-    createClusterCustomIcon, getGridData,
-    MultiMarkerPopup,
-    pointInCircle,
-    pointInPolygon,
-    pointInRectangle
-} from "../../shared/functions/MapFunctions";
 import {changeMapFilters, resetMapFilters} from "../../shared/features/SavingsSlice";
+import {getClusterList, getGridData} from "../../shared/functions/MapFunctions";
+import {getCategoryName, getIntensityName} from "../../shared/functions/WeatherCategories";
+import MarkerClusterGroup from "../../shared/components/MarkerClusterGroup";
+import {MultiMarkerPopup} from "../../shared/components/MultiMarkerPopup";
+import MiniMap from "./MiniMap";
+import EditPopup from "./EditPopup";
+import MapFilterOverlay from "./MapFilterOverlay";
+import {styled} from "@mui/material/styles";
+import {Box, Button, CircularProgress, Popover, Popper, ToggleButton, ToggleButtonGroup} from "@mui/material";
+import {
+    CancelButton,
+    DeleteButton,
+    StyledInputField, StyledPopup,
+    StyledSlider,
+    StyledTooltip
+} from "../../../static/style/muiStyling";
+import "leaflet-draw/dist/leaflet.draw.css";
 import Delete from "../../../static/images/delete.png";
 import Edit from "../../../static/images/edit.png";
 import PolygonIcon from "../../../static/images/polygon.png";
@@ -39,26 +45,10 @@ import Point from "../../../static/images/point.png";
 import Proximity from "../../../static/images/proximity.png";
 import Save from "../../../static/images/save.png";
 import Reset from "../../../static/images/reset.png";
-import {styled} from "@mui/material/styles";
-import {
-    CancelButton,
-    DeleteButton,
-    StyledInputField, StyledPopup,
-    StyledSlider,
-    StyledTooltip
-} from "../../../static/style/muiStyling";
-import L from "leaflet";
-import MiniMap from "./MiniMap";
-import Arrow from "../../../static/images/left-arrow.png";
-import {getCategoryName, getIntensityName} from "../../shared/functions/WeatherCategories";
-import MarkerClusterGroup from "../../shared/functions/MarkerClusterGroup";
 import MarkerMode from "../../../static/data/MarkerMode.json";
-
-const StyledPopupButtons = styled(Button)({
-    width: "32px",
-    height: "32px",
-    minWidth: "0"
-})
+import Arrow from "../../../static/images/left-arrow.png";
+import "../../../static/tooltipHelper"
+import MapEvents from "../../shared/components/MapEvents";
 
 const StyledToggleButtonGroup = styled(ToggleButtonGroup)({
     display: "grid",
@@ -102,13 +92,11 @@ const MapResizer = () => {
 const Map = () => {
     const dispatch = useDispatch()
 
-    const mapRef = useRef()
+    const editControlRef = useRef()
     let featureRef = useRef()
-    let clusterRef = useRef()
 
     const [singlePoints,
         multiplePoints,
-        focusedArea,
         proximityDistance,
         isFocused,
         isMapFocused
@@ -116,7 +104,6 @@ const Map = () => {
         const map = state.map
         return [map.singlePoints,
             map.multiplePoints,
-            map.mapFilters.focusedArea,
             map.mapFilters.proximityDistance,
             map.isFocused,
             map.isMapFocused
@@ -125,24 +112,32 @@ const Map = () => {
     const [isLoading,
         hasMapFilter,
         color,
-        id
+        id,
+        mapFilter
     ] = useSelector(state => {
         const savings = state.savings
         return [savings.status === "loading",
             savings.current.hasMapFilter,
             savings.current.color,
-            savings.current.id
+            savings.current.id,
+            savings.current.mapFilter
         ]})
 
-    const mapTile = useSelector(state => state.settings.mapTile)
+    const [mapTile,
+        markerMode
+    ] = useSelector(state => {
+        const settings = state.settings
+        return [
+            settings.mapTile,
+            settings.markerMode
+        ]
+    })
 
     const [selectionButton, setButton] = useState(null)
     const [pointSelection, setPointSelection] = useState(false)
     const [changedPoint, setPoint] = useState(null)
     const [proximitySelection, setProximitySelection] = useState(false)
     const [changedProximity, setProximity] = useState(null)
-
-    const [markerMode, setMarkerMode] = useState("Grid Marker")
 
     const [markerPos, setMarkerPos] = useState(null)
     const [clusterPopup, setClusterPopup] = useState(null)
@@ -151,12 +146,15 @@ const Map = () => {
     const [zoomLevel, setZoomLevel] = useState(8)
     const [gridData, setGridData] = useState([])
     const [hoverPoint, setHoverPoint] = useState(null)
+    const [hoverReset, setHoverReset] = useState(false)
+
+    const [mapLoadingStyle, setMapLoadingStyle] = useState({})
 
     useEffect(() => {
-        if (mapRef.current !== undefined) {
-            mapRef.current._toolbars.draw._modes.polygon.handler.disable()
-            mapRef.current._toolbars.draw._modes.rectangle.handler.disable()
-            mapRef.current._toolbars.draw._modes.circle.handler.disable()
+        if (editControlRef.current !== undefined) {
+            editControlRef.current._toolbars.draw._modes.polygon.handler.disable()
+            editControlRef.current._toolbars.draw._modes.rectangle.handler.disable()
+            editControlRef.current._toolbars.draw._modes.circle.handler.disable()
             setPointSelection(false)
             setProximitySelection(false)
             setPoint(null)
@@ -165,13 +163,13 @@ const Map = () => {
             })
             switch (selectionButton) {
                 case "polygon":
-                    mapRef.current._toolbars.draw._modes.polygon.handler.enable()
+                    editControlRef.current._toolbars.draw._modes.polygon.handler.enable()
                     break
                 case "rectangle":
-                    mapRef.current._toolbars.draw._modes.rectangle.handler.enable()
+                    editControlRef.current._toolbars.draw._modes.rectangle.handler.enable()
                     break
                 case "circle":
-                    mapRef.current._toolbars.draw._modes.circle.handler.enable()
+                    editControlRef.current._toolbars.draw._modes.circle.handler.enable()
                     break
                 case "points":
                     setPointSelection(true)
@@ -200,14 +198,10 @@ const Map = () => {
                 default:
             }
         }
-    }, [dispatch, focusedArea, isMapFocused, selectionButton])
+    }, [dispatch, isMapFocused, selectionButton])
 
     useEffect(() => {
-        if (isLoading) {
-            $(".mapLoading").css('display', "flex")
-        } else {
-            $(".mapLoading").css('display', "none")
-        }
+        isLoading ? setMapLoadingStyle({display: "flex"}) : setMapLoadingStyle({display: "none"})
     }, [isLoading])
 
     useEffect(() => {
@@ -230,16 +224,18 @@ const Map = () => {
     }, [changedProximity, dispatch, proximitySelection])
 
     useEffect(() => {
-        const focusedData = singlePoints.focused.concat(multiplePoints.map(e => e.focused)).flat()
-        setGridData(getGridData(focusedData, zoomLevel))
-    }, [multiplePoints, singlePoints, zoomLevel])
+        if (markerMode === MarkerMode["Grid"]) {
+            const focusedData = singlePoints.focused.concat(multiplePoints.map(e => e.focused)).flat()
+            setGridData(getGridData(focusedData, zoomLevel))
+        }
+    }, [markerMode, multiplePoints, singlePoints, zoomLevel])
 
     //todo: fix issue: Color change doesn't work on cluster icons
 
     // useEffect(() => {
-    //     if (mapRef.current !== undefined && clusterRef.current !== undefined) {
+    //     if (editControlRef.current !== undefined && clusterRef.current !== undefined) {
     //         let clusters = []
-    //         mapRef.current._map.eachLayer((l) => {
+    //         editControlRef.current._map.eachLayer((l) => {
     //             if( l instanceof L.Marker && l._childCount !== undefined )
     //                 clusters.push(l)
     //         })
@@ -250,22 +246,7 @@ const Map = () => {
     //         })
     //         clusterRef.current.refreshClusters()
     //     }
-    // }, [color, mapRef])
-
-    const pointInArea = (coords) => {
-        return Object.keys(focusedArea).filter(k => {
-            switch (focusedArea[k].type) {
-                case "rectangle":
-                    return pointInRectangle(coords, focusedArea[k])
-                case "circle":
-                    return pointInCircle(coords, focusedArea[k])
-                case "polygon":
-                    return pointInPolygon(coords, focusedArea[k])
-                default:
-                    return []
-            }
-        })
-    }
+    // }, [color, editControlRef])
 
     const addPoint = (focused, e) => {
         setPoint([focused, e.target])
@@ -273,61 +254,6 @@ const Map = () => {
 
     const addProximity = (e) => {
         setProximity(e.target)
-    }
-
-    const handleEdit = (clickedAreas) => {
-        mapRef.current._map.closePopup()
-        Object.keys(featureRef.current._layers).forEach(e => {
-            featureRef.current._layers[e].editing.disable()
-        })
-        clickedAreas.forEach(e => {
-            featureRef.current._layers[e].editing.enable()
-        })
-    }
-
-    const handleDelete = (clickedAreas) => {
-        clickedAreas.forEach(e => {
-            const layer = featureRef.current._layers[e]
-            featureRef.current.removeLayer(layer)
-        })
-        dispatch(changeFocusedArea("delete", clickedAreas))
-    }
-
-    const EditPopup = () => {
-        const [position, setPosition] = useState(null)
-        const [clickedAreas, setAreas] = useState(null)
-        useMapEvent('click', (e) => {
-            if (selectionButton !== "editAll") {
-                const getAreas = pointInArea([e.latlng.lat, e.latlng.lng])
-                setAreas(getAreas)
-                if (getAreas.length > 0) {
-                    setPosition(e.latlng)
-                }
-                Object.keys(featureRef.current._layers).forEach(f => {
-                    if (!getAreas.includes(f)) {
-                        featureRef.current._layers[f].editing.disable()
-                    }
-                })
-            }
-        })
-
-        return position === null ? null : (
-            <Popup position={position} closeButton={false}>
-                <StyledPopupButtons onClick={() => handleEdit(clickedAreas)}>
-                    <img src={Edit} width={20} alt={"edit"}/>
-                </StyledPopupButtons>
-                <StyledPopupButtons onClick={() => handleDelete(clickedAreas)}>
-                    <img src={Delete} width={20} alt={"delete"}/>
-                </StyledPopupButtons>
-            </Popup>
-        )
-    }
-
-    const handleMounted = (e) => {
-        mapRef.current = e
-        e._map.on("baselayerchange", e => {
-            setMarkerMode(e.name)
-        })
     }
 
     const handleCreated = e => {
@@ -356,14 +282,7 @@ const Map = () => {
     }
 
     const showClusterPopup = (event) => {
-        let markerList = event.layer.getAllChildMarkers().map(e => e.options.data)
-        let dataList = markerList.map(e => {
-            if (e.count === undefined) {
-                return e
-            } else {
-                return e.focused
-            }
-        }).flat()
+        let dataList = getClusterList(event)
         setClusterData(dataList)
         setMarkerPos(event.latlng)
         setClusterPopup(true)
@@ -371,7 +290,9 @@ const Map = () => {
 
     const MapSelection = () => {
         let proximityRef = useRef()
+
         const [anchorEl, setAnchorEl] = useState()
+        const [showTools, setTools] = useState(true)
 
         useEffect(() => {
             setTimeout(() => setAnchorEl(proximityRef?.current), 1)
@@ -380,8 +301,6 @@ const Map = () => {
         const handleButtons = (event, newButton) => {
             setButton(newButton);
         }
-
-        const [showTools, setTools] = useState(true)
 
         const handleCloseClick = () => {
             setTools(false)
@@ -485,7 +404,7 @@ const Map = () => {
                                 </div>
                             </StyledTooltip>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"reset"} disabled={!hasMapFilter}>
+                        <StyledToggleButton value={"reset"} disabled={!hasMapFilter} onMouseEnter={() => setHoverReset(true)}  onMouseLeave={() => setHoverReset(false)}>
                             <StyledTooltip title={"Reset all saved map filters"} arrow enterDelay={500}>
                                 <div className={"selectionButtonsContent"}>
                                     <img src={Reset} width={21} alt={"Reset map filters"}/>
@@ -567,21 +486,11 @@ const Map = () => {
         }
     }
 
-     const ZoomLevel = () => {
-        const mapEvents = useMapEvents({
-            zoomend: () => {
-                setZoomLevel(mapEvents.getZoom())
-            },
-        });
-        return null
-    }
-
     return <div style={{width: "100%", height: "100vh"}}>
         <MapSelection/>
         <MiniMap
             color={color}
             id={id}
-            markerMode={markerMode}
         />
         <div style={{display: "contents"}}>
             <MapContainer
@@ -593,14 +502,14 @@ const Map = () => {
                 <MapResizer/>
                 <ScaleControl imperial={false} position="bottomright" />
                 <ZoomControl position="bottomright" />
-                <ZoomLevel/>
+                <MapEvents setZoomLevel={setZoomLevel}/>
                 {mapTile === "CH" && <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://tile.osm.ch/switzerland/{z}/{x}/{y}.png" />}
                 {mapTile === "OSM" && <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />}
                 {mapTile === "NationalMapColor" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg" />}
                 {mapTile === "NationalMapGrey" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-grau/default/current/3857/{z}/{x}/{y}.jpeg" />}
                 {mapTile === "SWISSIMAGE" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg" />}
                 <LayersControl position="bottomright">
-                    <LayersControl.BaseLayer checked name={MarkerMode["Grid"]}>
+                    <LayersControl.BaseLayer name={MarkerMode["Grid"]} checked={markerMode===MarkerMode["Grid"]}>
                         <LayerGroup>
                             {gridData.map(e => {
                                 if (e.count === 1) {
@@ -633,7 +542,7 @@ const Map = () => {
                                                         addPoint(true, e)
                                                         addProximity(e)
                                                     },
-                                                    mouseover: e => setHoverPoint(e.target.options.data),
+                                                    mouseover: e => setHoverPoint(selectionButton===null ? e.target.options.data: null),
                                                     mouseout: () => setHoverPoint(null)
                                                 }}
                                         >
@@ -643,13 +552,20 @@ const Map = () => {
                                 }
                             })}
                         </LayerGroup>
-                        {hoverPoint && <Polygon pathOptions={{color: 'var(--border-bg-color)', fillOpacity: "0.4", zIndex: "2000"}} positions={hoverPoint.convexHull} pane={"markerPane"}>
+                        {hoverPoint &&
+                            <Polygon
+                                pathOptions={{color: 'var(--border-bg-color)', fillOpacity: "0.4", zIndex: "2000"}}
+                                positions={hoverPoint.convexHull}
+                                pane={"markerPane"}
+                                eventHandlers={{
+                                    mouseout: () => setHoverPoint(null)
+                                }}
+                            >
                             <MultiMarkerPopup data={hoverPoint}/>
                         </Polygon>}
                     </LayersControl.BaseLayer>
-                    <LayersControl.BaseLayer name={MarkerMode["Cluster"]}>
+                    <LayersControl.BaseLayer name={MarkerMode["Cluster"]} checked={markerMode===MarkerMode["Cluster"]}>
                         <MarkerClusterGroup
-                            ref={clusterRef}
                             iconCreateFunction={d => createClusterCustomIcon(d)}
                             zoomToBoundsOnClick={false}
                             chunkedLoading={true}
@@ -702,7 +618,7 @@ const Map = () => {
                             />
                         }
                     </LayersControl.BaseLayer>
-                    <LayersControl.BaseLayer name={MarkerMode["Location"]}>
+                    <LayersControl.BaseLayer name={MarkerMode["Location"]} checked={markerMode===MarkerMode["Location"]}>
                         <LayerGroup>
                             {singlePoints.unfocused.map(e => (
                                 <Marker opacity={0.5} zIndexOffset={-1000}
@@ -773,15 +689,19 @@ const Map = () => {
                                     )
                                 }
                             })}
-
                         </LayerGroup>
                     </LayersControl.BaseLayer>
                 </LayersControl>
+                {hasMapFilter && hoverReset &&
+                    <MapFilterOverlay
+                        mapFilter={mapFilter}
+                    />
+                }
                 <FeatureGroup ref={featureRef}>
                     <EditControl
                         position="topright"
                         onCreated={handleCreated}
-                        onMounted={handleMounted}
+                        onMounted={(e) => editControlRef.current = e}
                         draw={{
                             polyline: false,
                             polygon: {
@@ -814,9 +734,13 @@ const Map = () => {
                         }}
                     />
                 </FeatureGroup>
-                <EditPopup/>
+                <EditPopup
+                    selectionButton={selectionButton}
+                    featureRef={featureRef}
+                    editControlRef={editControlRef}
+                />
             </MapContainer>
-            <div className={"mapLoading"}>
+            <div className={"mapLoading"} style={mapLoadingStyle}>
                 <CircularProgress size={120}/>
             </div>
         </div>

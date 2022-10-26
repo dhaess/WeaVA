@@ -1,5 +1,15 @@
 import {styled} from "@mui/material/styles";
-import {Button, Input, Radio, Slider, TextField, Tooltip, tooltipClasses} from "@mui/material";
+import {
+    Button,
+    FormControl,
+    FormControlLabel,
+    Input,
+    Radio,
+    Slider,
+    TextField,
+    Tooltip,
+    tooltipClasses
+} from "@mui/material";
 import {Popup} from "react-leaflet";
 
 export const StyledTextField = styled(TextField)({
@@ -68,9 +78,21 @@ export const StyledSlider = styled(Slider)({
     },
 })
 
+export const StyledFormControl = styled(FormControl)({
+    width: "100%"
+})
+
+export const StyledFormControlLabel = styled(FormControlLabel)({
+    margin: "0 0 5px 0",
+    '& .MuiFormControlLabel-label': {
+        width: "100%",
+        fontSize: "15px"
+    }
+})
+
 export const StyledRadio = styled(Radio)({
     color: 'var(--main-bg-color)',
-    margin: "9px 6px 0px 0px",
+    marginRight: "5px",
     padding: "0",
     '&.Mui-checked': {
         color: 'var(--main-bg-color)',
@@ -78,8 +100,8 @@ export const StyledRadio = styled(Radio)({
 })
 
 export const StyledTooltip = styled(({ className, ...props }) => (
-    <Tooltip {...props} arrow enterDelay={500} classes={{ popper: className }} />
-))(({ theme }) => ({
+    <Tooltip {...props} arrow enterDelay={500} classes={{ popper: className }}/>
+))(() => ({
     [`& .${tooltipClasses.tooltip}`]: {
         backgroundColor: "#efefef",
         color: 'rgba(0, 0, 0, 0.87)',
@@ -135,4 +157,11 @@ export const DeleteButton = styled(Button)({
 
 export const StyledPopup = styled(Popup)({
     marginBottom: 26 + "px"
+})
+
+export const ImageButton = styled(StyledButton)({
+    border: "0",
+    width: "0",
+    marginTop: "0px",
+    minWidth: "35px"
 })

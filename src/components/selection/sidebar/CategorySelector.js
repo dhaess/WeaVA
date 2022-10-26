@@ -1,11 +1,11 @@
-import {ToggleButton, ToggleButtonGroup} from "@mui/material";
-import {getIcon} from "../../shared/functions/WeatherIcons";
 import {useDispatch, useSelector} from "react-redux";
-import {styled} from "@mui/material/styles";
-import {changeFilter, setCurrent} from "../../shared/features/SavingsSlice";
-import weather_categories from "../../../static/data/weather_categories.json"
-import {StyledSlider, StyledTooltip} from "../../../static/style/muiStyling";
 import $ from "jquery";
+import {changeFilter, setCurrent} from "../../shared/features/SavingsSlice";
+import {getIcon} from "../../shared/functions/WeatherIcons";
+import {styled} from "@mui/material/styles";
+import {ToggleButton, ToggleButtonGroup} from "@mui/material";
+import {StyledSlider, StyledTooltip} from "../../../static/style/muiStyling";
+import weather_categories from "../../../static/data/weather_categories.json"
 
 const StyledToggleButtonGroup = styled(ToggleButtonGroup)({
     display: "flex",

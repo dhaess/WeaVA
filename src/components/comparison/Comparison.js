@@ -2,8 +2,8 @@ import React from "react";
 import {useSelector} from "react-redux";
 import Map from "./Map";
 import GeneralButtons from "./GeneralButtons";
-import "../../static/style/comparison.css"
 import HistogramBox from "./histogram/HistogramBox";
+import "../../static/style/comparison.css"
 
 const dimensions = {
     width: 500,
@@ -18,9 +18,7 @@ const dimensions = {
 
 const Comparison = () => {
 
-    const events = useSelector(state => {
-        return state.comparison.events
-    })
+    const events = useSelector(state =>  state.comparison.events)
 
     return (
         <div>
@@ -37,7 +35,6 @@ const Comparison = () => {
                     <GeneralButtons/>
                 </div>
             </div>
-            <Map/>
         </div>
     )
 }

@@ -1,3 +1,4 @@
+import {renderToStaticMarkup} from "react-dom/server";
 import L from "leaflet";
 import Cloud from "../../../static/images/cloud.png";
 import Fog from "../../../static/images/fog.png";
@@ -9,7 +10,7 @@ import Snowfall from "../../../static/images/snowfall.png";
 import SnowLayer from "../../../static/images/snowLayer.png";
 import Wind from "../../../static/images/wind.png";
 import Tornado from "../../../static/images/tornado.png";
-import {renderToStaticMarkup} from "react-dom/server";
+
 const iconData = [
     {idName: "BEWOELKUNG", url: "../../static/images/cloud.png", icon: Cloud, names: ["BEWOELKUNG"]},
     {idName: "NEBEL", url: "../../static/images/fog.png", icon: Fog, names: ["NEBEL"]},
@@ -110,4 +111,22 @@ export const getPieIcon = (data, props = {}) => {
         className: className,
         iconSize: [size, size],
     })
+}
+
+export const createClusterCustomIcon = (cluster, size) => {
+    const color = cluster.getAllChildMarkers()[0].options.color
+    const pieSize = size === undefined ? 26 : size
+    const markerList = cluster.getAllChildMarkers().map(e => e.options.data)
+    const dataList = markerList.map(e => {
+        if (e.count === undefined) {
+            return e
+        } else {
+            return e.focused
+        }
+    }).flat()
+    if (color !== undefined) {
+        return getPieIcon(dataList, {color: color, size: pieSize})
+    } else {
+        return getPieIcon(dataList, {size: pieSize})
+    }
 }

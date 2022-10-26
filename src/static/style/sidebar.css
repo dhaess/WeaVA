@@ -110,12 +110,6 @@
     margin-bottom: 15px;
 }
 
-#EndButtonContainer {
-    border-top: 2px solid var(--border-bg-color);
-    background-color:var(--main-bg-color);
-    padding: 0 25px 0 25px;
-}
-
 #SaveButtons {
     display: flex;
     justify-content: space-between;

@@ -4,7 +4,7 @@ import './index.css';
 import 'leaflet/dist/leaflet.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import store from './components/shared/Store';
+import store from './components/shared/features/Store';
 import { Provider } from 'react-redux';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));

@@ -1,18 +1,26 @@
-import {LayerGroup, MapContainer, Marker, TileLayer} from "react-leaflet";
-import {getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
 import {useSelector} from "react-redux";
+import {LayerGroup, MapContainer, Marker, TileLayer} from "react-leaflet";
 import {useEffect, useState} from "react";
+import {createClusterCustomIcon, getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
+import MarkerClusterGroup from "../../shared/components/MarkerClusterGroup";
+import {getGridData} from "../../shared/functions/MapFunctions";
 import {Button} from "@mui/material";
-import Arrow from "../../../static/images/left-arrow.png"
-import MarkerClusterGroup from "../../shared/functions/MarkerClusterGroup";
-import {createClusterCustomIcon, getGridData} from "../../shared/functions/MapFunctions";
+import Arrow from "../../../static/images/left-arrow.png";
 import MarkerMode from "../../../static/data/MarkerMode.json";
 
-const MiniMap = ({color, id, markerMode}) => {
+const MiniMap = ({color, id}) => {
 
     const events = useSelector(state => state.comparison.events)
-    const mapTile = useSelector(state => state.settings.mapTile)
     const data = useSelector(state => state.map.focusedData)
+    const [mapTile,
+        markerMode
+    ] = useSelector(state => {
+        const settings = state.settings
+        return [
+            settings.mapTile,
+            settings.markerMode
+        ]
+    })
 
     const [showMap, setMap] = useState(true)
     const [singleData, setSingleData] = useState([])
@@ -31,16 +39,10 @@ const MiniMap = ({color, id, markerMode}) => {
         let mapData = data.map(d => {
             let e = {...d}
             e.color = color
+            e.eventId = id
             return e
         }).concat(
-            events.filter(event => event.info.id !== id && !event.hidden)
-                .map(event => {
-                    return event.data.map(e => {
-                        const e2 = {...e}
-                        e2.color = event.info.color
-                        return e2
-                    })
-                })
+            events.filter(event => event.info.id !== id && !event.hidden).map(e => e.data)
         ).flat()
 
         let coordsList = []
@@ -109,7 +111,7 @@ const MiniMap = ({color, id, markerMode}) => {
                                     return (
                                         <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
                                                 position={e.coordinates}
-                                                icon={getMapIcon(singlePoint.category, color, 7)}
+                                                icon={getMapIcon(singlePoint.category, singlePoint.color, 7)}
                                         />
                                     )
                                 } else {
@@ -118,7 +120,7 @@ const MiniMap = ({color, id, markerMode}) => {
                                                 color={color}
                                                 data={e}
                                                 position={e.coordinates}
-                                                icon={getPieIcon(e.focused, {color: color, sum: e.focused.length, size: 7})}
+                                                icon={getPieIcon(e.focused, {sum: e.focused.length, size: 7})}
                                         />
                                     )
                                 }
@@ -138,7 +140,7 @@ const MiniMap = ({color, id, markerMode}) => {
                                         color={color}
                                         data={e}
                                         position={e.coordinates}
-                                        icon={getMapIcon(e.category, color, 7, "minimapMarkers minimapSingle")}
+                                        icon={getMapIcon(e.category, e.color, 7, "minimapMarkers minimapSingle")}
                                 />
                             ))}
                             {multipleData.filter(e => e.focused.length !== 0).map(e => (
@@ -146,7 +148,7 @@ const MiniMap = ({color, id, markerMode}) => {
                                         color={color}
                                         data={e}
                                         position={e.coordinates}
-                                        icon={getPieIcon(e.focused, {color: color, size: 7})}
+                                        icon={getPieIcon(e.focused, {size: 7})}
                                 />
                             ))}
                         </MarkerClusterGroup>

@@ -1,6 +1,6 @@
 import {useDispatch, useSelector} from "react-redux";
-import {StyledTextField} from "../../../static/style/muiStyling";
 import {setCurrent} from "../../shared/features/SavingsSlice";
+import {StyledTextField} from "../../../static/style/muiStyling";
 
 export default function NameSelector() {
     const dispatch = useDispatch()

@@ -1,0 +1,140 @@
+import {useSelector} from "react-redux";
+import React from "react";
+import {getCategoryName, getIntensityName} from "../functions/WeatherCategories";
+import {StyledPopup} from "../../../static/style/muiStyling";
+
+const arrangeIntensityInfo = (array) => {
+    const groupByCategory = array.reduce((group, el) => {
+        const {category} = el
+        group[category] = group[category] ?? []
+        group[category].push(el)
+        return group
+    }, {})
+    return Object.entries(groupByCategory).map(e => {
+        const groupByIntensity = e[1].reduce((group, el) => {
+            const {auspraegung} = el
+            group[auspraegung] = group[auspraegung] ?? []
+            group[auspraegung].push(el)
+            return group
+        }, {})
+        const intensities = Object.entries(groupByIntensity).map(i => {
+            return {intensity: i[0], count: i[1].length}
+        })
+        return {category: e[0], intensities: intensities}
+    })
+}
+
+export const MultiMarkerPopup = ({data, isCluster, position}) => {
+
+    let focusedIntensityInfo
+    let unfocusedIntensityInfo
+    if (isCluster === undefined) {
+        focusedIntensityInfo = arrangeIntensityInfo(data.focused)
+        unfocusedIntensityInfo = arrangeIntensityInfo(data.unfocused)
+    } else {
+        focusedIntensityInfo = arrangeIntensityInfo(data)
+        unfocusedIntensityInfo = []
+    }
+
+    return <StyledPopup position={position}>
+        <div className={"multiPopup"}>
+        {focusedIntensityInfo.map(c => (
+            <React.Fragment key={c.category}>
+                <p>{getCategoryName(c.category)}: </p>
+                <div>
+                    {c.intensities.map(i => <p key={i.intensity}>{getIntensityName(c.category, i.intensity)}:</p>)}
+                </div>
+                <div style={{alignItems: "flex-end"}}>
+                    {c.intensities.map(i => <p key={i.intensity}>{i.count}</p>)}
+                </div>
+            </React.Fragment>
+        ))}
+        {unfocusedIntensityInfo.map(c => (
+            <React.Fragment key={c.category}>
+                <p style={{opacity: "0.5"}}>{getCategoryName(c.category)}: </p>
+                <div style={{opacity: "0.5"}}>
+                    {c.intensities.map(i => <p key={i.intensity}>{getIntensityName(c.category, i.intensity)}:</p>)}
+                </div>
+                <div style={{alignItems: "flex-end", opacity: "0.5"}}>
+                    {c.intensities.map(i => <p key={i.intensity}>{i.count}</p>)}
+                </div>
+            </React.Fragment>
+        ))}
+        </div>
+    </StyledPopup>
+}
+
+export const MultiMarkerEventPopup = ({data, isCluster, position}) => {
+    const events = useSelector(state => state.comparison.events)
+
+    let focusedIntensityInfo, unfocusedIntensityInfo, popupInfo
+
+    if (isCluster === undefined) {
+        const groupByEventFocused = data.focused.reduce((group, el) => {
+            const {eventId} = el
+            group[eventId] = group[eventId] ?? []
+            group[eventId].push(el)
+            return group
+        }, {})
+        const groupByEventUnfocused = data.unfocused.reduce((group, el) => {
+            const {eventId} = el
+            group[eventId] = group[eventId] ?? []
+            group[eventId].push(el)
+            return group
+        }, {})
+
+        popupInfo = events.filter(e => groupByEventFocused[e.info.id]!==undefined || groupByEventUnfocused[e.info.id]!==undefined)
+            .map(e => {
+                const id = e.info.id
+                focusedIntensityInfo = groupByEventFocused[id]!==undefined ? arrangeIntensityInfo(groupByEventFocused[id]): []
+                unfocusedIntensityInfo = groupByEventUnfocused[id]!==undefined ? arrangeIntensityInfo(groupByEventUnfocused[id]): []
+                return [e.info.name, focusedIntensityInfo, unfocusedIntensityInfo]
+            })
+    } else {
+        const groupByEvent = data.reduce((group, el) => {
+            const {eventId} = el
+            group[eventId] = group[eventId] ?? []
+            group[eventId].push(el)
+            return group
+        }, {})
+
+        popupInfo = events.map(e => e.info.id).filter(e => groupByEvent[e]!==undefined)
+            .map(e => {
+                focusedIntensityInfo = groupByEvent[e]!==undefined ? arrangeIntensityInfo(groupByEvent[e]): []
+                unfocusedIntensityInfo = []
+                return [e.info.name, focusedIntensityInfo, unfocusedIntensityInfo]
+            })
+    }
+
+    return <StyledPopup position={position} sx={{width: "auto"}}>
+        <div className={"multiEventPopup"}>
+        {popupInfo.map(e => (
+            <React.Fragment key={e[0]}>
+                {e[1].map(c => (
+                    <React.Fragment key={c.category}>
+                        <p>{e[0]}: </p>
+                        <p>{getCategoryName(c.category)}: </p>
+                        <div>
+                            {c.intensities.map(i => <p key={i.intensity}>{getIntensityName(c.category, i.intensity)}:</p>)}
+                        </div>
+                        <div style={{alignItems: "flex-end"}}>
+                            {c.intensities.map(i => <p key={i.intensity}>{i.count}</p>)}
+                        </div>
+                    </React.Fragment>
+                ))}
+                {e[2].map(c => (
+                    <React.Fragment key={c.category}>
+                        <p style={{opacity: "0.5"}}>{getCategoryName(c.category)}: </p>
+                        <div style={{opacity: "0.5"}}>
+                            {c.intensities.map(i => <p key={i.intensity}>{getIntensityName(c.category, i.intensity)}:</p>)}
+                        </div >
+                        <div style={{alignItems: "flex-end", opacity: "0.5"}}>
+                            {c.intensities.map(i => <p key={i.intensity}>{i.count}</p>)}
+                        </div>
+                    </React.Fragment>
+                ))}
+            </React.Fragment>
+        ))}
+        </div>
+    </StyledPopup>
+}
