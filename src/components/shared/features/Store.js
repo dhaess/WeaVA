@@ -4,6 +4,7 @@ import mapReducer from './MapSlice'
 import savedReducer from './SavingsSlice'
 import comparisonReducer from './ComparisonSlice'
 import settingsReducer from './SettingsSlice'
+import playerReducer from './PlayerSlice'
 
 export default configureStore({
     reducer: {
@@ -12,6 +13,7 @@ export default configureStore({
         histogram: histogramReducer,
         map: mapReducer,
         comparison: comparisonReducer,
+        player: playerReducer
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

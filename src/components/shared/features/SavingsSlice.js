@@ -5,6 +5,7 @@ import {setHistogramData} from "./HistogramSlice";
 import {deleteAllAreas, isMapFilterChanged, setMapData} from "./MapSlice";
 import {saveEvent} from "./ComparisonSlice";
 import {focusArea, focusPoints, focusProximity, getProximityPoints} from "../functions/MapFunctions";
+import {resetPlayer} from "./PlayerSlice";
 
 const configureAddFilter = (query, filter) => {
     let dictKey = Object.keys(filter)[0]
@@ -154,6 +155,7 @@ export const changeFilter = createAsyncThunk('posts/changeFilter',
             timeRange = state.savings.current.timeRange
         }
         if (isChanged) {
+            dispatch(resetPlayer())
             const data = await getData(filter, areaFilter)
             dispatch(setHistogramData(data, timeRange))
             dispatch(setMapData(data))
@@ -168,6 +170,7 @@ export const reset = createAsyncThunk('posts/resetData',
         resetCurrent.name = current.name
         resetCurrent.id = current.id
         resetCurrent.color = current.color
+        dispatch(resetPlayer())
         dispatch(resetState(resetCurrent))
         dispatch(setHistogramData([], current.timeRange))
         dispatch(setMapData([]))
@@ -177,6 +180,7 @@ export const revert = createAsyncThunk('posts/revertData',
     async (_, {dispatch, getState}) => {
         dispatch(revertState())
         const savedState = getState()
+        dispatch(resetPlayer())
         const data = await getData(savedState.savings.saved.filter, savedState.savings.current.mapFilter)
         dispatch(setHistogramData(data, savedState.savings.current.timeRange))
         dispatch(setMapData(data))
@@ -193,6 +197,7 @@ export const changeMapFilters = () => {
 
         const [newData, hasMapFilters] = applyMapFilters(data, areas, points, proximityPoints)
 
+        dispatch(resetPlayer())
         dispatch(setHistogramData(newData, state.savings.current.timeRange))
         dispatch(setMapData(newData))
         dispatch(saveMapFilters({
@@ -220,6 +225,7 @@ export const resetMapFilters = createAsyncThunk('posts/restMapFilters',
             focusedProximityPoints: [],
             proximityDistance: state.map.proximityDistance
         }
+        dispatch(resetPlayer())
         const data = await getData(state.savings.current.filter, areaFilter)
         dispatch(setHistogramData(data, state.savings.current.timeRange))
         dispatch(setMapData(data))
@@ -268,6 +274,7 @@ export const saveAllChanges = () => {
 
 export const setSelection = (event) => {
     return (dispatch) => {
+        dispatch(resetPlayer())
         dispatch(initCurrent(event))
         dispatch(setHistogramData(event.data, event.info.timeRange))
         dispatch(setMapData(event.data))

@@ -23,6 +23,7 @@ import {getClusterList, getGridData} from "../../shared/functions/MapFunctions";
 import {getCategoryName, getIntensityName} from "../../shared/functions/WeatherCategories";
 import MarkerClusterGroup from "../../shared/components/MarkerClusterGroup";
 import {MultiMarkerPopup} from "../../shared/components/MultiMarkerPopup";
+import MapEvents from "../../shared/components/MapEvents";
 import MiniMap from "./MiniMap";
 import EditPopup from "./EditPopup";
 import MapFilterOverlay from "./MapFilterOverlay";
@@ -48,7 +49,6 @@ import Reset from "../../../static/images/reset.png";
 import MarkerMode from "../../../static/data/MarkerMode.json";
 import Arrow from "../../../static/images/left-arrow.png";
 import "../../../static/tooltipHelper"
-import MapEvents from "../../shared/components/MapEvents";
 
 const StyledToggleButtonGroup = styled(ToggleButtonGroup)({
     display: "grid",
@@ -106,8 +106,15 @@ const Map = () => {
             map.multiplePoints,
             map.mapFilters.proximityDistance,
             map.isFocused,
-            map.isMapFocused
-        ]})
+            map.isMapFocused]
+    })
+
+    // const [inPlayerMode
+    // ] = useSelector(state => {
+    //     const player = state.player
+    //     return [player.isActive,
+    //         ]
+    // })
 
     const [isLoading,
         hasMapFilter,
@@ -120,8 +127,8 @@ const Map = () => {
             savings.current.hasMapFilter,
             savings.current.color,
             savings.current.id,
-            savings.current.mapFilter
-        ]})
+            savings.current.mapFilter]
+    })
 
     const [mapTile,
         markerMode
@@ -129,8 +136,7 @@ const Map = () => {
         const settings = state.settings
         return [
             settings.mapTile,
-            settings.markerMode
-        ]
+            settings.markerMode]
     })
 
     const [selectionButton, setButton] = useState(null)

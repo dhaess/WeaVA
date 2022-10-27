@@ -195,7 +195,15 @@ body {
     justify-content: flex-end;
     margin-right: 20px;
     margin-left: -23px;
-    padding-bottom: 58px;
+    padding-bottom: 87px;
+}
+
+.playerBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 395px;
+    margin: 0 0 5px 15px;
 }
 
 .circle {

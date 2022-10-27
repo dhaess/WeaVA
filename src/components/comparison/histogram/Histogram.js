@@ -89,8 +89,8 @@ const Histogram = ({dimensions, id}) => {
             if (data.length !== 0) {
                 const [binTimeStart, binTimeBorder] = setBinTimeBorders(binType, binCount, timeRange)
 
-                const histData = setHistData(data.map(e => e.timestamp), binTimeStart, binTimeBorder)
-                const histImageData = setHistData(data.filter(e => e.imageName!==null).map(e => e.timestamp), binTimeStart, binTimeBorder)
+                const histData = setHistData(data.map(e => e.timestamp), binTimeStart, binTimeBorder, timeRange)
+                const histImageData = setHistData(data.filter(e => e.imageName!==null).map(e => e.timestamp), binTimeStart, binTimeBorder, timeRange)
 
                 const x = d3
                     .scaleTime()

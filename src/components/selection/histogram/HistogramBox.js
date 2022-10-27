@@ -4,12 +4,13 @@ import * as d3 from "d3";
 import {changeFilter, setCurrent} from "../../shared/features/SavingsSlice";
 import {setBins} from "../../shared/features/SettingsSlice";
 import {changeFocusedTimeRange} from "../../shared/features/MapSlice";
+import OptionsWindow from "../../shared/components/OptionsWindow";
+import Player from "./Player";
 import Histogram from "./Histogram";
 import {styled} from "@mui/material/styles";
 import {Box, Button, CircularProgress, Popper} from "@mui/material";
 import Arrow from "../../../static/images/left-arrow.png";
 import SettingsIcon from "../../../static/images/settings.png";
-import HistogramOptions from "../../shared/components/HistogramOptions";
 
 const StyledButton = styled(Button)({
     backgroundColor: "var(--light-bg-color)",
@@ -88,6 +89,8 @@ const HistogramBox = ({dimensions}) => {
             fI,
             fI.filter(e => e.imageName!==null)
         ]})
+
+    const inPlayerMode = useSelector(state => state.player.isActive)
 
     const [showHistogram, setHistogram] = useState(true)
 
@@ -185,7 +188,7 @@ const HistogramBox = ({dimensions}) => {
     const imageInfo = imageData.length === 0 ? "" : ` (${imageData.length} with images)`
     const focusedImageInfo = focusedImageData.length === 0 ? "" : ` (${focusedImageData.length} with images)`
 
-    if (data.length === 0) {
+    if (data.length === 0 && !inPlayerMode) {
         return (
             <>
                 <div style={{margin: "25px", ...histContentStyle}} className="histogramContent">
@@ -216,9 +219,12 @@ const HistogramBox = ({dimensions}) => {
                     </div>
                 </div>
                 <div>
-                    <Histogram
-                        dimensions={dimensions}
-                    />
+                    <div style={{flexDirection: "column", alignItems: "center"}}>
+                        <Histogram
+                            dimensions={dimensions}
+                        />
+                        <Player/>
+                    </div>
                     <div className="histogramButtons">
                         <div style={{flexDirection: "column", ...legendStyle}}>
                             <div className="histLegend"><span style={{backgroundColor: "var(--main-bg-color)"}}></span><p>Without images</p></div>
@@ -249,7 +255,7 @@ const HistogramBox = ({dimensions}) => {
                         marginBottom: "3px",
                         marginLeft: "-2px"
                     }}>
-                        <HistogramOptions setOpenHistOptions={setOpen}/>
+                        <OptionsWindow setOpenHistOptions={setOpen}/>
                     </Box>
                 </Popper>
             }

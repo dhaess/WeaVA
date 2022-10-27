@@ -36,8 +36,22 @@ const Histogram = ({dimensions}) => {
             histogram.isFocused,
             histogram.focusedData,
             histogram.focusedImageData,
-            histogram.timeRange
-        ]})
+            histogram.timeRange]
+    })
+
+    const [inPlayerMode,
+        originalTimeRange,
+        originalData,
+        playerData,
+        playerImageData
+    ] = useSelector(state => {
+        const player = state.player
+        return [player.isActive,
+            player.originalTimeRange,
+            player.originalData.map(e => e.timestamp),
+            player.isPrepared ? player.data[player.currentStep].map(e => e.timestamp) : [],
+            player.isPrepared ? player.data[player.currentStep].filter(e => e.imageName!==null).map(e => e.timestamp) : []]
+    })
 
     const svgRef = useRef(null);
 
@@ -53,54 +67,69 @@ const Histogram = ({dimensions}) => {
         const height = dimensions.height - dimensions.margin.top - dimensions.margin.bottom
 
         const handleMouseDown = (event) => {
-            const rectList = document.querySelectorAll('rect')
-            const newTimeRange = getBinTimeRange(event.screenX, rectList)
-            if (newTimeRange !== undefined) {
-                setDrag(newTimeRange)
-                dispatch(changeFocusedTimeRange(newTimeRange))
-            }
-        }
-
-        const handleMouseOver = (event) => {
-            const rectList = document.querySelectorAll('rect')
-            const newTimeRange = getBinTimeRange(event.screenX, rectList)
-            if (newTimeRange !== undefined) {
-                if (dragStart !== undefined) {
-                    const start = dragStart[0] < newTimeRange[0] ? dragStart[0] : newTimeRange[0]
-                    const end = dragStart[1] > newTimeRange[1] ? dragStart[1] : newTimeRange[1]
-                    dispatch(changeFocusedTimeRange([start, end]))
-                } else {
-                    dispatch(changeFocusedTimeRange([]))
+            if (!inPlayerMode) {
+                const rectList = document.querySelectorAll('rect')
+                const newTimeRange = getBinTimeRange(event.screenX, rectList)
+                if (newTimeRange !== undefined) {
+                    setDrag(newTimeRange)
+                    dispatch(changeFocusedTimeRange(newTimeRange))
                 }
             }
         }
 
-        const toDelay = controlBinNumber(timeRange, binType, binCount, divided, dispatch)
+        const handleMouseOver = (event) => {
+            if (!inPlayerMode) {
+                const rectList = document.querySelectorAll('rect')
+                const newTimeRange = getBinTimeRange(event.screenX, rectList)
+                if (newTimeRange !== undefined) {
+                    if (dragStart !== undefined) {
+                        const start = dragStart[0] < newTimeRange[0] ? dragStart[0] : newTimeRange[0]
+                        const end = dragStart[1] > newTimeRange[1] ? dragStart[1] : newTimeRange[1]
+                        dispatch(changeFocusedTimeRange([start, end]))
+                    } else {
+                        dispatch(changeFocusedTimeRange([]))
+                    }
+                }
+            }
+        }
+
+        const toDelay = inPlayerMode ? false : controlBinNumber(timeRange, binType, binCount, divided, dispatch)
 
         if (!toDelay) {
             if (document.getElementsByTagName('g').length>0) {
                 d3.select(svgRef.current).select('g').remove()
             }
-            if (data.length !== 0) {
-                const [binTimeStart, binTimeBorder] = setBinTimeBorders(binType, binCount, timeRange)
+            if (inPlayerMode || data.length !== 0) {
+                let binTimeStart, binTimeBorder, histDataFocused, histDataUnfocused, imageHistData, yMax
 
-                const histDataFocused = isFocused ?
-                    setHistData(focusedData, binTimeStart, binTimeBorder) :
-                    setHistData(data, binTimeStart, binTimeBorder)
+                if (inPlayerMode) {
+                    [binTimeStart, binTimeBorder] = setBinTimeBorders(binType, binCount, originalTimeRange)
+                    histDataUnfocused = setHistData(originalData, binTimeStart, binTimeBorder, originalTimeRange)
+                    histDataFocused = setHistData(playerData, binTimeStart, binTimeBorder, originalTimeRange)
+                    imageHistData = setHistData(playerImageData, binTimeStart, binTimeBorder, originalTimeRange)
 
-                const histDataUnfocused = isFocused ?
-                    setHistData(data, binTimeStart, binTimeBorder) : []
+                    yMax = d3.max(histDataUnfocused, (d) => {return d.length})
+                } else {
+                    [binTimeStart, binTimeBorder] = setBinTimeBorders(binType, binCount, timeRange)
+                    histDataUnfocused = isFocused ?
+                        setHistData(data, binTimeStart, binTimeBorder, timeRange) : [];
 
-                const imageHistData = isFocused ?
-                    setHistData(focusedImageData, binTimeStart, binTimeBorder) :
-                    setHistData(imageData, binTimeStart, binTimeBorder)
+                    histDataFocused = isFocused ?
+                        setHistData(focusedData, binTimeStart, binTimeBorder, timeRange) :
+                        setHistData(data, binTimeStart, binTimeBorder, timeRange)
+
+                    imageHistData = isFocused ?
+                        setHistData(focusedImageData, binTimeStart, binTimeBorder, timeRange) :
+                        setHistData(imageData, binTimeStart, binTimeBorder, timeRange)
+
+                    yMax = d3.max(isFocused ? histDataUnfocused: histDataFocused, (d) => {return d.length})
+                }
 
                 const x = d3
                     .scaleTime()
-                    .domain([binTimeBorder[0], binTimeBorder.slice(-1)])
+                    .domain([binTimeBorder[0], binTimeBorder.slice(-1)[0]])
                     .range([0, width-25]);
 
-                const yMax = d3.max(isFocused ? histDataUnfocused: histDataFocused, function(d) { return d.length; })
                 const y = d3.scaleLinear()
                     .domain([0, yMax]).nice()
                     .range([height, 0]);
@@ -110,7 +139,7 @@ const Histogram = ({dimensions}) => {
                     .append("g")
                     .attr("transform", "translate(" + marginLeft + "," + margin.top + ")")
 
-                const appendData = (data, color, opacity) => {
+                const appendData = (data, color, opacity, x, y) => {
                     svg.append("svg")
                         .on("mousedown", (event) => {
                             handleMouseDown(event)
@@ -126,22 +155,21 @@ const Histogram = ({dimensions}) => {
                         .enter()
                         .append("rect")
                         .attr("x", 1)
-                        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
-                        .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
-                        .attr("height", function(d) { return height - y(d.length); })
+                        .attr("transform", (d) => {return "translate(" + x(d.x0) + "," + y(d.length) + ")"})
+                        .attr("width", (d) => {return x(d.x1) - x(d.x0) -1})
+                        .attr("height", (d) => {return height - y(d.length)})
                         .style("fill", color)
                         .style("opacity", opacity)
                 }
 
-
-                if (isFocused) {
-                    appendData(histDataUnfocused, "var(--opacity-bg-color)", "0.4")
+                if (inPlayerMode || isFocused) {
+                    appendData(histDataUnfocused, "var(--opacity-bg-color)", "0.4", x, y)
                 }
                 if (histDataFocused.length !== 0) {
-                    appendData(histDataFocused, "var(--main-bg-color)", "1")
+                    appendData(histDataFocused, "var(--main-bg-color)", "1", x, y)
                 }
                 if (divided && imageHistData.length !== 0) {
-                    appendData(imageHistData, "var(--shadow-bg-color)", "1")
+                    appendData(imageHistData, "var(--shadow-bg-color)", "1", x, y)
                 }
 
                 let formatDate = d3.timeFormat("%d.%m.%y");
@@ -180,7 +208,7 @@ const Histogram = ({dimensions}) => {
                     .text("Number of Reports");
             }
         }
-    }, [binCount, binType, data, dimensions, dispatch, divided, dragStart, focusedData, focusedImageData, imageData, isFocused, timeRange]);
+    }, [binCount, binType, data, dimensions, dispatch, divided, dragStart, focusedData, focusedImageData, imageData, inPlayerMode, isFocused, originalData, originalTimeRange, playerData, playerImageData, timeRange]);
 
     return <>
         <svg ref={svgRef} width={dimensions.width} height={dimensions.height} style={{flexShrink: "0"}} />

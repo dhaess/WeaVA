@@ -106,17 +106,18 @@ export const setBinTimeBorders = (binType, binCount, timeRange) => {
     return [binTimeStart, binTimeBorder]
 }
 
-export const setHistData = (d, binTimeStart, binTimeBorder) => {
+export const setHistData = (d, binTimeStart, binTimeBorder, timeRange) => {
     if (d.length === 0) {
         return []
     }
     const binDataRange = d3
         .bin()
         .thresholds(binTimeStart)
+
     let histData = binDataRange(d)
     histData.map(a => {
-        a.x0 = d3.max(binTimeBorder.filter(e => e <= a.x0))
-        a.x1 = d3.min(binTimeBorder.filter(e => e >= a.x1))
+        a.x0 = a.x0 === undefined ? timeRange[0] : d3.max(binTimeBorder.filter(e => e <= a.x0))
+        a.x1 = a.x1 === undefined ? timeRange[1] : d3.min(binTimeBorder.filter(e => e >= a.x1))
         return a
     })
     for (let i in binTimeBorder) {

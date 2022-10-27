@@ -2,7 +2,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {useRef, useEffect, useState} from "react";
 import {setMapTile, setTheme} from "../features/SettingsSlice";
 import Credits from "./Credits";
-import HistogramOptions from "./HistogramOptions";
+import OptionsWindow from "./OptionsWindow";
 import {NestedMenuItem} from "mui-nested-menu";
 import {styled} from "@mui/material/styles";
 import {Box, Button, Menu, MenuItem, Modal, Popper} from "@mui/material";
@@ -149,7 +149,7 @@ const Settings = ({additional, boxAnchor}) => {
                     marginBottom: "0px",
                     marginLeft: "1px"
                 }}>
-                    <HistogramOptions additional setOpenHistOptions={setOpenHistOptions}/>
+                    <OptionsWindow additional setOpenHistOptions={setOpenHistOptions}/>
                 </Box>
             </Popper>
         }
