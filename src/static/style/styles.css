@@ -304,6 +304,16 @@ body {
     align-items: center;
 }
 
+#DisableMapSelection {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 96px;
+    width: 185px;
+    margin-left: -1px;
+}
+
 .leaflet-draw-section {
     display:none
 }

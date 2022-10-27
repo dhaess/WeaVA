@@ -1,8 +1,8 @@
 import {useDispatch, useSelector} from "react-redux";
 import {moveToStep, pause, playFromStart, resume, stop} from "../../shared/features/PlayerSlice";
-import {ImageButton} from "../../../static/style/muiStyling";
+import {ImageButton, StyledTooltip} from "../../../static/style/muiStyling";
 import {styled} from "@mui/material/styles";
-import {Slider} from "@mui/material";
+import {Box, Slider} from "@mui/material";
 import Pause from "../../../static/images/pause.png";
 import Play from "../../../static/images/play.png";
 import Rewind from "../../../static/images/rewind.png";
@@ -11,6 +11,7 @@ import Stop from "../../../static/images/stop.png";
 const PlayerSlider = styled(Slider)({
     color: 'var(--main-bg-color)',
     height: 4,
+    padding: "6px 0",
     '& .MuiSlider-track': {
         border: 'none',
     },
@@ -79,23 +80,27 @@ const Player = () => {
 
     return (
         <div className={"playerBox"}>
-            {isActive &&
-                <PlayerSlider
-                valueLabelDisplay="off"
-                aria-label="Player Slider"
-                value={currentStep}
-                min={0}
-                max={totalSteps}
-                onChange={handleSliderChange}
-                sx={{marginBottom: '40px', marginTop: "-73px"}}
-            />
-            }
             <div>
                 <ImageButton disabled={!isPrepared} onClick={rewindPlayer}><img src={Rewind} width={18} alt={"rewind"}/></ImageButton>
                 {!isPlaying && <ImageButton onClick={playPlayer}><img src={Play} width={18} alt={"play"}/></ImageButton>}
                 {isPlaying && <ImageButton onClick={pausePlayer}><img src={Pause} width={18} alt={"pause"}/></ImageButton>}
                 <ImageButton onClick={stopPlayer}><img src={Stop} width={18} alt={"stop"}/></ImageButton>
             </div>
+            {isActive &&
+                <div style={{position: 'absolute', width: '395px', bottom: '84.5px', flexDirection: 'column'}}>
+                    <StyledTooltip title={"Stop player to focus bins"} arrow placement="top" followCursor enterDelay={500}>
+                        <Box height={175} width={395}/>
+                    </StyledTooltip>
+                    <PlayerSlider
+                        valueLabelDisplay="off"
+                        aria-label="Player Slider"
+                        value={currentStep}
+                        min={0}
+                        max={totalSteps}
+                        onChange={handleSliderChange}
+                    />
+                </div>
+            }
         </div>
     )
 }

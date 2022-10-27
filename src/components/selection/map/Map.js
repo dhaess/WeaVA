@@ -151,6 +151,7 @@ const Map = () => {
     const [changedPoint, setPoint] = useState(null)
     const [proximitySelection, setProximitySelection] = useState(false)
     const [changedProximity, setProximity] = useState(null)
+    const [selectionStyle, setSelectionStyle] = useState({})
 
     const [markerPos, setMarkerPos] = useState(null)
     const [clusterPopup, setClusterPopup] = useState(null)
@@ -166,6 +167,19 @@ const Map = () => {
     useEffect(() => {
         setMapData(inPlayerMode ? playerData[currentStep] : pointsData)
     }, [currentStep, inPlayerMode, playerData, pointsData])
+
+    useEffect(() => {
+        const overlayPanes = document.getElementsByClassName("leaflet-overlay-pane")
+        if (inPlayerMode) {
+            overlayPanes[0].style.display = "none"
+            overlayPanes[1].style.display = "none"
+            setSelectionStyle({display: "block"})
+        } else {
+            overlayPanes[0].style.display = "block"
+            overlayPanes[1].style.display = "block"
+            setSelectionStyle({display: "none"})
+        }
+    }, [inPlayerMode])
 
     useEffect(() => {
         if (editControlRef.current !== undefined) {
@@ -355,12 +369,16 @@ const Map = () => {
                         <div className={"MapBoxTitle"}>Map selection</div>
                         <Button id={"selectionBoxButton"} onClick={handleCloseClick}><img src={Arrow} width={16} alt={"close"}/></Button>
                     </div>
+                    <StyledTooltip title={"Stop player to enable map selection"} arrow followCursor>
+                        <div id={"DisableMapSelection"} style={selectionStyle}/>
+                    </StyledTooltip>
                     <StyledToggleButtonGroup
                         exclusive
                         onChange={handleButtons}
                         value={selectionButton}
                         aria-label={"Selection Button"}
                         ref={proximityRef}
+                        disabled={inPlayerMode}
                     >
                         <StyledToggleButton value={"polygon"}>
                             <StyledTooltip title={"Select polygon"} arrow enterDelay={500}>

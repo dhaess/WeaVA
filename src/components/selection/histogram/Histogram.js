@@ -147,7 +147,7 @@ const Histogram = ({dimensions}) => {
                                 handleMouseOver(event)
                             }
                         })
-                        .attr("cursor", "pointer")
+                        .attr("cursor", inPlayerMode ? "default" : "pointer")
                         .selectAll("rect")
                         .data(data)
                         .enter()
