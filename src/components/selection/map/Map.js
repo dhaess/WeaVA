@@ -95,26 +95,19 @@ const Map = () => {
     const editControlRef = useRef()
     let featureRef = useRef()
 
-    const [singlePoints,
-        multiplePoints,
+    const [pointsData,
+        focusedData,
         proximityDistance,
         isFocused,
         isMapFocused
     ] = useSelector(state => {
         const map = state.map
-        return [map.singlePoints,
-            map.multiplePoints,
+        return [map.pointsData,
+            map.focusedData,
             map.mapFilters.proximityDistance,
             map.isFocused,
             map.isMapFocused]
     })
-
-    // const [inPlayerMode
-    // ] = useSelector(state => {
-    //     const player = state.player
-    //     return [player.isActive,
-    //         ]
-    // })
 
     const [isLoading,
         hasMapFilter,
@@ -231,10 +224,9 @@ const Map = () => {
 
     useEffect(() => {
         if (markerMode === MarkerMode["Grid"]) {
-            const focusedData = singlePoints.focused.concat(multiplePoints.map(e => e.focused)).flat()
             setGridData(getGridData(focusedData, zoomLevel))
         }
-    }, [markerMode, multiplePoints, singlePoints, zoomLevel])
+    }, [focusedData, markerMode, zoomLevel])
 
     //todo: fix issue: Color change doesn't work on cluster icons
 
@@ -366,7 +358,7 @@ const Map = () => {
                                 </div>
                             </StyledTooltip>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"points"} disabled={markerMode!==MarkerMode["Location"] || (singlePoints.focused.length===0 && singlePoints.unfocused.length===0 && multiplePoints.length===0)}>
+                        <StyledToggleButton value={"points"} disabled={markerMode!==MarkerMode["Location"] || pointsData.length===0}>
                             <StyledTooltip title={"Select individual points"} arrow enterDelay={500}>
                                 <div className={"selectionButtonsContent"}>
                                     <img src={Point} width={14} alt={"Point"}/>
@@ -396,7 +388,7 @@ const Map = () => {
                         </StyledToggleButton>
                         <StyledToggleButton value={"canton"} disabled={true}>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"proximity"} disabled={markerMode!==MarkerMode["Location"] || (singlePoints.focused.length===0 && singlePoints.unfocused.length===0 && multiplePoints.length===0)}>
+                        <StyledToggleButton value={"proximity"} disabled={markerMode!==MarkerMode["Location"] || pointsData.length===0}>
                             <StyledTooltip title={"Select point to get all points with maximal given distance"} arrow enterDelay={500}>
                                 <div className={"selectionButtonsContent"}>
                                     <img src={Proximity} width={20} alt={"Proximity"}/>
@@ -419,7 +411,7 @@ const Map = () => {
                         </StyledToggleButton>
                     </StyledToggleButtonGroup>
                     { anchorEl &&
-                        <Popper open={selectionButton === "proximity" && (singlePoints.focused.length!==0 || singlePoints.unfocused.length!==0 || multiplePoints.length!==0)} anchorEl={anchorEl} placement={"bottom-start"}>
+                        <Popper open={selectionButton === "proximity" && pointsData.length!==0} anchorEl={anchorEl} placement={"bottom-start"}>
                             <Box sx={{
                                 border: "2px solid var(--main-bg-color)",
                                 p: 1,
@@ -581,40 +573,45 @@ const Map = () => {
                                 }
                             }}
                         >
-                            {singlePoints.focused.map(e => (
-                                <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
-                                        color={color}
-                                        data={e}
-                                        position={e.coordinates}
-                                        icon={getMapIcon(e.category, color)}
-                                        eventHandlers={{
-                                            click: e => {
-                                                addPoint(true, e)
-                                                addProximity(e)
-                                            }
-                                        }}
-                                >
-                                    <StyledPopup>
-                                        <p>{getCategoryName(e.category)}: {getIntensityName(e.category, e.auspraegung)}</p>
-                                    </StyledPopup>
-                                </Marker>
-                            ))}
-                            {multiplePoints.filter(e => e.focused.length !== 0).map(e => (
-                                <Marker opacity={1}  key={e.coordinates[0] + "," + e.coordinates[1]}
-                                        color={color}
-                                        data={e}
-                                        position={e.coordinates}
-                                        icon={getPieIcon(e.focused, {color: color})}
-                                        eventHandlers={{
-                                            click: e => {
-                                                addPoint(true, e)
-                                                addProximity(e)
-                                            }
-                                        }}
-                                >
-                                    <MultiMarkerPopup data={e}/>
-                                </Marker>
-                            ))}
+                            {pointsData.filter(e => e.focused.length > 0).map(e => {
+                                if (e.focused.length === 1 && e.unfocused.length === 0) {
+                                    return (
+                                        <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
+                                                color={color}
+                                                data={e.focused[0]}
+                                                position={e.coordinates}
+                                                icon={getMapIcon(e.focused[0].category, color)}
+                                                eventHandlers={{
+                                                    click: event => {
+                                                        addPoint(true, event)
+                                                        addProximity(event)
+                                                    }
+                                                }}
+                                        >
+                                            <StyledPopup>
+                                                <p>{getCategoryName(e.focused[0].category)}: {getIntensityName(e.focused[0].category, e.focused[0].auspraegung)}</p>
+                                            </StyledPopup>
+                                        </Marker>
+                                    )
+                                } else {
+                                    return (
+                                        <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}
+                                                color={color}
+                                                data={e}
+                                                position={e.coordinates}
+                                                icon={getPieIcon(e.focused, {color: color})}
+                                                eventHandlers={{
+                                                    click: event => {
+                                                        addPoint(true, event)
+                                                        addProximity(event)
+                                                    }
+                                                }}
+                                        >
+                                            <MultiMarkerPopup data={e}/>
+                                        </Marker>
+                                    )
+                                }
+                            })}
                         </MarkerClusterGroup>
                         {clusterPopup &&
                             <MultiMarkerPopup
@@ -626,43 +623,43 @@ const Map = () => {
                     </LayersControl.BaseLayer>
                     <LayersControl.BaseLayer name={MarkerMode["Location"]} checked={markerMode===MarkerMode["Location"]}>
                         <LayerGroup>
-                            {singlePoints.unfocused.map(e => (
-                                <Marker opacity={0.5} zIndexOffset={-1000}
-                                        key={e.coordinates[0] + "," + e.coordinates[1]}
-                                        position={e.coordinates}
-                                        icon={getMapIcon(e.category, "var(--gray-bg-color)")}
-                                        eventHandlers={{
-                                            click: e => {
-                                                addPoint(false, e)
-                                                addProximity(e)
-                                            }
-                                        }}
-                                >
-                                    <StyledPopup>
-                                        <p>{getCategoryName(e.category)}: {getIntensityName(e.category, e.auspraegung)}</p>
-                                    </StyledPopup>
-                                </Marker>
-                            ))}
-                            {singlePoints.focused.map(e => {
-                                return (
-                                    <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
-                                            position={e.coordinates}
-                                            icon={getMapIcon(e.category, color)}
-                                            eventHandlers={{
-                                                click: e => {
-                                                    addPoint(true, e)
-                                                    addProximity(e)
-                                                }
-                                            }}
-                                    >
-                                        <StyledPopup>
-                                            <p>{getCategoryName(e.category)}: {getIntensityName(e.category, e.auspraegung)}</p>
-                                        </StyledPopup>
-                                    </Marker>
-                                )
-                            })}
-                            {multiplePoints.map(e => {
-                                if (e.focused.length === 0) {
+                            {pointsData.map(e => {
+                                if (e.focused.length === 1 && e.unfocused.length === 0) {
+                                    return (
+                                        <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
+                                                position={e.coordinates}
+                                                icon={getMapIcon(e.focused[0].category, color)}
+                                                eventHandlers={{
+                                                    click: event => {
+                                                        addPoint(true, event)
+                                                        addProximity(event)
+                                                    }
+                                                }}
+                                        >
+                                            <StyledPopup>
+                                                <p>{getCategoryName(e.focused[0].category)}: {getIntensityName(e.focused[0].category, e.focused[0].auspraegung)}</p>
+                                            </StyledPopup>
+                                        </Marker>
+                                    )
+                                } else if (e.focused.length === 0 && e.unfocused.length === 1) {
+                                    return (
+                                        <Marker opacity={0.5} zIndexOffset={-1000}
+                                                key={e.coordinates[0] + "," + e.coordinates[1]}
+                                                position={e.coordinates}
+                                                icon={getMapIcon(e.unfocused[0].category, "var(--gray-bg-color)")}
+                                                eventHandlers={{
+                                                    click: event => {
+                                                        addPoint(false, event)
+                                                        addProximity(event)
+                                                    }
+                                                }}
+                                        >
+                                            <StyledPopup>
+                                                <p>{getCategoryName(e.unfocused[0].category)}: {getIntensityName(e.unfocused[0].category, e.unfocused[0].auspraegung)}</p>
+                                            </StyledPopup>
+                                        </Marker>
+                                    )
+                                } else if (e.focused.length === 0) {
                                     return (
                                         <Marker opacity={0.5} zIndexOffset={-1000}
                                                 key={e.coordinates[0] + "," + e.coordinates[1]}

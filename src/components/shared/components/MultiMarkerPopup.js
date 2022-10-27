@@ -25,7 +25,6 @@ const arrangeIntensityInfo = (array) => {
 }
 
 export const MultiMarkerPopup = ({data, isCluster, position}) => {
-
     let focusedIntensityInfo
     let unfocusedIntensityInfo
     if (isCluster === undefined) {

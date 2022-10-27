@@ -82,12 +82,11 @@ const HistogramBox = ({dimensions}) => {
         focusedImageData
     ] = useSelector(state => {
         const map = state.map
-        const fI = map.singlePoints.focused.concat(map.multiplePoints.map(e => e.focused).flat())
         return [
             map.isFocused,
             map.focusedTimeRange,
-            fI,
-            fI.filter(e => e.imageName!==null)
+            map.focusedData,
+            map.focusedData.filter(e => e.imageName!==null)
         ]})
 
     const inPlayerMode = useSelector(state => state.player.isActive)

@@ -40,7 +40,7 @@ export const pointInRectangle = (point, rectangle) => {
         point[1] >= rectangle.southWest.lng
 }
 
-const arrangeMultiArea = (allPoints, focused) => {
+const arrangeArea = (allPoints, focused) => {
     let newAll = [...allPoints]
     focused.forEach(e => {
         const index = newAll.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
@@ -52,7 +52,7 @@ const arrangeMultiArea = (allPoints, focused) => {
     return newAll
 }
 
-export const focusArea = (focused, areas, isSinglePoint = true) => {
+export const focusArea = (focused, areas) => {
     if (Object.keys(areas).length === 0) {
         return [focused, false]
     }
@@ -74,43 +74,12 @@ export const focusArea = (focused, areas, isSinglePoint = true) => {
                 return []
         }
     }).flat()
-
-    if (isSinglePoint) {
-        newFocused = [...new Map(newFocused.map(item => [item.id, item])).values()]
-    } else {
-        newFocused = arrangeMultiArea(focused, newFocused)
-    }
+    newFocused = arrangeArea(focused, newFocused)
 
     return [newFocused, true]
 }
-export const focusPoints = (focused, allData, points, isSinglePoint=true) => {
-    if (isSinglePoint) {
-        return focusSinglePoints(focused, allData, points)
-    } else {
-        return focusMultiPoints(focused, allData, points)
-    }
-}
 
-const focusSinglePoints = (focused, allData, points) => {
-    if (points["add"].length === 0 && points["delete"].length === 0) {
-        return [focused, false]
-    }
-    let newFocused = [...focused]
-    points["delete"].forEach(c => {
-        const index = newFocused.findIndex(e => e.coordinates[0] === c.lat && e.coordinates[1] === c.lng)
-        if (index !== -1) {
-            newFocused.splice(index, 1)
-        }
-    })
-    const addedPoints = points["add"].map(c => {
-        return allData.filter(f => f.coordinates[0] === c.lat && f.coordinates[1] === c.lng)
-    })
-    newFocused = newFocused.concat(addedPoints).flat()
-    newFocused = [...new Map(newFocused.map(item => [item.id, item])).values()]
-    return [newFocused, true]
-}
-
-const focusMultiPoints = (focused, allData, points) => {
+export const focusPoints = (focused, points) => {
     if (points["add"].length === 0 && points["delete"].length === 0) {
         return [focused, false]
     }
@@ -136,31 +105,7 @@ const focusMultiPoints = (focused, allData, points) => {
     return [newFocused, true]
 }
 
-export const focusProximity = (focused, allData, proximityPoints, isFocused, isSinglePoint = true) => {
-    if (isSinglePoint) {
-        return focusSingleProximity(focused, allData, proximityPoints, isFocused)
-    } else {
-        return focusMultiProximity(focused, proximityPoints)
-    }
-}
-
-const focusSingleProximity = (focused, allData, proximityPoints, isFocused) => {
-    if (proximityPoints.length === 0) {
-        return [focused, false]
-    }
-    let newFocused = isFocused ? [...focused] : []
-    proximityPoints.flat().forEach(c => {
-        const index = allData.findIndex(v => [0, 1].every(k => v.coordinates[k]===c[k]))
-        if (index!==-1) {
-            newFocused.push(allData[index])
-        }
-    })
-
-    newFocused = [...new Map(newFocused.map(item => [item.id, item])).values()]
-    return [newFocused, true]
-}
-
-const focusMultiProximity = (data, proximityPoints) => {
+export const focusProximity = (data, proximityPoints) => {
     if (proximityPoints.length === 0) {
         return [data, false]
     }

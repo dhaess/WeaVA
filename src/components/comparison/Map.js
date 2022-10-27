@@ -45,8 +45,7 @@ const Map = () => {
     })
 
     const [selectionButton, setButton] = useState(null)
-    const [singleData, setSingleData] = useState({focused: [], unfocused: []})
-    const [multipleData, setMultipleData] = useState([])
+    const [pointsData, setPointsData] = useState([])
     const [markerPos, setMarkerPos] = useState(null)
     const [clusterPopup, setClusterPopup] = useState(null)
     const [clusterData, setClusterData] = useState(null)
@@ -57,38 +56,30 @@ const Map = () => {
     useEffect(() => {
         const shownEvents = events.filter(event => !event.hidden)
         let coordsList = []
-        let newSingleData = {focused: [], unfocused: []}
-        let newMultipleData = []
+        let newPointsData = []
 
         shownEvents.forEach(event => {
             event.data.forEach(e => {
                 const e2 = {...e}
-                let index = coordsList.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
+                let index = coordsList.findIndex(c => [0, 1].every(k => e.coordinates[k] === c[k]))
                 if (index === -1) {
-                    newSingleData.focused.push(e2)
-                    coordsList.push({coordinates: e.coordinates, isSingle: true})
+                    newPointsData.push({coordinates: e.coordinates, count: 1, focused: [e2], unfocused:[]})
+                    coordsList.push(e.coordinates)
                 } else {
-                    if (coordsList[index].isSingle) {
-                        let newDouble = newSingleData.focused.splice(newSingleData.focused.findIndex(s => [0, 1].every(k => e.coordinates[k] === s.coordinates[k])), 1)
-                        newMultipleData.push({coordinates: e.coordinates, count: 2, focused: [newDouble[0], e2], unfocused:[]})
-                        coordsList[index].isSingle = false
-                    } else {
-                        let multiIndex = newMultipleData.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
-                        newMultipleData[multiIndex].count += 1
-                        newMultipleData[multiIndex].focused.push(e2)
-                    }
+                    let pointsIndex = newPointsData.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
+                    newPointsData[pointsIndex].count += 1
+                    newPointsData[pointsIndex].focused.push(e2)
                 }
             })
         })
-        setSingleData(newSingleData)
-        setMultipleData(newMultipleData)
+        setPointsData(newPointsData)
 
     }, [events])
 
     useEffect(() => {
-        let data = singleData.focused.concat(multipleData.map(e => e.focused).flat())
+        let data = pointsData.map(e => e.focused).flat()
         setGridData(getGridData(data, zoomLevel))
-    }, [singleData, multipleData, zoomLevel])
+    }, [pointsData, zoomLevel])
 
     const showClusterPopup = (event) => {
         let dataList = getClusterList(event)
@@ -163,27 +154,28 @@ const Map = () => {
                             }
                         }}
                     >
-                        {singleData.focused.map(e => (
-                            <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
-                                    data={e}
-                                    position={e.coordinates}
-                                    icon={getMapIcon(e.category, e.color)}
-                            >
-                                <StyledPopup>
-                                    <p>{getCategoryName(e.category)}: {getIntensityName(e.category, e.auspraegung)}</p>
-                                </StyledPopup>
-                            </Marker>
-                        ))}
-                        {multipleData.filter(e => e.focused.length !== 0).map(e => {
-                            return (
-                                <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}
-                                        data={e}
-                                        position={e.coordinates}
-                                        icon={getPieIcon(e.focused)}
-                                >
-                                    <MultiMarkerEventPopup data={e}/>
-                                </Marker>
-                            )
+                        {pointsData.filter(e => e.focused.length !== 1).map(e => {
+                            if (e.focused.length === 1 && e.unfocused.length === 0) {
+                                return (
+                                    <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}
+                                            data={e.focused[0]}
+                                            position={e.coordinates}
+                                            icon={getMapIcon(e.focused[0].category, e.focused[0].color)}
+                                    >
+                                        <MultiMarkerEventPopup data={e}/>
+                                    </Marker>
+                                )
+                            } else {
+                                return (
+                                    <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}
+                                            data={e}
+                                            position={e.coordinates}
+                                            icon={getPieIcon(e.focused)}
+                                    >
+                                        <MultiMarkerEventPopup data={e}/>
+                                    </Marker>
+                                )
+                            }
                         })}
                     </MarkerClusterGroup>
                     {clusterPopup &&
@@ -196,29 +188,31 @@ const Map = () => {
                 </LayersControl.BaseLayer>
                 <LayersControl.BaseLayer name={MarkerMode["Location"]} checked={markerMode===MarkerMode["Location"]}>
                     <LayerGroup>
-                        {singleData.unfocused.map(e => (
-                            <Marker opacity={0.5} zIndexOffset={-1000}
-                                    key={e.coordinates[0] + "," + e.coordinates[1]}
-                                    position={e.coordinates}
-                                    icon={getMapIcon(e.category, "var(--gray-bg-color)")}
-                            >
-                                <StyledPopup>
-                                    <p>{getCategoryName(e.category)}: {getIntensityName(e.category, e.auspraegung)}</p>
-                                </StyledPopup>
-                            </Marker>
-                        ))}
-                        {singleData.focused.map(e => (
-                            <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
-                                    position={e.coordinates}
-                                    icon={getMapIcon(e.category, e.color)}
-                            >
-                                <StyledPopup>
-                                    <p>{getCategoryName(e.category)}: {getIntensityName(e.category, e.auspraegung)}</p>
-                                </StyledPopup>
-                            </Marker>
-                        ))}
-                        {multipleData.map(e => {
-                            if (e.focused.length === 0) {
+                        {pointsData.map(e => {
+                            if (e.focused.length === 1 && e.unfocused.length === 0) {
+                                return (
+                                    <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
+                                            position={e.coordinates}
+                                            icon={getMapIcon(e.focused[0].category, e.focused[0].color)}
+                                    >
+                                        <StyledPopup>
+                                            <p>{getCategoryName(e.focused[0].category)}: {getIntensityName(e.focused[0].category, e.focused[0].auspraegung)}</p>
+                                        </StyledPopup>
+                                    </Marker>
+                                )
+                            } else if (e.focused.length === 0 && e.unfocused.length === 1) {
+                                return (
+                                    <Marker opacity={0.5} zIndexOffset={-1000}
+                                            key={e.coordinates[0] + "," + e.coordinates[1]}
+                                            position={e.coordinates}
+                                            icon={getMapIcon(e.unfocused[0].category, "var(--gray-bg-color)")}
+                                    >
+                                        <StyledPopup>
+                                            <p>{getCategoryName(e.unfocused[0].category)}: {getIntensityName(e.unfocused[0].category, e.unfocused[0].auspraegung)}</p>
+                                        </StyledPopup>
+                                    </Marker>
+                                )
+                            } else if (e.focused.length === 0) {
                                 return (
                                     <Marker opacity={0.5} zIndexOffset={-1000}
                                             key={e.coordinates[0] + "," + e.coordinates[1]}

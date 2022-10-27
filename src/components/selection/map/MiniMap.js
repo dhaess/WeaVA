@@ -23,8 +23,7 @@ const MiniMap = ({color, id}) => {
     })
 
     const [showMap, setMap] = useState(true)
-    const [singleData, setSingleData] = useState([])
-    const [multipleData, setMultipleData] = useState([])
+    const [pointsData, setPointsData] = useState([])
     const [gridData, setGridData] = useState([])
 
     const handleCloseClick = () => {
@@ -46,37 +45,27 @@ const MiniMap = ({color, id}) => {
         ).flat()
 
         let coordsList = []
-        let newSingleData = []
-        let newMultipleData = []
+        let newPointsData = []
         mapData.forEach(e => {
-            let index = coordsList.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
+            let index = coordsList.findIndex(c => [0, 1].every(k => e.coordinates[k] === c[k]))
             if (index === -1) {
-                const e2 = {...e}
-                newSingleData.push(e2)
-                coordsList.push({coordinates: e.coordinates, isSingle: true})
+                newPointsData.push({coordinates: e.coordinates, count: 1, focused: [e]})
+                coordsList.push(e.coordinates)
             } else {
-                if (coordsList[index].isSingle) {
-                    let newDouble = newSingleData.splice(newSingleData.findIndex(s => [0, 1].every(k => e.coordinates[k] === s.coordinates[k])), 1)
-                    const e2 = {...e}
-                    newMultipleData.push({coordinates: e.coordinates, count: 2, focused: [newDouble[0], e2]})
-                    coordsList[index].isSingle = false
-                } else {
-                    let multiIndex = newMultipleData.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
-                    newMultipleData[multiIndex].count += 1
-                    newMultipleData[multiIndex].focused.push(e)
-                }
+                let multiIndex = newPointsData.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
+                newPointsData[multiIndex].count += 1
+                newPointsData[multiIndex].focused.push(e)
             }
         })
-        setSingleData(newSingleData)
-        setMultipleData(newMultipleData)
+        setPointsData(newPointsData)
     }, [color, data, events, id])
 
     useEffect(() => {
         if (markerMode===MarkerMode["Grid"]) {
-            const gridInput = singleData.concat(multipleData.map(e => e.focused).flat())
+            const gridInput = pointsData.map(e => e.focused).flat()
             setGridData(getGridData(gridInput, 8))
         }
-    }, [markerMode, multipleData, singleData])
+    }, [markerMode, pointsData])
 
     if (showMap) {
         return (
@@ -135,38 +124,48 @@ const MiniMap = ({color, id}) => {
                             maxClusterRadius={20}
                             // chunkProgress={(processed, total, elapsed, layersArray) => updateProgressBar(processed, total, elapsed, layersArray)}
                         >
-                            {singleData.map(e => (
-                                <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
-                                        color={color}
-                                        data={e}
-                                        position={e.coordinates}
-                                        icon={getMapIcon(e.category, e.color, 7, "minimapMarkers minimapSingle")}
-                                />
-                            ))}
-                            {multipleData.filter(e => e.focused.length !== 0).map(e => (
-                                <Marker opacity={1}  key={e.coordinates[0] + "," + e.coordinates[1]}
-                                        color={color}
-                                        data={e}
-                                        position={e.coordinates}
-                                        icon={getPieIcon(e.focused, {size: 7})}
-                                />
-                            ))}
+                            {pointsData.filter(e => e.focused.length !== 0).map(e => {
+                                if (e.focused.length === 1) {
+                                    return (
+                                        <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
+                                                color={color}
+                                                data={e.focused[0]}
+                                                position={e.coordinates}
+                                                icon={getMapIcon(e.focused[0].category, e.focused[0].color, 7, "minimapMarkers minimapSingle")}
+                                        />
+                                    )
+                                } else {
+                                    return (
+                                        <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}
+                                                color={color}
+                                                data={e}
+                                                position={e.coordinates}
+                                                icon={getPieIcon(e.focused, {size: 7})}
+                                        />
+                                    )
+                                }
+                            })}
                         </MarkerClusterGroup>
                     }
                     {markerMode===MarkerMode["Location"] &&
                         <LayerGroup>
-                            {singleData.map(e => (
-                                <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
-                                        position={e.coordinates}
-                                        icon={getMapIcon(e.category, e.color, 7, "minimapMarkers minimapSingle")}
-                                />
-                            ))}
-                            {multipleData.map(e => (
-                                <Marker opacity={1}  key={e.coordinates[0] + "," + e.coordinates[1]}
-                                        position={e.coordinates}
-                                        icon={getPieIcon(e.focused, {size: 7, className: "minimapMarkers"})}
-                                />
-                            ))}
+                            {pointsData.map(e => {
+                                if (pointsData.focused.length === 1) {
+                                    return (
+                                        <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
+                                                position={e.coordinates}
+                                                icon={getMapIcon(e.focused[0].category, e.focused[0].color, 7, "minimapMarkers minimapSingle")}
+                                        />
+                                    )
+                                } else {
+                                    return (
+                                        <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}
+                                                position={e.coordinates}
+                                                icon={getPieIcon(e.focused, {size: 7, className: "minimapMarkers"})}
+                                        />
+                                    )
+                                }
+                            })}
                         </LayerGroup>
                     }
                 </MapContainer>

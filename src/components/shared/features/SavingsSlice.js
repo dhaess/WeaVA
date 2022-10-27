@@ -69,12 +69,11 @@ const applyMapFilters = (data, areas, points, proximityPoints) => {
     let [newData, isAreaFocused] = focusArea(data, areas)
 
     let isProximityFocused
-    [newData, isProximityFocused] = focusProximity(newData, data, proximityPoints, isAreaFocused)
+    [newData, isProximityFocused] = focusProximity(newData, proximityPoints, isAreaFocused)
 
     let isPointFocused
-    [newData, isPointFocused] = focusPoints(newData, data, points)
-
-    return [newData, isAreaFocused || isPointFocused || isProximityFocused]
+    [newData, isPointFocused] = focusPoints(newData, points)
+    return [newData.map(e => e.focused).flat(), isAreaFocused || isPointFocused || isProximityFocused]
 }
 
 const getData = async (filter, areaFilter) => {
@@ -98,8 +97,8 @@ const getData = async (filter, areaFilter) => {
             if (areaFilter.length === undefined) {
                 [newData, isAreaFocused] = focusArea(data, areaFilter.focusedArea)
                 const newPoints = getNewProximityPoints(areaFilter.focusedProximityPoints, coordsList, areaFilter.proximityDistance);
-                [newData, isProximityFocused] = focusProximity(newData, data, newPoints, isAreaFocused);
-                [newData, isPointFocused] = focusPoints(newData, data, areaFilter.focusedSpecialPoints)
+                [newData, isProximityFocused] = focusProximity(newData, newPoints, isAreaFocused);
+                [newData, isPointFocused] = focusPoints(newData, areaFilter.focusedSpecialPoints)
             } else if (areaFilter.length === 0) {
                 newData = data
                 isAreaFocused = false
@@ -110,8 +109,8 @@ const getData = async (filter, areaFilter) => {
                 areaFilter.forEach(e => {
                     [newData, isAreaFocused] = focusArea(newData, e.focusedArea)
                     const newPoints = getNewProximityPoints(e.focusedProximityPoints, coordsList, e.proximityDistance);
-                    [newData, isProximityFocused] = focusProximity(newData, data, newPoints, isAreaFocused);
-                    [newData, isPointFocused] = focusPoints(newData, data, e.focusedSpecialPoints)
+                    [newData, isProximityFocused] = focusProximity(newData, newPoints, isAreaFocused);
+                    [newData, isPointFocused] = focusPoints(newData, e.focusedSpecialPoints)
                 })
             }
 
@@ -189,7 +188,7 @@ export const revert = createAsyncThunk('posts/revertData',
 export const changeMapFilters = () => {
     return (dispatch, getState) => {
         const state = getState()
-        let data = state.map.allData
+        let data = state.map.pointsData
         const areas = state.map.mapFilters.focusedArea
         const points = state.map.mapFilters.focusedSpecialPoints
         const proximityPoints = state.map.mapFilters.focusedProximityPoints
@@ -251,7 +250,7 @@ export const checkChanges = () => {
 export const saveAllChanges = () => {
     return (dispatch, getState) => {
         const state = getState()
-        const data = state.map.allData
+        const data = state.map.pointsData
         const areas = state.map.mapFilters.focusedArea
         const points = state.map.mapFilters.focusedSpecialPoints
         const proximityPoints = state.map.mapFilters.focusedProximityPoints
