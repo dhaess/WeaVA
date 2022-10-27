@@ -41,16 +41,14 @@ const Histogram = ({dimensions}) => {
 
     const [inPlayerMode,
         originalTimeRange,
-        originalData,
         playerData,
         playerImageData
     ] = useSelector(state => {
         const player = state.player
         return [player.isActive,
             player.originalTimeRange,
-            player.originalData.map(e => e.timestamp),
-            player.isPrepared ? player.data[player.currentStep].map(e => e.timestamp) : [],
-            player.isPrepared ? player.data[player.currentStep].filter(e => e.imageName!==null).map(e => e.timestamp) : []]
+            player.isPrepared ? player.histData[player.currentStep] : [],
+            player.isPrepared ? player.histImageData[player.currentStep] : []]
     })
 
     const svgRef = useRef(null);
@@ -104,7 +102,7 @@ const Histogram = ({dimensions}) => {
 
                 if (inPlayerMode) {
                     [binTimeStart, binTimeBorder] = setBinTimeBorders(binType, binCount, originalTimeRange)
-                    histDataUnfocused = setHistData(originalData, binTimeStart, binTimeBorder, originalTimeRange)
+                    histDataUnfocused = setHistData(data, binTimeStart, binTimeBorder, originalTimeRange)
                     histDataFocused = setHistData(playerData, binTimeStart, binTimeBorder, originalTimeRange)
                     imageHistData = setHistData(playerImageData, binTimeStart, binTimeBorder, originalTimeRange)
 
@@ -208,7 +206,7 @@ const Histogram = ({dimensions}) => {
                     .text("Number of Reports");
             }
         }
-    }, [binCount, binType, data, dimensions, dispatch, divided, dragStart, focusedData, focusedImageData, imageData, inPlayerMode, isFocused, originalData, originalTimeRange, playerData, playerImageData, timeRange]);
+    }, [binCount, binType, data, dimensions, dispatch, divided, dragStart, focusedData, focusedImageData, imageData, inPlayerMode, isFocused, originalTimeRange, playerData, playerImageData, timeRange]);
 
     return <>
         <svg ref={svgRef} width={dimensions.width} height={dimensions.height} style={{flexShrink: "0"}} />

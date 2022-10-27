@@ -5,28 +5,16 @@ import {
     focusArea,
     focusPoints,
     focusProximity,
-    getProximityPoints,
+    getProximityPoints, setPointsData,
 } from "../functions/MapFunctions";
 
 const standardProximity = 20
 
 export const setMapData = (originalData) => {
     return (dispatch, getState) => {
-        let coordsList = []
-        let points = []
-        originalData.forEach(e => {
-            let index = coordsList.findIndex(c => [0, 1].every(k => e.coordinates[k] === c[k]))
-            if (index === -1) {
-                points.push({coordinates: e.coordinates, count: 1, focused: [e], unfocused:[]})
-                coordsList.push(e.coordinates)
-            } else {
-                let pointsIndex = points.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
-                points[pointsIndex].count += 1
-                points[pointsIndex].focused.push(e)
-            }
-        })
-
         const state = getState()
+
+        const points = setPointsData(originalData)
         const [focusedData, data, isFocused, isMapFocused] = setFocuses(state, [], state.map.mapFilters.focusedArea, {add: [], delete: []}, [], points)
         dispatch(setData({
             isFocused: isFocused,

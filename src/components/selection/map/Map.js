@@ -132,6 +132,20 @@ const Map = () => {
             settings.markerMode]
     })
 
+    const [inPlayerMode,
+        playerData,
+        playerFlatData,
+        currentStep
+    ] = useSelector(state => {
+        const player = state.player
+        return [player.isActive,
+            player.mapData,
+            player.data,
+            player.currentStep]
+    })
+
+    const [mapData, setMapData] = useState([])
+
     const [selectionButton, setButton] = useState(null)
     const [pointSelection, setPointSelection] = useState(false)
     const [changedPoint, setPoint] = useState(null)
@@ -148,6 +162,10 @@ const Map = () => {
     const [hoverReset, setHoverReset] = useState(false)
 
     const [mapLoadingStyle, setMapLoadingStyle] = useState({})
+
+    useEffect(() => {
+        setMapData(inPlayerMode ? playerData[currentStep] : pointsData)
+    }, [currentStep, inPlayerMode, playerData, pointsData])
 
     useEffect(() => {
         if (editControlRef.current !== undefined) {
@@ -224,9 +242,9 @@ const Map = () => {
 
     useEffect(() => {
         if (markerMode === MarkerMode["Grid"]) {
-            setGridData(getGridData(focusedData, zoomLevel))
+            setGridData(getGridData(inPlayerMode ? playerFlatData[currentStep] : focusedData, zoomLevel))
         }
-    }, [focusedData, markerMode, zoomLevel])
+    }, [currentStep, focusedData, inPlayerMode, markerMode, playerFlatData, zoomLevel])
 
     //todo: fix issue: Color change doesn't work on cluster icons
 
@@ -358,7 +376,7 @@ const Map = () => {
                                 </div>
                             </StyledTooltip>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"points"} disabled={markerMode!==MarkerMode["Location"] || pointsData.length===0}>
+                        <StyledToggleButton value={"points"} disabled={markerMode!==MarkerMode["Location"] || mapData.length===0}>
                             <StyledTooltip title={"Select individual points"} arrow enterDelay={500}>
                                 <div className={"selectionButtonsContent"}>
                                     <img src={Point} width={14} alt={"Point"}/>
@@ -388,7 +406,7 @@ const Map = () => {
                         </StyledToggleButton>
                         <StyledToggleButton value={"canton"} disabled={true}>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"proximity"} disabled={markerMode!==MarkerMode["Location"] || pointsData.length===0}>
+                        <StyledToggleButton value={"proximity"} disabled={markerMode!==MarkerMode["Location"] || mapData.length===0}>
                             <StyledTooltip title={"Select point to get all points with maximal given distance"} arrow enterDelay={500}>
                                 <div className={"selectionButtonsContent"}>
                                     <img src={Proximity} width={20} alt={"Proximity"}/>
@@ -411,7 +429,7 @@ const Map = () => {
                         </StyledToggleButton>
                     </StyledToggleButtonGroup>
                     { anchorEl &&
-                        <Popper open={selectionButton === "proximity" && pointsData.length!==0} anchorEl={anchorEl} placement={"bottom-start"}>
+                        <Popper open={selectionButton === "proximity" && mapData.length!==0} anchorEl={anchorEl} placement={"bottom-start"}>
                             <Box sx={{
                                 border: "2px solid var(--main-bg-color)",
                                 p: 1,
@@ -517,9 +535,9 @@ const Map = () => {
                                                 position={e.coordinates}
                                                 icon={getMapIcon(singlePoint.category, color)}
                                                 eventHandlers={{
-                                                    click: e => {
-                                                        addPoint(true, e)
-                                                        addProximity(e)
+                                                    click: event => {
+                                                        addPoint(true, event)
+                                                        addProximity(event)
                                                     }
                                                 }}
                                         >
@@ -536,9 +554,9 @@ const Map = () => {
                                                 position={e.coordinates}
                                                 icon={getPieIcon(e.focused, {color: color, sum: e.focused.length})}
                                                 eventHandlers={{
-                                                    click: e => {
-                                                        addPoint(true, e)
-                                                        addProximity(e)
+                                                    click: event => {
+                                                        addPoint(true, event)
+                                                        addProximity(event)
                                                     },
                                                     mouseover: e => setHoverPoint(selectionButton===null ? e.target.options.data: null),
                                                     mouseout: () => setHoverPoint(null)
@@ -573,7 +591,7 @@ const Map = () => {
                                 }
                             }}
                         >
-                            {pointsData.filter(e => e.focused.length > 0).map(e => {
+                            {mapData.filter(e => e.focused.length > 0).map(e => {
                                 if (e.focused.length === 1 && e.unfocused.length === 0) {
                                     return (
                                         <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
@@ -623,7 +641,7 @@ const Map = () => {
                     </LayersControl.BaseLayer>
                     <LayersControl.BaseLayer name={MarkerMode["Location"]} checked={markerMode===MarkerMode["Location"]}>
                         <LayerGroup>
-                            {pointsData.map(e => {
+                            {mapData.map(e => {
                                 if (e.focused.length === 1 && e.unfocused.length === 0) {
                                     return (
                                         <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
@@ -666,9 +684,9 @@ const Map = () => {
                                                 position={e.coordinates}
                                                 icon={getPieIcon(e.focused, {color: "var(--gray-bg-color)"})}
                                                 eventHandlers={{
-                                                    click: e => {
-                                                        addPoint(false, e)
-                                                        addProximity(e)
+                                                    click: event => {
+                                                        addPoint(false, event)
+                                                        addProximity(event)
                                                     }
                                                 }}
                                         >
@@ -681,9 +699,9 @@ const Map = () => {
                                                 position={e.coordinates}
                                                 icon={getPieIcon(e.focused, {color: color})}
                                                 eventHandlers={{
-                                                    click: e => {
-                                                        addPoint(true, e)
-                                                        addProximity(e)
+                                                    click: event => {
+                                                        addPoint(true, event)
+                                                        addProximity(event)
                                                     }
                                                 }}
                                         >

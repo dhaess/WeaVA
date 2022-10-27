@@ -146,11 +146,29 @@ export const getProximityPoints = (coords, coordsList, distance) => {
     return proximityList
 }
 
+export const setPointsData = (data) => {
+    let coordsList = []
+    let points = []
+    data.forEach(e => {
+        let index = coordsList.findIndex(c => [0, 1].every(k => e.coordinates[k] === c[k]))
+        if (index === -1) {
+            points.push({coordinates: e.coordinates, count: 1, focused: [e], unfocused:[]})
+            coordsList.push(e.coordinates)
+        } else {
+            let pointsIndex = points.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
+            points[pointsIndex].count += 1
+            points[pointsIndex].focused.push(e)
+        }
+    })
+    return points
+}
+
 export const getGridData = (allData, zoomLevel) => {
     const gridData = []
 
     if (allData.length===1) {
-        return [{focused: allData, unfocused: [], count: 1, coordinates: allData[0].coordinates}]
+        gridData.push({focused: allData, unfocused: [], count: 1, coordinates: allData[0].coordinates, convexHull: [allData[0].coordinates]})
+        return gridData
     }
     else if (allData.length>1) {
         const latList = allData.map(e => e.coordinates[0])
