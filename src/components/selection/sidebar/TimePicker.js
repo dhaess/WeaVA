@@ -172,9 +172,7 @@ export default function TimePicker() {
 
     const handleEndTimeChange = (val) => {
         const timeVal = [timeRange[0].getTime(), val.getTime()]
-        if (timeVal[1] > maxDataDate) {
-            timeVal[1] = maxDataDate
-        }
+        if (timeVal[1] > maxDataDate) timeVal[1] = maxDataDate
         const delayDebounceFn = setTimeout(() => {
             const filter = {"timestamp": {
                     '$gt': timeVal[0],
@@ -200,9 +198,7 @@ export default function TimePicker() {
             default: endTime += duration[0] * 86400000 + duration[1] * 3600000 + val * 60000
         }
         const timeVal = [timeRange[0].getTime(), endTime]
-        if (endTime > maxDataDate) {
-            timeVal[1] = maxDataDate
-        }
+        if (endTime > maxDataDate) timeVal[1] = maxDataDate
         const filter = {"timestamp": {
                 '$gt': timeVal[0],
                 '$lt': timeVal[1]
@@ -237,6 +233,7 @@ export default function TimePicker() {
                     // onError={(e) => {console.log(e, "invalidDate", e === "invalidDate")}}
                     onChange={handleStartTimeChange}
                     renderInput={(params) => <StyledTimeTextField size={"small"} {...params} />}
+                    sx={{}}
                 />
                 <DateTimePicker
                     ampm={false}

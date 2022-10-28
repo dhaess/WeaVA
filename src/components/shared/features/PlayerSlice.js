@@ -1,11 +1,14 @@
 import {createSlice} from "@reduxjs/toolkit";
+import * as d3 from "d3";
 import {setPointsData} from "../functions/MapFunctions";
 
 const setPlayerData = (state, props, event) => {
     const data = event === undefined ? state.map.allData : event.data
-    const totalTimeRange = event === undefined ? state.savings.current.timeRange : event.info.timeRange
+    const totalTimeRange = props.timeRange === undefined ? state.savings.current.timeRange : props.timeRange
     const type = props.type === undefined ? state.player.type : props.type
     const totalSteps = props.totalSteps === undefined ? state.player.totalSteps : props.totalSteps
+    // const stepSyncType = props.syncType === undefined ? state.player.stepSyncType : props.syncType
+    // const totalSteps = props.totalSteps === undefined ? getTotalSteps(state, totalTimeRange, stepSyncType) : props.totalSteps
     const stepDuration = (totalTimeRange[1]-totalTimeRange[0])/totalSteps
     let timeSteps
 
@@ -38,6 +41,28 @@ const setPlayerData = (state, props, event) => {
     return [playerData, mapData, histData, histImageData]
 }
 
+const getTimeRanges = (state) => {
+    const histSyncType = state.settings.histogram.type
+    const events = state.comparison.events
+    let timeRanges = {}
+    switch (histSyncType) {
+        case "syncDuration":
+            const durations = events.map(e => e.info.timeRange[1]-e.info.timeRange[0])
+            const maxDuration = Math.max(...durations)
+            events.forEach(e => timeRanges[e.info.id] = [e.info.timeRange[0], e.info.timeRange[0] + maxDuration])
+            break
+        case "syncAll":
+            const starts = events.map(e => e.info.timeRange[0])
+            const minStart = Math.min(...starts)
+            const ends = events.map(e => e.info.timeRange[1])
+            const maxEnds = Math.max(...ends)
+            events.for(e => timeRanges[e.info.id] = [minStart, maxEnds])
+            break
+        default: events.forEach(e => timeRanges[e.info.id] = [e.info.timeRange[0], e.info.timeRange[1]])
+    }
+    return timeRanges
+}
+
 const setEventPlayerData = (state, props) => {
     const events = state.comparison.events
     const totalSteps = props.totalSteps === undefined ? state.player.totalSteps : props.totalSteps
@@ -45,8 +70,12 @@ const setEventPlayerData = (state, props) => {
     let eventHistData = {}
     let eventHistImageData = {}
 
+    const timeRanges = getTimeRanges(state)
+    let newProps = {...props}
+
     events.forEach(event => {
-        const [playerData, histData, histImageData] = setPlayerData(state, props, event)
+        newProps.timeRange = timeRanges[event.info.id]
+        const [playerData, histData, histImageData] = setPlayerData(state, newProps, event)
         eventBasicPlayerData[event.info.id] = playerData
         eventHistData[event.info.id] = histData
         eventHistImageData[event.info.id] = histImageData
@@ -72,6 +101,24 @@ const playData = (dispatch, state, currentStep) => {
         }
     }, stepTime)
     dispatch(setTimerId(timerId))
+}
+
+const getTotalSteps = (state, timeRange, syncType) => {
+    const stepSyncType = syncType===undefined ? state.player.stepSyncType : syncType
+    if (stepSyncType === "custom") {
+        return state.player.totalSteps
+    }
+    switch (state.settings.histogram.type) {
+        case "month":
+            return d3.timeMonth.count(d3.timeMonth.floor(timeRange[0]), d3.timeMonth.ceil(timeRange[1]))
+        case "day":
+            return d3.timeDay.count(d3.timeDay.floor(timeRange[0]), d3.timeDay.ceil(timeRange[1]))
+        case "hour":
+            return d3.timeHour.count(d3.timeHour.floor(timeRange[0]), d3.timeHour.ceil(timeRange[1]))
+        case "minute":
+            return d3.timeMinute.count(d3.timeMinute.floor(timeRange[0]), d3.timeMinute.ceil(timeRange[1]))
+        default:
+    }
 }
 
 export const playFromStart = (isComparison= false) => {
@@ -143,6 +190,29 @@ export const setPlayerType = (type, isComparison = false) => {
     }
 }
 
+export const setTotalStepsSync = (syncType, isComparison = false) => {
+    return (dispatch, getState) => {
+        const state = getState()
+        clearInterval(state.player.timerId)
+        dispatch(setTimerId(null))
+        dispatch(setCurrentStep(0))
+        dispatch(setLocalStepSyncType(syncType))
+
+        if (state.player.isActive) {
+            let updateId = state.player.updateId
+            if (updateId !== null) {
+                clearTimeout(updateId)
+            }
+            updateId = setTimeout(() => {
+                const totalSteps = syncType === "equalBins" ? state.settings.histogram.bins : state.player.totalSteps
+                const [data, mapData, histData, histImageData] = isComparison ? setEventPlayerData(state, {syncType: syncType}) : setPlayerData(state, {syncType: syncType})
+                dispatch(initPlayer({data: data, mapData: mapData, histData: histData, histImageData: histImageData, syncType: syncType}))
+            }, 200)
+            dispatch(setUpdateId(updateId))
+        }
+    }
+}
+
 export const setTotalSteps = (totalSteps, isComparison = false) => {
     return (dispatch, getState) => {
         const state = getState()
@@ -183,6 +253,8 @@ export const playerSlice = createSlice(({
         timerId: null,
         type: "add",
         stepTime: 500,
+        stepSyncType: "equalBins",
+        customSteps: 40,
         totalSteps: 40,
         currentStep: 0,
         data: [],
@@ -231,6 +303,9 @@ export const playerSlice = createSlice(({
         setLocalType: (state, action) => {
             state.type = action.payload
         },
+        setLocalStepSyncType: (state, action) => {
+            state.stepSyncType = action.payload
+        },
         setLocalTotalSteps: (state, action) => {
             state.totalSteps = action.payload
         },
@@ -240,5 +315,5 @@ export const playerSlice = createSlice(({
     }
 }))
 
-export const {initPlayer, resetPlayer, stopPlayer, setTimerId, setUpdateId, setCurrentStep, setLocalType, setLocalTotalSteps, setLocalStepTime} = playerSlice.actions
+export const {initPlayer, resetPlayer, stopPlayer, setTimerId, setUpdateId, setCurrentStep, setLocalType, setLocalStepSyncType, setLocalTotalSteps, setLocalStepTime} = playerSlice.actions
 export default playerSlice.reducer

@@ -1,6 +1,5 @@
 import {useDispatch, useSelector} from "react-redux";
-import * as d3 from "d3";
-import {setPlayerType, setStepTime, setTotalSteps} from "../features/PlayerSlice";
+import {setPlayerType, setStepTime, setTotalSteps, setTotalStepsSync} from "../features/PlayerSlice";
 import {styled} from "@mui/material/styles";
 import {Button, RadioGroup} from "@mui/material";
 import {
@@ -36,50 +35,27 @@ const PlayerOptions = ({additional = false}) => {
 
     const [type,
         stepTime,
+        stepSyncType,
         totalSteps
     ] = useSelector(state => {
         const player = state.player
         return [player.type,
             player.stepTime,
+            player.stepSyncType,
             player.totalSteps
         ]
     })
-
-    const [binType,
-        binCount]
-        = useSelector(state => {
-        const histogram = state.settings.histogram
-        return [histogram.type,
-            histogram.bins]
-    })
-
-    const timeRange = useSelector(state => state.savings.current.timeRange)
 
     const handleTypeChange = (event) => {
         dispatch(setPlayerType(event.target.value, additional))
     }
 
-    const handleTotalStepInputChange = (event) => {
-        dispatch(setTotalSteps(Number(event.target.value), additional))
+    const handleNumberChange = (event) => {
+        dispatch(setTotalStepsSync(event.target.value, additional))
     }
 
-    const setDefaultTotalNumber = () => {
-        switch (binType) {
-            case "month":
-                dispatch(setTotalSteps(d3.timeMonth.count(d3.timeMonth.floor(timeRange[0]), d3.timeMonth.ceil(timeRange[1])), additional))
-                break
-            case "day":
-                dispatch(setTotalSteps(d3.timeDay.count(d3.timeDay.floor(timeRange[0]), d3.timeDay.ceil(timeRange[1])), additional))
-                break
-            case "hour":
-                dispatch(setTotalSteps(d3.timeHour.count(d3.timeHour.floor(timeRange[0]), d3.timeHour.ceil(timeRange[1])), additional))
-                break
-            case "minute":
-                dispatch(setTotalSteps(d3.timeMinute.count(d3.timeMinute.floor(timeRange[0]), d3.timeMinute.ceil(timeRange[1])), additional))
-                break
-            default:
-                dispatch(setTotalSteps(binCount, additional))
-        }
+    const handleTotalStepInputChange = (event) => {
+        dispatch(setTotalSteps(Number(event.target.value), additional))
     }
 
     const handleStepTimeInputChange = (event) => {
@@ -118,20 +94,41 @@ const PlayerOptions = ({additional = false}) => {
                 </RadioGroup>
             </StyledFormControl>
             <div style={{display: "flex"}}>
-                <p style={{marginBottom: "5px"}}>Number of steps:</p>
-                <OptionStyledInputField
-                    value={totalSteps}
-                    size="small"
-                    onChange={handleTotalStepInputChange}
-                    inputProps={{
-                        step: 1,
-                        min: 1,
-                        max: 100,
-                        type: 'number',
-                        'aria-labelledby': 'input-slider',
-                    }}
-                />
-                <DefaultButton onClick={setDefaultTotalNumber}>Equal bin number</DefaultButton>
+                <p style={{whiteSpace: 'nowrap', marginRight: '5px'}}>Number of steps:</p>
+                <StyledFormControl>
+                    <RadioGroup
+                        aria-labelledby="number-group-label"
+                        value={stepSyncType}
+                        onChange={handleNumberChange}
+                        name="number-group"
+                    >
+                        <StyledFormControlLabel
+                            value="equalBins"
+                            control={<StyledRadio />}
+                            label="Equal bin number" />
+                        <StyledFormControlLabel
+                            value="custom"
+                            control={<StyledRadio />}
+                            label={
+                                <div style={{display: 'flex', alignItems: 'center'}}>
+                                    <p style={{marginTop: 0}}>Custom:</p>
+                                    <OptionStyledInputField
+                                        value={totalSteps}
+                                        size="small"
+                                        onChange={handleTotalStepInputChange}
+                                        inputProps={{
+                                            step: 1,
+                                            min: 1,
+                                            max: 100,
+                                            type: 'number',
+                                            'aria-labelledby': 'input-slider',
+                                        }}
+                                    />
+                                </div>
+                            }
+                        />
+                    </RadioGroup>
+                </StyledFormControl>
             </div>
             <div style={{display: "flex"}}>
                 <p style={{marginBottom: "5px"}}>Time per step:</p>

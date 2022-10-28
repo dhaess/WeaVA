@@ -147,7 +147,8 @@ const Settings = ({additional= false, boxAnchor}) => {
                     p: 1,
                     backgroundColor: 'white',
                     marginBottom: "0px",
-                    marginLeft: "1px"
+                    marginLeft: "1px",
+                    paddingBottom: "16px"
                 }}>
                     <OptionsWindow additional setOpenHistOptions={setOpenHistOptions}/>
                 </Box>

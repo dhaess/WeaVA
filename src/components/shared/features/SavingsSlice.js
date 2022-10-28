@@ -303,7 +303,7 @@ export const initNewCurrent = () => {
 
 
 // const initialTimeRange = [new Date("2021-10-07T08:00").getTime(), new Date("2022-06-02T20:00").getTime()]
-const initialTimeRange = [new Date("2022-01-01T09:00").getTime(), new Date("2022-01-01T10:00").getTime()]
+const initialTimeRange = [new Date("2022-01-01T09:00").getTime(), new Date("2022-01-02T10:00").getTime()]
 
 const initalCurrent = {
     id: 0,

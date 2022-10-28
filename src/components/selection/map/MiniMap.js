@@ -150,7 +150,7 @@ const MiniMap = ({color, id}) => {
                     {markerMode===MarkerMode["Location"] &&
                         <LayerGroup>
                             {pointsData.map(e => {
-                                if (pointsData.focused.length === 1) {
+                                if (e.focused.length === 1) {
                                     return (
                                         <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
                                                 position={e.coordinates}
