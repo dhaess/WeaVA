@@ -1,13 +1,4 @@
-import {
-    MapContainer,
-    Marker,
-    TileLayer,
-    useMap,
-    LayersControl,
-    ZoomControl,
-    LayerGroup,
-    Polygon
-} from "react-leaflet";
+import {LayerGroup, LayersControl, MapContainer, Marker, Polygon, TileLayer, ZoomControl} from "react-leaflet";
 import {useSelector} from "react-redux";
 import {useEffect, useState} from "react";
 import {createClusterCustomIcon, getMapIcon, getPieIcon} from "../shared/functions/WeatherIcons";
@@ -15,22 +6,10 @@ import {getClusterList, getGridData} from "../shared/functions/MapFunctions";
 import {getCategoryName, getIntensityName} from "../shared/functions/WeatherCategories";
 import MarkerClusterGroup from "../shared/components/MarkerClusterGroup";
 import {MultiMarkerEventPopup} from "../shared/components/MultiMarkerPopup";
+import MapEvents from "../shared/components/MapEvents";
+import MapResizer from "../shared/components/MapResizer";
 import {StyledPopup} from "../../static/style/muiStyling";
 import MarkerMode from "../../static/data/MarkerMode.json";
-import MapEvents from "../shared/components/MapEvents";
-
-const MapResizer = () => {
-    const mapDiv = document.getElementById("Map");
-    const map = useMap()
-    if (map !== undefined) {
-        const resizeObserver = new ResizeObserver(() => {
-            if (map._panes.length !== 0) {
-                map.invalidateSize()
-            }
-        });
-        resizeObserver.observe(mapDiv)
-    }
-}
 
 const Map = () => {
     const events = useSelector(state => state.comparison.events)
@@ -43,6 +22,17 @@ const Map = () => {
             settings.markerMode
         ]
     })
+    const [inPlayerMode,
+        playerData,
+        playerFlatData,
+        currentStep
+    ] = useSelector(state => {
+        const player = state.player
+        return [player.isActive,
+            player.mapData,
+            player.data,
+            player.currentStep]
+    })
 
     const [selectionButton, setButton] = useState(null)
     const [pointsData, setPointsData] = useState([])
@@ -54,32 +44,36 @@ const Map = () => {
     const [hoverPoint, setHoverPoint] = useState(null)
 
     useEffect(() => {
-        const shownEvents = events.filter(event => !event.hidden)
-        let coordsList = []
-        let newPointsData = []
+        if (inPlayerMode) {
+            setPointsData(playerData[currentStep])
+        } else {
+            const shownEvents = events.filter(event => !event.hidden)
+            let coordsList = []
+            let newPointsData = []
 
-        shownEvents.forEach(event => {
-            event.data.forEach(e => {
-                const e2 = {...e}
-                let index = coordsList.findIndex(c => [0, 1].every(k => e.coordinates[k] === c[k]))
-                if (index === -1) {
-                    newPointsData.push({coordinates: e.coordinates, count: 1, focused: [e2], unfocused:[]})
-                    coordsList.push(e.coordinates)
-                } else {
-                    let pointsIndex = newPointsData.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
-                    newPointsData[pointsIndex].count += 1
-                    newPointsData[pointsIndex].focused.push(e2)
-                }
+            shownEvents.forEach(event => {
+                event.data.forEach(e => {
+                    const e2 = {...e}
+                    let index = coordsList.findIndex(c => [0, 1].every(k => e.coordinates[k] === c[k]))
+                    if (index === -1) {
+                        newPointsData.push({coordinates: e.coordinates, count: 1, focused: [e2], unfocused:[]})
+                        coordsList.push(e.coordinates)
+                    } else {
+                        let pointsIndex = newPointsData.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
+                        newPointsData[pointsIndex].count += 1
+                        newPointsData[pointsIndex].focused.push(e2)
+                    }
+                })
             })
-        })
-        setPointsData(newPointsData)
+            setPointsData(newPointsData)
+        }
 
-    }, [events])
+    }, [currentStep, events, inPlayerMode, playerData])
 
     useEffect(() => {
-        let data = pointsData.map(e => e.focused).flat()
+        let data = inPlayerMode ? playerFlatData[currentStep] : pointsData.map(e => e.focused).flat()
         setGridData(getGridData(data, zoomLevel))
-    }, [pointsData, zoomLevel])
+    }, [currentStep, inPlayerMode, playerFlatData, pointsData, zoomLevel])
 
     const showClusterPopup = (event) => {
         let dataList = getClusterList(event)

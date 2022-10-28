@@ -165,3 +165,28 @@ export const ImageButton = styled(StyledButton)({
     marginTop: "0px",
     minWidth: "35px"
 })
+
+export const PlayerSlider = styled(Slider)({
+    color: 'var(--main-bg-color)',
+    height: 4,
+    padding: "6px 0",
+    '& .MuiSlider-track': {
+        border: 'none',
+    },
+    '& .MuiSlider-thumb': {
+        height: 12,
+        width: 12,
+        backgroundColor: '#fff',
+        border: '2px solid currentColor',
+        '&:focus, &:hover, &.Mui-active, &.Mui-focusVisible': {
+            boxShadow: 'inherit',
+        },
+        '&:before': {
+            display: 'none',
+        },
+        '&:after': {
+            width: '20px',
+            height: '20px',
+        }
+    },
+})

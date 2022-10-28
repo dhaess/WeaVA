@@ -18,7 +18,7 @@ const dimensions = {
 
 const Comparison = () => {
 
-    const events = useSelector(state =>  state.comparison.events)
+    const events = useSelector(state => state.comparison.events)
 
     return (
         <div>

@@ -42,7 +42,7 @@ const StyledInnerMenuItem = styled(MenuItem)({
     }
 })
 
-const Settings = ({additional, boxAnchor}) => {
+const Settings = ({additional= false, boxAnchor}) => {
     const dispatch = useDispatch()
 
     let menuRef = useRef()
@@ -126,7 +126,7 @@ const Settings = ({additional, boxAnchor}) => {
                 <StyledInnerMenuItem onClick={() => closeMapMenu("SWISSIMAGE")}>SWISSIMAGE</StyledInnerMenuItem>
             </NestedMenuItem>
             <StyledOuterMenuItem onClick={handleOpenCredits}>Credits</StyledOuterMenuItem>
-            {additional!==undefined &&
+            {additional &&
                 <StyledOuterMenuItem onClick={handleOpenHistogramOptions}>Open Histogram Options</StyledOuterMenuItem>
             }
         </Menu>

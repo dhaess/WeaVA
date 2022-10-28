@@ -3,7 +3,7 @@ import PlayerOptions from "./PlayerOptions";
 import {ImageButton} from "../../../static/style/muiStyling";
 import Close from "../../../static/images/close.png";
 
-const OptionsWindow = ({additional, setOpenHistOptions}) => {
+const OptionsWindow = ({additional = false, setOpenHistOptions}) => {
     return(
         <>
             <ImageButton
@@ -13,7 +13,7 @@ const OptionsWindow = ({additional, setOpenHistOptions}) => {
             </ImageButton>
             <div style={{display: "flex", flexDirection: "column"}}>
                 <HistogramOptions additional={additional}/>
-                <PlayerOptions/>
+                <PlayerOptions additional={additional}/>
             </div>
         </>
     )

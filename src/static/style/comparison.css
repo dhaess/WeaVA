@@ -66,11 +66,36 @@
     border-bottom: 2px solid var(--border-bg-color);
 }
 
-#EndButtonContainerComparison {
+#GeneralButtonContainer {
     border-top: 2px solid var(--border-bg-color);
     background-color:var(--main-bg-color);
     padding: 0 25px 0 25px;
     display: flex;
+    flex-direction: column;
+}
+
+#GeneralButtons {
+    display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+#ComparisonPlayer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#SliderBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 11px;
+    margin-left: 35px;
+    background-color: white;
+    border: 1px solid var(--border-bg-color);
+}
+
+#SliderBox > div {
+
 }

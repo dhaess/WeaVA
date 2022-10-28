@@ -3,6 +3,7 @@ import {useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {changeVisibility, deleteEvent} from "../../shared/features/ComparisonSlice";
 import {setSelection} from "../../shared/features/SavingsSlice";
+import {resetPlayer} from "../../shared/features/PlayerSlice";
 import {getIcon} from "../../shared/functions/WeatherIcons";
 import Histogram from "./Histogram";
 import DeleteDialog from "./DeleteDialog";
@@ -50,6 +51,7 @@ const HistogramBox = ({dimensions, id}) => {
 
     const editEvent = () => {
         dispatch(setSelection(event))
+        dispatch(resetPlayer())
         navigate(`/selection`)
     }
 

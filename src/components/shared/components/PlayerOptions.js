@@ -1,13 +1,14 @@
 import {useDispatch, useSelector} from "react-redux";
+import * as d3 from "d3";
 import {setPlayerType, setStepTime, setTotalSteps} from "../features/PlayerSlice";
 import {styled} from "@mui/material/styles";
+import {Button, RadioGroup} from "@mui/material";
 import {
     StyledFormControl,
     StyledFormControlLabel,
     StyledInputField,
     StyledRadio
 } from "../../../static/style/muiStyling";
-import {Button, RadioGroup} from "@mui/material";
 
 const OptionStyledInputField = styled(StyledInputField)({
     height: '28px',
@@ -30,7 +31,7 @@ const DefaultButton = styled(Button)({
     }
 })
 
-const PlayerOptions = () => {
+const PlayerOptions = ({additional = false}) => {
     const dispatch = useDispatch()
 
     const [type,
@@ -44,18 +45,41 @@ const PlayerOptions = () => {
         ]
     })
 
-    const binCount = useSelector(state => state.settings.histogram.bins)
+    const [binType,
+        binCount]
+        = useSelector(state => {
+        const histogram = state.settings.histogram
+        return [histogram.type,
+            histogram.bins]
+    })
+
+    const timeRange = useSelector(state => state.savings.current.timeRange)
 
     const handleTypeChange = (event) => {
-        dispatch(setPlayerType(event.target.value))
+        dispatch(setPlayerType(event.target.value, additional))
     }
 
     const handleTotalStepInputChange = (event) => {
-        dispatch(setTotalSteps(Number(event.target.value)))
+        dispatch(setTotalSteps(Number(event.target.value), additional))
     }
 
     const setDefaultTotalNumber = () => {
-        dispatch(setTotalSteps(binCount))
+        switch (binType) {
+            case "month":
+                dispatch(setTotalSteps(d3.timeMonth.count(d3.timeMonth.floor(timeRange[0]), d3.timeMonth.ceil(timeRange[1])), additional))
+                break
+            case "day":
+                dispatch(setTotalSteps(d3.timeDay.count(d3.timeDay.floor(timeRange[0]), d3.timeDay.ceil(timeRange[1])), additional))
+                break
+            case "hour":
+                dispatch(setTotalSteps(d3.timeHour.count(d3.timeHour.floor(timeRange[0]), d3.timeHour.ceil(timeRange[1])), additional))
+                break
+            case "minute":
+                dispatch(setTotalSteps(d3.timeMinute.count(d3.timeMinute.floor(timeRange[0]), d3.timeMinute.ceil(timeRange[1])), additional))
+                break
+            default:
+                dispatch(setTotalSteps(binCount, additional))
+        }
     }
 
     const handleStepTimeInputChange = (event) => {

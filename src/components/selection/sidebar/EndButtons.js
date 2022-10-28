@@ -1,6 +1,7 @@
 import {useDispatch, useSelector} from "react-redux";
 import {useNavigate} from "react-router-dom";
 import {useState} from "react";
+import {resetPlayer} from "../../shared/features/PlayerSlice";
 import {changeMapFilters, checkChanges, reset, revert, save, saveAllChanges} from "../../shared/features/SavingsSlice";
 import {saveEvent} from "../../shared/features/ComparisonSlice";
 import GoToDialog from "./GoToDialog";
@@ -47,6 +48,7 @@ export default function EndButtons() {
             setOpen(true)
         } else {
             dispatch(saveEvent())
+            dispatch(resetPlayer())
             navigate(`/comparison`)
         }
     }
@@ -54,14 +56,17 @@ export default function EndButtons() {
     const handleClose = (response) => {
         setOpen(false)
         if (response.answer === "noSave") {
+            dispatch(resetPlayer())
             navigate(`/comparison`)
         } else if (response.answer === "save") {
             if (response.type === "changed") {
                 dispatch(saveAllChanges())
+                dispatch(resetPlayer())
                 navigate(`/comparison`)
             } else if (response.type === "mapFilter") {
                 dispatch(changeMapFilters())
                 dispatch(saveEvent())
+                dispatch(resetPlayer())
                 navigate(`/comparison`)
             }
         }

@@ -40,13 +40,11 @@ const Histogram = ({dimensions}) => {
     })
 
     const [inPlayerMode,
-        originalTimeRange,
         playerData,
         playerImageData
     ] = useSelector(state => {
         const player = state.player
         return [player.isActive,
-            player.originalTimeRange,
             player.isPrepared ? player.histData[player.currentStep] : [],
             player.isPrepared ? player.histImageData[player.currentStep] : []]
     })
@@ -98,17 +96,16 @@ const Histogram = ({dimensions}) => {
                 d3.select(svgRef.current).select('g').remove()
             }
             if (inPlayerMode || data.length !== 0) {
-                let binTimeStart, binTimeBorder, histDataFocused, histDataUnfocused, imageHistData, yMax
+                const [binTimeStart, binTimeBorder] = setBinTimeBorders(binType, binCount, timeRange)
+                let histDataFocused, histDataUnfocused, imageHistData, yMax
 
                 if (inPlayerMode) {
-                    [binTimeStart, binTimeBorder] = setBinTimeBorders(binType, binCount, originalTimeRange)
-                    histDataUnfocused = setHistData(data, binTimeStart, binTimeBorder, originalTimeRange)
-                    histDataFocused = setHistData(playerData, binTimeStart, binTimeBorder, originalTimeRange)
-                    imageHistData = setHistData(playerImageData, binTimeStart, binTimeBorder, originalTimeRange)
+                    histDataUnfocused = setHistData(data, binTimeStart, binTimeBorder, timeRange)
+                    histDataFocused = setHistData(playerData, binTimeStart, binTimeBorder, timeRange)
+                    imageHistData = divided ? setHistData(playerImageData, binTimeStart, binTimeBorder, timeRange) : []
 
                     yMax = d3.max(histDataUnfocused, (d) => {return d.length})
                 } else {
-                    [binTimeStart, binTimeBorder] = setBinTimeBorders(binType, binCount, timeRange)
                     histDataUnfocused = isFocused ?
                         setHistData(data, binTimeStart, binTimeBorder, timeRange) : [];
 
@@ -116,9 +113,13 @@ const Histogram = ({dimensions}) => {
                         setHistData(focusedData, binTimeStart, binTimeBorder, timeRange) :
                         setHistData(data, binTimeStart, binTimeBorder, timeRange)
 
-                    imageHistData = isFocused ?
-                        setHistData(focusedImageData, binTimeStart, binTimeBorder, timeRange) :
-                        setHistData(imageData, binTimeStart, binTimeBorder, timeRange)
+                    if (divided) {
+                        imageHistData = isFocused ?
+                            setHistData(focusedImageData, binTimeStart, binTimeBorder, timeRange) :
+                            setHistData(imageData, binTimeStart, binTimeBorder, timeRange)
+                    } else {
+                        imageHistData = []
+                    }
 
                     yMax = d3.max(isFocused ? histDataUnfocused: histDataFocused, (d) => {return d.length})
                 }
@@ -206,7 +207,7 @@ const Histogram = ({dimensions}) => {
                     .text("Number of Reports");
             }
         }
-    }, [binCount, binType, data, dimensions, dispatch, divided, dragStart, focusedData, focusedImageData, imageData, inPlayerMode, isFocused, originalTimeRange, playerData, playerImageData, timeRange]);
+    }, [binCount, binType, data, dimensions, dispatch, divided, dragStart, focusedData, focusedImageData, imageData, inPlayerMode, isFocused, playerData, playerImageData, timeRange]);
 
     return <>
         <svg ref={svgRef} width={dimensions.width} height={dimensions.height} style={{flexShrink: "0"}} />

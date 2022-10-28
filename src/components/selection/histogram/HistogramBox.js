@@ -5,8 +5,8 @@ import {changeFilter, setCurrent} from "../../shared/features/SavingsSlice";
 import {setBins} from "../../shared/features/SettingsSlice";
 import {changeFocusedTimeRange} from "../../shared/features/MapSlice";
 import OptionsWindow from "../../shared/components/OptionsWindow";
-import Player from "./Player";
 import Histogram from "./Histogram";
+import PlayerBox from "./PlayerBox";
 import {styled} from "@mui/material/styles";
 import {Box, Button, CircularProgress, Popper} from "@mui/material";
 import Arrow from "../../../static/images/left-arrow.png";
@@ -222,7 +222,7 @@ const HistogramBox = ({dimensions}) => {
                         <Histogram
                             dimensions={dimensions}
                         />
-                        <Player/>
+                        <PlayerBox/>
                     </div>
                     <div className="histogramButtons">
                         <div style={{flexDirection: "column", ...legendStyle}}>

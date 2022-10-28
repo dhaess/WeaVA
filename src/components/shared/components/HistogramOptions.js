@@ -2,6 +2,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {useEffect, useState} from "react";
 import * as d3 from "d3";
 import {setBinDivided, setBins} from "../features/SettingsSlice";
+import {resetPlayer} from "../features/PlayerSlice";
 import {setSynchronization} from "../features/ComparisonSlice";
 import {styled} from "@mui/material/styles";
 import {Checkbox, RadioGroup} from "@mui/material";
@@ -22,7 +23,7 @@ const StyledCheckBox = styled(Checkbox)({
     },
 })
 
-const HistogramOptions = ({additional}) => {
+const HistogramOptions = ({additional = false}) => {
     const dispatch = useDispatch()
 
     const [binType,
@@ -58,6 +59,7 @@ const HistogramOptions = ({additional}) => {
     }
 
     const handleSyncChange = (event) => {
+        dispatch(resetPlayer())
         dispatch(setSynchronization(event.target.value))
     }
 

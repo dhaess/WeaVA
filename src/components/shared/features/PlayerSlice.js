@@ -1,11 +1,10 @@
 import {createSlice} from "@reduxjs/toolkit";
 import {setPointsData} from "../functions/MapFunctions";
-import {setMapData} from "./MapSlice";
 
-const setPlayerData = (state, props) => {
-    const data = props.data === undefined ? state.player.originalData : props.data
+const setPlayerData = (state, props, event) => {
+    const data = event === undefined ? state.map.allData : event.data
+    const totalTimeRange = event === undefined ? state.savings.current.timeRange : event.info.timeRange
     const type = props.type === undefined ? state.player.type : props.type
-    const totalTimeRange = props.totalTimeRange === undefined ? state.player.originalTimeRange : props.totalTimeRange
     const totalSteps = props.totalSteps === undefined ? state.player.totalSteps : props.totalSteps
     const stepDuration = (totalTimeRange[1]-totalTimeRange[0])/totalSteps
     let timeSteps
@@ -22,19 +21,44 @@ const setPlayerData = (state, props) => {
             break
         default:
     }
-    let playerData = timeSteps.map(e => data.filter(d => d.timestamp >= e[0] && d.timestamp < e[1]))
+    let playerData = timeSteps.map(e => data.filter(d => d.timestamp >= e[0] && d.timestamp <= e[1]))
     if (type === "delete") {
         playerData.push([])
     } else {
         playerData.unshift([])
     }
-    const mapData = playerData.map(e => setPointsData(e))
     const histData = playerData.map(e => e.map(e2 => e2.timestamp))
     const histImageData = playerData.map(e => e.filter(e2 => e2.imageName !== null).map(e2 => e2.timestamp))
+
+    if (event !== undefined) {
+        return [playerData, histData, histImageData]
+    }
+
+    const mapData = playerData.map(e => setPointsData(e))
     return [playerData, mapData, histData, histImageData]
 }
 
-const playData = (dispatch, state, totalTimeRange, currentStep, mapData) => {
+const setEventPlayerData = (state, props) => {
+    const events = state.comparison.events
+    const totalSteps = props.totalSteps === undefined ? state.player.totalSteps : props.totalSteps
+    let eventBasicPlayerData = {}
+    let eventHistData = {}
+    let eventHistImageData = {}
+
+    events.forEach(event => {
+        const [playerData, histData, histImageData] = setPlayerData(state, props, event)
+        eventBasicPlayerData[event.info.id] = playerData
+        eventHistData[event.info.id] = histData
+        eventHistImageData[event.info.id] = histImageData
+    })
+
+    const eventPlayerData = [...new Array(totalSteps+1)].map((e, i) => events.map((event) => eventBasicPlayerData[event.info.id][i]).flat())
+    const eventMapData = eventPlayerData.map(e => setPointsData(e))
+
+    return[eventPlayerData, eventMapData, eventHistData, eventHistImageData]
+}
+
+const playData = (dispatch, state, currentStep) => {
     const totalSteps = state.player.totalSteps
     const stepTime = state.player.stepTime
     let timerId = state.player.timerId
@@ -50,22 +74,15 @@ const playData = (dispatch, state, totalTimeRange, currentStep, mapData) => {
     dispatch(setTimerId(timerId))
 }
 
-export const playFromStart = () => {
+export const playFromStart = (isComparison= false) => {
     return (dispatch, getState) => {
         const state = getState()
-        let totalTimeRange, mapData, histData, histImageData, data
 
-        if (state.player.isPrepared) {
-            totalTimeRange = state.player.originalTimeRange
-            mapData = state.player.data
-        } else {
-            const originalData = state.map.allData
-            totalTimeRange = state.savings.current.timeRange;
-            [data, mapData, histData, histImageData] = setPlayerData(state, {data: originalData, totalTimeRange: totalTimeRange})
-            dispatch(initPlayer({originalTimeRange: totalTimeRange, originalData: originalData, data: data, mapData: mapData, histData: histData, histImageData: histImageData}))
+        if (!state.player.isPrepared) {
+            const [data, mapData, histData, histImageData] = isComparison ? setEventPlayerData(state, {}) : setPlayerData(state, {})
+            dispatch(initPlayer({data: data, mapData: mapData, histData: histData, histImageData: histImageData}))
         }
-
-        return playData(dispatch, state, totalTimeRange, 0, mapData)
+        return playData(dispatch, state, 0)
     }
 }
 
@@ -80,10 +97,9 @@ export const pause = () => {
 export const resume = () => {
     return (dispatch, getState) => {
         const state = getState()
-        const totalTimeRange = state.player.originalTimeRange
         const currentStep = state.player.currentStep
 
-        return playData(dispatch, state, totalTimeRange, currentStep)
+        return playData(dispatch, state, currentStep)
     }
 }
 
@@ -91,18 +107,22 @@ export const stop = () => {
     return (dispatch, getState) => {
         const state = getState()
         clearInterval(state.player.timerId)
-        dispatch(setMapData(state.player.originalData))
         dispatch(stopPlayer())
     }
 }
 
 export const moveToStep = (currentStep) => {
-    return (dispatch) => {
-        dispatch(setCurrentStep(currentStep))
+    return (dispatch, getState) => {
+        const state = getState()
+        if (state.player.timerId === null) {
+            dispatch(setCurrentStep(currentStep))
+        } else {
+            playData(dispatch, state, currentStep)
+        }
     }
 }
 
-export const setPlayerType = (type) => {
+export const setPlayerType = (type, isComparison = false) => {
     return (dispatch, getState) => {
         const state = getState()
         clearInterval(state.player.timerId)
@@ -115,7 +135,7 @@ export const setPlayerType = (type) => {
                 clearTimeout(updateId)
             }
             updateId = setTimeout(() => {
-                const [data, mapData, histData, histImageData] = setPlayerData(state, {type: type})
+                const [data, mapData, histData, histImageData] = isComparison ? setEventPlayerData(state, {type: type}) : setPlayerData(state, {type: type})
                 dispatch(initPlayer({data: data, mapData: mapData, histData: histData, histImageData: histImageData, type: type}))
             }, 200)
             dispatch(setUpdateId(updateId))
@@ -123,7 +143,7 @@ export const setPlayerType = (type) => {
     }
 }
 
-export const setTotalSteps = (totalSteps) => {
+export const setTotalSteps = (totalSteps, isComparison = false) => {
     return (dispatch, getState) => {
         const state = getState()
         clearInterval(state.player.timerId)
@@ -137,7 +157,7 @@ export const setTotalSteps = (totalSteps) => {
                 clearTimeout(updateId)
             }
             updateId = setTimeout(() => {
-                const [data, mapData, histData, histImageData] = setPlayerData(state, {totalSteps: totalSteps})
+                const [data, mapData, histData, histImageData] = isComparison ? setEventPlayerData(state, {totalSteps: totalSteps}) : setPlayerData(state, {totalSteps: totalSteps})
                 dispatch(initPlayer({data: data, mapData: mapData, histData: histData, histImageData: histImageData, totalSteps: totalSteps}))
             }, 200)
             dispatch(setUpdateId(updateId))
@@ -151,18 +171,6 @@ export const setStepTime = (stepTime) => {
         clearInterval(state.player.timerId)
         dispatch(setTimerId(null))
         dispatch(setLocalStepTime(stepTime))
-
-        if (state.player.isActive) {
-            let updateId = state.player.updateId
-            if (updateId !== null) {
-                clearTimeout(updateId)
-            }
-            updateId = setTimeout(() => {
-                const [data, mapData, histData, histImageData] = setPlayerData(state, {stepTime: stepTime})
-                dispatch(initPlayer({data: data, mapData: mapData, histData: histData, histImageData: histImageData, stepTime: stepTime}))
-            }, 200)
-            dispatch(setUpdateId(updateId))
-        }
     }
 }
 
@@ -177,8 +185,6 @@ export const playerSlice = createSlice(({
         stepTime: 500,
         totalSteps: 40,
         currentStep: 0,
-        originalTimeRange: [],
-        originalData: [],
         data: [],
         mapData: [],
         histData: [],
@@ -189,8 +195,6 @@ export const playerSlice = createSlice(({
             state.updateId = null
             state.isPrepared = true
             state.isActive = true
-            if (action.payload.originalTimeRange !== undefined) state.originalTimeRange = action.payload.originalTimeRange
-            if (action.payload.originalData !== undefined) state.originalData = action.payload.originalData
             state.data = action.payload.data
             state.mapData = action.payload.mapData
             state.histData = action.payload.histData
@@ -204,8 +208,6 @@ export const playerSlice = createSlice(({
             state.isActive = false
             state.timerId = null
             state.currentStep = 0
-            state.originalTimeRange = []
-            state.originalData = []
             state.data = []
             state.mapData = []
             state.histData = []

@@ -1,5 +1,5 @@
 import {useDispatch, useSelector} from "react-redux";
-import React, {useEffect, useRef} from "react";
+import {useEffect, useRef, useState} from "react";
 import * as d3 from "d3";
 import {controlBinNumber, setBinTimeBorders, setHistData} from "../../shared/functions/HistogramFunctions";
 
@@ -36,9 +36,27 @@ const Histogram = ({dimensions, id}) => {
             comparison.syncedTime
         ]})
 
+    const [inPlayerMode,
+        playerData,
+        playerImageData
+    ] = useSelector(state => {
+        const player = state.player
+        return [player.isActive,
+            player.isPrepared ? player.histData[id][player.currentStep] : [],
+            player.isPrepared ? player.histImageData[id][player.currentStep] : []]
+    })
+
     const svgRef = useRef(null);
 
+    const [histData, setLocalHistData] = useState([])
+    const [imageData, setImageData] = useState([])
+
     // const [dragStart, setDrag] = useState(undefined)
+
+    useEffect(() => {
+        setLocalHistData(data.map(e => e.timestamp))
+        setImageData(data.filter(e => e.imageName!==null).map(e => e.timestamp))
+    }, [data])
 
     useEffect(() => {
         const margin = {top: 10, right: 50, bottom: 50, left: 40}
@@ -80,24 +98,34 @@ const Histogram = ({dimensions, id}) => {
                 timeRange = localTimeRange
         }
 
-        const toDelay = controlBinNumber(timeRange, binType, binCount, divided, dispatch)
+        const toDelay = inPlayerMode ? false : controlBinNumber(timeRange, binType, binCount, divided, dispatch)
 
         if (!toDelay) {
             if (document.getElementsByTagName('g').length>0) {
                 d3.select(svgRef.current).select('g').remove()
             }
-            if (data.length !== 0) {
+            if (inPlayerMode ||  histData.length !== 0) {
                 const [binTimeStart, binTimeBorder] = setBinTimeBorders(binType, binCount, timeRange)
+                let histDataFocused, histDataUnfocused, imageHistData, yMax
 
-                const histData = setHistData(data.map(e => e.timestamp), binTimeStart, binTimeBorder, timeRange)
-                const histImageData = setHistData(data.filter(e => e.imageName!==null).map(e => e.timestamp), binTimeStart, binTimeBorder, timeRange)
+                if (inPlayerMode) {
+                    histDataUnfocused = setHistData(histData, binTimeStart, binTimeBorder, timeRange)
+                    histDataFocused = setHistData(playerData, binTimeStart, binTimeBorder, timeRange)
+                    imageHistData = divided ? setHistData(playerImageData, binTimeStart, binTimeBorder, timeRange) : []
+
+                    yMax = d3.max(histDataUnfocused, (d) => {return d.length})
+                } else {
+                    histDataFocused = setHistData(histData, binTimeStart, binTimeBorder, timeRange)
+                    imageHistData = divided ? setHistData(imageData, binTimeStart, binTimeBorder, timeRange): []
+
+                    yMax = d3.max(histDataFocused, function(d) {return d.length})
+                }
 
                 const x = d3
                     .scaleTime()
                     .domain([binTimeBorder[0], binTimeBorder.slice(-1)])
                     .range([0, width-25]);
 
-                const yMax = d3.max(histData, function(d) { return d.length; })
                 const y = d3.scaleLinear()
                     .domain([0, yMax]).nice() // d3.hist has to be called before the Y axis obviously
                     .range([height, 0]);
@@ -117,7 +145,7 @@ const Histogram = ({dimensions, id}) => {
                         //         handleMouseOver(event)
                         //     }
                         // })
-                        .attr("cursor", "pointer")
+                        // .attr("cursor", "pointer")
                         .selectAll("rect")
                         .data(data)
                         .enter()
@@ -130,9 +158,14 @@ const Histogram = ({dimensions, id}) => {
                         .style("opacity", opacity)
                 }
 
-                appendHistData(histData, "var(--main-bg-color)", "1")
-                if (divided && histImageData.length!==0) {
-                    appendHistData(histImageData, "var(--shadow-bg-color)", "1")
+                if (inPlayerMode) {
+                    appendHistData(histDataUnfocused, "var(--opacity-bg-color)", "0.4", x, y)
+                }
+                if (histDataFocused.length !== 0) {
+                    appendHistData(histDataFocused, "var(--main-bg-color)", "1")
+                }
+                if (divided && imageHistData.length!==0) {
+                    appendHistData(imageHistData, "var(--shadow-bg-color)", "1")
                 }
 
                 let formatDate = d3.timeFormat("%d.%m.%y");
@@ -171,7 +204,7 @@ const Histogram = ({dimensions, id}) => {
                     .text("Number of Reports");
             }
         }
-    }, [binCount, binType, data, dimensions, dispatch, divided, syncType, localTimeRange, syncedTime]);
+    }, [binCount, binType, dimensions, dispatch, divided, histData, imageData, inPlayerMode, localTimeRange, playerData, playerImageData, syncType, syncedTime]);
 
     return (
         <div style={{opacity: hidden ? "0.4" : "1", pointerEvents: hidden ? "none" : "all"}}>

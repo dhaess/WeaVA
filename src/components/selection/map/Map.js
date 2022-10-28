@@ -4,7 +4,6 @@ import {
     MapContainer,
     Marker,
     TileLayer,
-    useMap,
     ZoomControl,
     LayersControl, LayerGroup, ScaleControl, Polygon
 } from 'react-leaflet';
@@ -23,6 +22,7 @@ import {getClusterList, getGridData} from "../../shared/functions/MapFunctions";
 import {getCategoryName, getIntensityName} from "../../shared/functions/WeatherCategories";
 import MarkerClusterGroup from "../../shared/components/MarkerClusterGroup";
 import {MultiMarkerPopup} from "../../shared/components/MultiMarkerPopup";
+import MapResizer from "../../shared/components/MapResizer";
 import MapEvents from "../../shared/components/MapEvents";
 import MiniMap from "./MiniMap";
 import EditPopup from "./EditPopup";
@@ -75,20 +75,6 @@ const StyledToggleButton = styled(ToggleButton)({
     }
 })
 
-// for loading whole map when changing size
-const MapResizer = () => {
-    const mapDiv = document.getElementById("Map");
-    const map = useMap()
-    if (map !== undefined) {
-        const resizeObserver = new ResizeObserver(() => {
-            if (map._panes.length !== 0) {
-                map.invalidateSize()
-            }
-        });
-        resizeObserver.observe(mapDiv)
-    }
-}
-
 const Map = () => {
     const dispatch = useDispatch()
 
@@ -133,12 +119,14 @@ const Map = () => {
     })
 
     const [inPlayerMode,
+        isPlaying,
         playerData,
         playerFlatData,
         currentStep
     ] = useSelector(state => {
         const player = state.player
         return [player.isActive,
+            player.timerId !== null,
             player.mapData,
             player.data,
             player.currentStep]
@@ -586,7 +574,7 @@ const Map = () => {
                                 }
                             })}
                         </LayerGroup>
-                        {hoverPoint &&
+                        {hoverPoint && !isPlaying &&
                             <Polygon
                                 pathOptions={{color: 'var(--border-bg-color)', fillOpacity: "0.4", zIndex: "2000"}}
                                 positions={hoverPoint.convexHull}
