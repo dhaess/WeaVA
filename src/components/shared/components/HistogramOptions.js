@@ -2,7 +2,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {useEffect, useState} from "react";
 import * as d3 from "d3";
 import {setBinDivided, setBins} from "../features/SettingsSlice";
-import {resetPlayer} from "../features/PlayerSlice";
+import {getBinsValid, resetPlayer} from "../features/PlayerSlice";
 import {setSynchronization} from "../features/ComparisonSlice";
 import {styled} from "@mui/material/styles";
 import {Checkbox, RadioGroup} from "@mui/material";
@@ -35,7 +35,8 @@ const HistogramOptions = ({additional = false}) => {
             histogram.bins,
             histogram.divided]
     })
-    const timeRange = useSelector(state => state.histogram.timeRange)
+    const histTimeRange = useSelector(state => state.histogram.timeRange)
+    const eventTimeRange = useSelector(state => state.histogram.timeRange)
     const syncType = useSelector(state => state.comparison.syncType)
 
     const [dayStyle, setDayStyle] = useState({})
@@ -43,16 +44,23 @@ const HistogramOptions = ({additional = false}) => {
     const [minuteStyle, setMinuteStyle] = useState({})
 
     useEffect(() => {
-        const topDay = d3.timeDay.count(d3.timeDay.floor(timeRange[0]), d3.timeDay.ceil(timeRange[1])) > 100 ?
-            {display: "none"} : {}
-        setDayStyle(topDay)
-        const topHour = d3.timeHour.count(d3.timeHour.floor(timeRange[0]), d3.timeHour.ceil(timeRange[1])) > 100 ?
-            {display: "none"} : {}
-        setHourStyle(topHour)
-        const topMinute = d3.timeMinute.count(d3.timeMinute.floor(timeRange[0]), d3.timeMinute.ceil(timeRange[1])) > 100 ?
-            {display: "none"} : {}
-        setMinuteStyle(topMinute)
-    }, [timeRange])
+        if (additional) {
+            const [dayValid, hourValid, minuteValid] = dispatch(getBinsValid())
+            setDayStyle(dayValid ? {} : {display: "none"})
+            setHourStyle(hourValid ? {} : {display: "none"})
+            setMinuteStyle(minuteValid ? {} : {display: "none"})
+        } else {
+            const topDay = d3.timeDay.count(d3.timeDay.floor(histTimeRange[0]), d3.timeDay.ceil(histTimeRange[1])) > 100 ?
+                {display: "none"} : {}
+            setDayStyle(topDay)
+            const topHour = d3.timeHour.count(d3.timeHour.floor(histTimeRange[0]), d3.timeHour.ceil(histTimeRange[1])) > 100 ?
+                {display: "none"} : {}
+            setHourStyle(topHour)
+            const topMinute = d3.timeMinute.count(d3.timeMinute.floor(histTimeRange[0]), d3.timeMinute.ceil(histTimeRange[1])) > 100 ?
+                {display: "none"} : {}
+            setMinuteStyle(topMinute)
+        }
+    }, [additional, dispatch, eventTimeRange, histTimeRange])
 
     const handleImageInfo = (event) => dispatch(setBinDivided(event.target.checked))
 

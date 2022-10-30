@@ -51,7 +51,7 @@ const Settings = ({additional= false, boxAnchor}) => {
 
     const [open, setOpen] = useState(false)
     const [modal, setModal] = useState(false)
-    const [openHistOptions, setOpenHistOptions] = useState(false)
+    const [optionsOpen, setOptionsOpen] = useState(false)
 
     useEffect(() => {
         document.documentElement.className = theme
@@ -59,7 +59,7 @@ const Settings = ({additional= false, boxAnchor}) => {
 
     const handleOpenHistogramOptions = () => {
         setOpen(false)
-        setOpenHistOptions(true)
+        setOptionsOpen(true)
     }
 
     const handleOpenCredits = () => {
@@ -130,7 +130,7 @@ const Settings = ({additional= false, boxAnchor}) => {
             </Box>
         </Modal>
         { boxAnchor &&
-            <Popper open={openHistOptions} anchorEl={boxAnchor} placement={"left-end"}>
+            <Popper open={optionsOpen} anchorEl={boxAnchor} placement={"left-end"}>
                 <Box sx={{
                     border: "2px solid var(--border-bg-color)",
                     p: 1,
@@ -139,7 +139,7 @@ const Settings = ({additional= false, boxAnchor}) => {
                     marginLeft: "1px",
                     paddingBottom: "16px"
                 }}>
-                    <OptionsWindow additional setOpenHistOptions={setOpenHistOptions}/>
+                    <OptionsWindow additional setOptionsOpen={setOptionsOpen}/>
                 </Box>
             </Popper>
         }

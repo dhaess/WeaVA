@@ -34,27 +34,6 @@ const setPlayerData = (state, props, event) => {
     return [playerData, mapData, histData, histImageData]
 }
 
-const getTimeRanges = (state) => {
-    const events = state.comparison.events
-    let timeRanges = {}
-    switch (state.comparison.syncType) {
-        case "syncDuration":
-            const durations = events.map(e => e.info.timeRange[1]-e.info.timeRange[0])
-            const maxDuration = Math.max(...durations)
-            events.forEach(e => timeRanges[e.info.id] = [e.info.timeRange[0], e.info.timeRange[0] + maxDuration])
-            break
-        case "syncAll":
-            const starts = events.map(e => e.info.timeRange[0])
-            const minStart = Math.min(...starts)
-            const ends = events.map(e => e.info.timeRange[1])
-            const maxEnds = Math.max(...ends)
-            events.forEach(e => timeRanges[e.info.id] = [minStart, maxEnds])
-            break
-        default: events.forEach(e => timeRanges[e.info.id] = [e.info.timeRange[0], e.info.timeRange[1]])
-    }
-    return timeRanges
-}
-
 const setEventPlayerData = (state, props) => {
     const events = state.comparison.events
     const totalSteps = props.totalSteps === undefined ? state.player.totalSteps : props.totalSteps
@@ -91,6 +70,40 @@ const playData = (dispatch, state, currentStep) => {
         if (currentStep === totalSteps+1) clearInterval(timerId)
     }, stepTime)
     dispatch(setTimerId(timerId))
+}
+
+const getTimeRanges = (state) => {
+    const events = state.comparison.events
+    let timeRanges = {}
+    switch (state.comparison.syncType) {
+        case "syncDuration":
+            const durations = events.map(e => e.info.timeRange[1] - e.info.timeRange[0])
+            const maxDuration = Math.max(...durations)
+            events.forEach(e => timeRanges[e.info.id] = [e.info.timeRange[0], e.info.timeRange[0] + maxDuration])
+            break
+        case "syncAll":
+            const starts = events.map(e => e.info.timeRange[0])
+            const minStart = Math.min(...starts)
+            const ends = events.map(e => e.info.timeRange[1])
+            const maxEnds = Math.max(...ends)
+            events.forEach(e => timeRanges[e.info.id] = [minStart, maxEnds])
+            break
+        default:
+            events.forEach(e => timeRanges[e.info.id] = [e.info.timeRange[0], e.info.timeRange[1]])
+    }
+    return timeRanges
+}
+
+export const getBinsValid = () => {
+    return (_, getState) => {
+        const state = getState()
+        const dayBins = getTotalSteps(state, "equalBins", {type: "day"})
+        if (dayBins > 100)  return [false, false, false]
+        const hourBins = getTotalSteps(state, "equalBins", {type: "hour"})
+        if (hourBins > 100)  return [true, false, false]
+        const minuteBins = getTotalSteps(state, "equalBins", {type: "minute"})
+        return [true, true, minuteBins > 100]
+    }
 }
 
 export const getTotalSteps = (state, syncType, binData) => {
