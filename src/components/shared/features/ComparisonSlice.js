@@ -21,11 +21,8 @@ export const saveEvent = (eventInfo) => {
             index = state.comparison.events.findIndex(e => e.info.id === newEvent.info.id)
         }
         let events = [...state.comparison.events]
-        if (index === -1) {
-            events.push(newEvent)
-        } else {
-            events[index] = newEvent
-        }
+        index === -1 ? events.push(newEvent) : events[index] = newEvent
+
         const syncedTime = getSyncedTime(state.comparison.syncType, events)
         dispatch(editComparison({events: events, syncedTime: syncedTime}))
         dispatch(clearMap())
@@ -105,7 +102,6 @@ export const comparisonSlice = createSlice({
     name: "comparisonSlice",
     initialState: {
         events: [],
-        // events: tempInit,
         syncType: "syncDuration",
         syncedTime: []
     },

@@ -1,16 +1,23 @@
 import {useSelector} from "react-redux";
 import {LayerGroup, MapContainer, Marker, TileLayer} from "react-leaflet";
 import {useEffect, useState} from "react";
-import {createClusterCustomIcon, getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
-import MarkerClusterGroup from "../../shared/components/MarkerClusterGroup";
+import {getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
+// import {createClusterCustomIcon, getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
+// import MarkerClusterGroup from "../../shared/components/MarkerClusterGroup";
 import {getGridData} from "../../shared/functions/MapFunctions";
 import {Button} from "@mui/material";
 import Arrow from "../../../static/images/left-arrow.png";
 import MarkerMode from "../../../static/data/MarkerMode.json";
 
-const MiniMap = ({color, id}) => {
-
-    const events = useSelector(state => state.comparison.events)
+const MiniMap = ({color, id, mapData}) => {
+    const [events,
+        hasEvents
+    ] = useSelector(state => {
+        const events = state.comparison.events
+        return [events,
+            events.length>0
+        ]
+    })
     const data = useSelector(state => state.map.focusedData)
     const [mapTile,
         markerMode
@@ -22,43 +29,44 @@ const MiniMap = ({color, id}) => {
         ]
     })
 
-    const [showMap, setMap] = useState(true)
+    const [showMap, setMap] = useState(false)
     const [pointsData, setPointsData] = useState([])
     const [gridData, setGridData] = useState([])
 
-    const handleCloseClick = () => {
-        setMap(false)
-    }
+    const handleCloseClick = () => setMap(false)
 
-    const handleOpenClick = () => {
-        setMap(true)
-    }
+    const handleOpenClick = () => setMap(true)
+
+    useEffect(() => setMap(hasEvents), [hasEvents])
 
     useEffect(() => {
-        let mapData = data.map(d => {
-            let e = {...d}
-            e.color = color
-            e.eventId = id
-            return e
-        }).concat(
-            events.filter(event => event.info.id !== id && !event.hidden).map(e => e.data)
-        ).flat()
+        if (showMap) {
+            if (events.length>0) {
+                let localMapData = data.map(d => {
+                    let e = {...d}
+                    e.color = color
+                    e.eventId = id
+                    return e
+                }).concat(events.filter(event => event.info.id !== id && !event.hidden).map(e => e.data)).flat()
 
-        let coordsList = []
-        let newPointsData = []
-        mapData.forEach(e => {
-            let index = coordsList.findIndex(c => [0, 1].every(k => e.coordinates[k] === c[k]))
-            if (index === -1) {
-                newPointsData.push({coordinates: e.coordinates, count: 1, focused: [e]})
-                coordsList.push(e.coordinates)
+                let coordsList = []
+                let newPointsData = []
+                localMapData.forEach(e => {
+                    let index = coordsList.findIndex(c => [0, 1].every(k => e.coordinates[k] === c[k]))
+                    if (index === -1) {
+                        newPointsData.push({coordinates: e.coordinates, focused: [e]})
+                        coordsList.push(e.coordinates)
+                    } else {
+                        let multiIndex = newPointsData.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
+                        newPointsData[multiIndex].focused.push(e)
+                    }
+                })
+                setPointsData(newPointsData)
             } else {
-                let multiIndex = newPointsData.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
-                newPointsData[multiIndex].count += 1
-                newPointsData[multiIndex].focused.push(e)
+                setPointsData(mapData)
             }
-        })
-        setPointsData(newPointsData)
-    }, [color, data, events, id])
+        }
+    }, [color, data, events, id, mapData, showMap])
 
     useEffect(() => {
         if (markerMode===MarkerMode["Grid"]) {
@@ -95,12 +103,13 @@ const MiniMap = ({color, id}) => {
                     {markerMode===MarkerMode["Grid"] &&
                         <LayerGroup>
                             {gridData.map(e => {
-                                if (e.count === 1) {
+                                if (e.focused.length === 1) {
                                     const singlePoint = e.focused[0]
+                                    const pointColor = hasEvents ? singlePoint.color : color
                                     return (
                                         <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
                                                 position={e.coordinates}
-                                                icon={getMapIcon(singlePoint.category, singlePoint.color, 7)}
+                                                icon={getMapIcon(singlePoint.category, pointColor, 7)}
                                         />
                                     )
                                 } else {
@@ -109,44 +118,43 @@ const MiniMap = ({color, id}) => {
                                                 color={color}
                                                 data={e}
                                                 position={e.coordinates}
-                                                icon={getPieIcon(e.focused, {sum: e.focused.length, size: 7})}
+                                                icon={getPieIcon(e.focused, hasEvents ? {sum: e.focused.length, size: 7} : {color: color, sum: e.focused.length, size: 7})}
                                         />
                                     )
                                 }
                             })}
                         </LayerGroup>
                     }
-                    {markerMode===MarkerMode["Cluster"] &&
-                        <MarkerClusterGroup
-                            iconCreateFunction={d => createClusterCustomIcon(d, 7)}
-                            zoomToBoundsOnClick={false}
-                            chunkedLoading={true}
-                            maxClusterRadius={20}
-                            // chunkProgress={(processed, total, elapsed, layersArray) => updateProgressBar(processed, total, elapsed, layersArray)}
-                        >
-                            {pointsData.filter(e => e.focused.length !== 0).map(e => {
-                                if (e.focused.length === 1) {
-                                    return (
-                                        <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
-                                                color={color}
-                                                data={e.focused[0]}
-                                                position={e.coordinates}
-                                                icon={getMapIcon(e.focused[0].category, e.focused[0].color, 7, "minimapMarkers minimapSingle")}
-                                        />
-                                    )
-                                } else {
-                                    return (
-                                        <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}
-                                                color={color}
-                                                data={e}
-                                                position={e.coordinates}
-                                                icon={getPieIcon(e.focused, {size: 7})}
-                                        />
-                                    )
-                                }
-                            })}
-                        </MarkerClusterGroup>
-                    }
+                    {/*{markerMode===MarkerMode["Cluster"] &&*/}
+                    {/*    <MarkerClusterGroup*/}
+                    {/*        iconCreateFunction={d => createClusterCustomIcon(d, 7)}*/}
+                    {/*        zoomToBoundsOnClick={false}*/}
+                    {/*        chunkedLoading={true}*/}
+                    {/*        maxClusterRadius={20}*/}
+                    {/*    >*/}
+                    {/*        {pointsData.filter(e => e.focused.length !== 0).map(e => {*/}
+                    {/*            if (e.focused.length === 1) {*/}
+                    {/*                return (*/}
+                    {/*                    <Marker key={e.coordinates[0] + "," + e.coordinates[1]}*/}
+                    {/*                            color={color}*/}
+                    {/*                            data={e.focused[0]}*/}
+                    {/*                            position={e.coordinates}*/}
+                    {/*                            icon={getMapIcon(e.focused[0].category, hasEvents ? e.focused[0].color : color, 7, "minimapMarkers minimapSingle")}*/}
+                    {/*                    />*/}
+                    {/*                )*/}
+                    {/*            } else {*/}
+                    {/*                return (*/}
+                    {/*                    <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}*/}
+                    {/*                            color={color}*/}
+                    {/*                            data={e}*/}
+                    {/*                            position={e.coordinates}*/}
+                    {/*                            icon={getPieIcon(e.focused, hasEvents ? {size: 7} : {color: color, size: 7})}*/}
+                    {/*                    />*/}
+                    {/*                )*/}
+                    {/*            }*/}
+                    {/*        })}*/}
+                    {/*    </MarkerClusterGroup>*/}
+                    {/*}*/}
                     {markerMode===MarkerMode["Location"] &&
                         <LayerGroup>
                             {pointsData.map(e => {
@@ -154,14 +162,14 @@ const MiniMap = ({color, id}) => {
                                     return (
                                         <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
                                                 position={e.coordinates}
-                                                icon={getMapIcon(e.focused[0].category, e.focused[0].color, 7, "minimapMarkers minimapSingle")}
+                                                icon={getMapIcon(e.focused[0].category, hasEvents ? e.focused[0].color : color, 7, "minimapMarkers minimapSingle")}
                                         />
                                     )
                                 } else {
                                     return (
                                         <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}
                                                 position={e.coordinates}
-                                                icon={getPieIcon(e.focused, {size: 7, className: "minimapMarkers"})}
+                                                icon={getPieIcon(e.focused, hasEvents ? {size: 7, className: "minimapMarkers"} : {color: color, size: 7, className: "minimapMarkers"})}
                                         />
                                     )
                                 }

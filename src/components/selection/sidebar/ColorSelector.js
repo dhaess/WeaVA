@@ -8,12 +8,9 @@ import {StyledTextField} from "../../../static/style/muiStyling";
 export default function ColorSelector() {
     const dispatch = useDispatch()
 
-    const color = useSelector(state => {
-        return state.savings.current.color
-    })
+    const color = useSelector(state => state.savings.current.color)
 
     const [colorStyle, setColorStyle] = useState({})
-
     const [boxFocus, setBoxFocus] = useState(false)
     const [fieldFocus, setFieldFocus] = useState(false)
     const [pickerFocus, setPickerFocus] = useState(false)
@@ -22,13 +19,9 @@ export default function ColorSelector() {
         setColorStyle({backgroundColor: color})
     }, [color])
 
-    const handleTextChange = (event) => {
-        dispatch(setCurrent({name: "color", value: event.target.value}))
-    }
+    const handleTextChange = (event) => dispatch(setCurrent({name: "color", value: event.target.value}))
 
-    const handlePickerChange = (val) => {
-        dispatch(setCurrent({name: "color", value: val}))
-    }
+    const handlePickerChange = (val) => dispatch(setCurrent({name: "color", value: val}))
 
     return(
         <div id="colorAll">

@@ -3,11 +3,9 @@ import PropTypes from "prop-types";
 import {CancelButton, DeleteButton} from "../../../static/style/muiStyling";
 
 const DeleteDialog = (props) => {
-    const { onClose, name, open } = props
+    const {onClose, name, open} = props
 
-    const handleClose = (deleteConfirmed) => {
-        onClose(deleteConfirmed)
-    }
+    const handleClose = (deleteConfirmed) => onClose(deleteConfirmed)
 
     return (
         <Dialog

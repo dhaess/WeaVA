@@ -15,26 +15,24 @@ const GeneralButtons = () => {
 
     const divided = useSelector(state => state.settings.histogram.divided)
     const events = useSelector(state => state.comparison.events)
-    const [isActive,
-        currentStep,
+    const [currentStep,
         totalSteps
     ] = useSelector(state => {
         const player = state.player
-        return [player.isActive,
-            player.currentStep,
-            player.totalSteps]
+        return [player.currentStep,
+            player.totalSteps
+        ]
     })
 
     const [anchorEl, setAnchorEl] = useState()
     const [legendStyle, setLegendStyle] = useState({})
 
     useEffect(() => {
-        divided && events.length>0 ? setLegendStyle({flexDirection: "column"}) : setLegendStyle({display: "none", flexDirection: "column"})
+        divided && events.length > 0 ? setLegendStyle({flexDirection: "column"}) : setLegendStyle({display: "none", flexDirection: "column"})
     }, [divided, events.length])
 
     useEffect(() => {
         setTimeout(() => setAnchorEl(boxRef?.current), 1)
-        
     },  [boxRef])
 
     const handleClick = () => {
@@ -43,9 +41,7 @@ const GeneralButtons = () => {
         navigate(`/selection`)
     }
 
-    const handleSliderChange = (event) => {
-        dispatch(moveToStep(event.target.value))
-    }
+    const handleSliderChange = (event) => dispatch(moveToStep(event.target.value))
 
     return (
         <div id={"GeneralButtonContainer"} style={{minWidth: "300px"}} ref={boxRef}>

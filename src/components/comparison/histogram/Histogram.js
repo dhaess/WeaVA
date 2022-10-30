@@ -98,12 +98,10 @@ const Histogram = ({dimensions, id}) => {
                 timeRange = localTimeRange
         }
 
-        const toDelay = inPlayerMode ? false : controlBinNumber(timeRange, binType, binCount, divided, dispatch)
+        const toDelay = inPlayerMode ? false : controlBinNumber(timeRange, binType, binCount, divided, dispatch, true)
 
         if (!toDelay) {
-            if (document.getElementsByTagName('g').length>0) {
-                d3.select(svgRef.current).select('g').remove()
-            }
+            if (document.getElementsByTagName('g').length>0) d3.select(svgRef.current).select('g').remove()
             if (inPlayerMode ||  histData.length !== 0) {
                 const [binTimeStart, binTimeBorder] = setBinTimeBorders(binType, binCount, timeRange)
                 let histDataFocused, histDataUnfocused, imageHistData, yMax
@@ -158,25 +156,15 @@ const Histogram = ({dimensions, id}) => {
                         .style("opacity", opacity)
                 }
 
-                if (inPlayerMode) {
-                    appendHistData(histDataUnfocused, "var(--opacity-bg-color)", "0.4", x, y)
-                }
-                if (histDataFocused.length !== 0) {
-                    appendHistData(histDataFocused, "var(--main-bg-color)", "1")
-                }
-                if (divided && imageHistData.length!==0) {
-                    appendHistData(imageHistData, "var(--shadow-bg-color)", "1")
-                }
+                if (inPlayerMode) appendHistData(histDataUnfocused, "var(--opacity-bg-color)", "0.4", x, y)
+                if (histDataFocused.length !== 0) appendHistData(histDataFocused, "var(--main-bg-color)", "1")
+                if (divided && imageHistData.length!==0) appendHistData(imageHistData, "var(--shadow-bg-color)", "1")
 
-                let formatDate = d3.timeFormat("%d.%m.%y");
-                if (d3.timeMonth.count(timeRange[0], timeRange[1])===0) {
-                    if (d3.timeDay.count(timeRange[0], timeRange[1])<2) {
-                        formatDate = d3.timeFormat("%d.%m. %H:%M");
-                    } else {
-                        formatDate = d3.timeFormat("%d.%m.");
-                    }
-                }
                 // Add the X Axis
+                let formatDate = d3.timeFormat("%d.%m.%y");
+                if (d3.timeMonth.count(timeRange[0], timeRange[1])===0)
+                    formatDate = d3.timeDay.count(timeRange[0], timeRange[1])<2 ?
+                    d3.timeFormat("%d.%m. %H:%M") : d3.timeFormat("%d.%m.")
                 svg.append("g")
                     .attr("class", "x axis")
                     .attr("transform", "translate(0," + height + ")")

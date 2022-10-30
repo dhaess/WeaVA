@@ -29,18 +29,11 @@ const MapFilterOverlay = ({mapFilter}) => {
                     groupedPolygons = union(groupedPolygons, turf.polygon([polygons[i]]))
                 }
             }
-            if (remainingPolygons.length === 0) {
-                remainingPolygons = groupedPolygons
-            } else {
-                remainingPolygons = intersect(remainingPolygons, groupedPolygons)
-            }
+            remainingPolygons = remainingPolygons.length === 0 ? groupedPolygons : intersect(remainingPolygons, groupedPolygons)
         } else {
             remainingPolygons = []
         }
-
-        if (remainingPolygons.length>0) {
-            remainingPoints = []
-        }
+        if (remainingPolygons.length>0) remainingPoints = []
         remainingPoints = remainingPoints.concat(e.focusedProximityPoints).concat(e.focusedSpecialPoints.add.map(v => [v.lat, v.lng]))
         e.focusedSpecialPoints.delete.forEach(f => {
             const index = remainingPoints.findIndex(e => e[0]===f.lat && e[1]===f.lng)
@@ -51,13 +44,9 @@ const MapFilterOverlay = ({mapFilter}) => {
             }
         })
     })
-    if (remainingPolygons.length===undefined) {
-        if (remainingPolygons.geometry.type === "Polygon") {
-            remainingPolygons = [remainingPolygons.geometry.coordinates.map(e => e.map(e2 => [e2[1], e2[0]]))]
-        } else {
-            remainingPolygons = remainingPolygons.geometry.coordinates.map(e => e.map(e2 => e2.map(e3 => [e3[1], e3[0]])))
-        }
-    }
+    if (remainingPolygons.length===undefined) remainingPolygons = remainingPolygons.geometry.type === "Polygon" ?
+            [remainingPolygons.geometry.coordinates.map(e => e.map(e2 => [e2[1], e2[0]]))] :
+            remainingPolygons.geometry.coordinates.map(e => e.map(e2 => e2.map(e3 => [e3[1], e3[0]])))
 
     return (
         <>

@@ -1,22 +1,12 @@
+import distance from "@turf/distance";
 import {ChanConvexHull} from "./ConvexHull";
 
-export const getDistance = (c1, c2) => {
-    const R = 6371e3; // metres
-    const phi1 = c1[0] * Math.PI / 180; // φ, λ in radians
-    const phi2 = c2[0] * Math.PI / 180;
-    const dPhi = (c2[0] - c1[0]) * Math.PI / 180;
-    const dLambda = (c2[1] - c1[1]) * Math.PI / 180;
-
-    const a = Math.sin(dPhi / 2) * Math.sin(dPhi / 2) +
-        Math.cos(phi1) * Math.cos(phi2) *
-        Math.sin(dLambda / 2) * Math.sin(dLambda / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
+const getDistance = (c1, c2) => {
+    return distance([c1[1], c1[0]], [c2[1], c2[0]])
 }
 
 export const pointInCircle = (point, circle) => {
-    return getDistance([circle.center.lat, circle.center.lng], point) <= circle.radius
+    return getDistance([circle.center.lat, circle.center.lng], point)*1000 <= circle.radius
 }
 
 // taken from https://www.algorithms-and-technologies.com/point_in_polygon/javascript
@@ -53,9 +43,8 @@ const arrangeArea = (allPoints, focused) => {
 }
 
 export const focusArea = (focused, areas) => {
-    if (Object.keys(areas).length === 0) {
-        return [focused, false]
-    }
+    if (Object.keys(areas).length === 0) return [focused, false]
+
     let newFocused = Object.keys(areas).map(e => {
         switch (areas[e].type) {
             case "rectangle":
@@ -75,14 +64,12 @@ export const focusArea = (focused, areas) => {
         }
     }).flat()
     newFocused = arrangeArea(focused, newFocused)
-
     return [newFocused, true]
 }
 
 export const focusPoints = (focused, points) => {
-    if (points["add"].length === 0 && points["delete"].length === 0) {
-        return [focused, false]
-    }
+    if (points["add"].length === 0 && points["delete"].length === 0) return [focused, false]
+
     let newFocused = [...focused]
     points["delete"].forEach(c => {
         const index = newFocused.findIndex(e => e.coordinates[0] === c.lat && e.coordinates[1] === c.lng)
@@ -106,9 +93,8 @@ export const focusPoints = (focused, points) => {
 }
 
 export const focusProximity = (data, proximityPoints) => {
-    if (proximityPoints.length === 0) {
-        return [data, false]
-    }
+    if (proximityPoints.length === 0) return [data, false]
+
     let newData = [...data]
     proximityPoints.flat().forEach(c => {
         const index = newData.findIndex(v => [0, 1].every(k => v.coordinates[k]===c[k]))
@@ -129,14 +115,13 @@ export const getProximityPoints = (coords, coordsList, distance) => {
 
     queue.push(coords)
     let index = coordsList.findIndex(c => [0, 1].every(k => c[k]===coords[k]))
-    if (index !== -1) {
-        visited[index] = true
-    }
+    if (index !== -1) visited[index] = true
 
     while (queue.length > 0) {
         let node = queue.shift()
         coordsList.forEach((e, i) => {
-            if (!visited[i] && getDistance(e, node) <= distance*1000) {
+            console.log(getDistance(e, node), distance)
+            if (!visited[i] && getDistance(e, node) <= distance) {
                 queue.push(e)
                 visited[i] = true
             }
@@ -152,11 +137,10 @@ export const setPointsData = (data) => {
     data.forEach(e => {
         let index = coordsList.findIndex(c => [0, 1].every(k => e.coordinates[k] === c[k]))
         if (index === -1) {
-            points.push({coordinates: e.coordinates, count: 1, focused: [e], unfocused:[]})
+            points.push({coordinates: e.coordinates, focused: [e], unfocused:[]})
             coordsList.push(e.coordinates)
         } else {
             let pointsIndex = points.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
-            points[pointsIndex].count += 1
             points[pointsIndex].focused.push(e)
         }
     })
@@ -167,10 +151,8 @@ export const getGridData = (allData, zoomLevel) => {
     const gridData = []
 
     if (allData.length===1) {
-        gridData.push({focused: allData, unfocused: [], count: 1, coordinates: allData[0].coordinates, convexHull: [allData[0].coordinates]})
-        return gridData
-    }
-    else if (allData.length>1) {
+        gridData.push({focused: allData, unfocused: [], coordinates: allData[0].coordinates, convexHull: [allData[0].coordinates]})
+    } else if (allData.length>1) {
         const latList = allData.map(e => e.coordinates[0])
         const minLat = Math.min(...latList)
         const maxLat = Math.max(...latList)
@@ -181,16 +163,14 @@ export const getGridData = (allData, zoomLevel) => {
         const latDist = getDistance([minLat, minLng], [maxLat, minLng])
         const lngDist = getDistance([minLat, minLng], [minLat, maxLng])
 
-        const maxGridSize = 10240 * 1000 / (Math.pow(2, zoomLevel))
+        const maxGridSize = 10240 / (Math.pow(2, zoomLevel))
         const latGrid = Math.ceil(latDist/maxGridSize)
         const lngGrid = Math.ceil(lngDist/maxGridSize)
-        const latGridSize = (maxLat-minLat+0.005) / Math.ceil(latDist/maxGridSize)
-        const lngGridSize = (maxLng-minLng+0.005) / Math.ceil(lngDist/maxGridSize)
+        const latGridSize = (maxLat-minLat+0.005) / latGrid
+        const lngGridSize = (maxLng-minLng+0.005) / lngGrid
 
         const grid = new Array(latGrid)
-        for (let i=0; i<latGrid; i++) {
-            grid[i] = new Array(lngGrid)
-        }
+        for (let i=0; i<latGrid; i++) grid[i] = new Array(lngGrid)
 
         allData.forEach(e => {
             const x = Math.floor((e.coordinates[0]-minLat) / latGridSize)
@@ -208,7 +188,8 @@ export const getGridData = (allData, zoomLevel) => {
                     const convexHull = ChanConvexHull.calculate(gridContent.map(e => e.coordinates)).convexHull
                     const avgLat =  convexHull.map(e => e[0]).reduce((a, b) => a + b, 0) / convexHull.length
                     const avgLng =  convexHull.map(e => e[1]).reduce((a, b) => a + b, 0) / convexHull.length
-                    gridData.push({focused: gridContent, unfocused: [], count: gridContent.length, coordinates: [avgLat, avgLng], convexHull: convexHull})
+                    // gridData.push({focused: gridContent, unfocused: [], coordinates: [avgLat, avgLng], convexHull: convexHull})
+                    gridData.push({focused: gridContent, unfocused: [], coordinates: [avgLat, avgLng]})
                 }
             }
         }
@@ -216,13 +197,7 @@ export const getGridData = (allData, zoomLevel) => {
     return gridData
 }
 
-export const getClusterList = (event) => {
-    let markerList = event.layer.getAllChildMarkers().map(e => e.options.data)
-    return markerList.map(e => {
-        if (e.count === undefined) {
-            return e
-        } else {
-            return e.focused
-        }
-    }).flat()
-}
+// export const getClusterList = (event) => {
+//     let markerList = event.layer.getAllChildMarkers().map(e => e.options.data)
+//     return markerList.map(e => e.focused === undefined ? e : e.focused).flat()
+// }

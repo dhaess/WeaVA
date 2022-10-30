@@ -18,13 +18,9 @@ const dimensions = {
 const Selection = () => {
     const dispatch = useDispatch()
 
-    const name = useSelector(state => {
-        return state.savings.current.name
-    })
+    const name = useSelector(state => state.savings.current.name)
 
-    if (name === "") {
-        dispatch(initNewCurrent())
-    }
+    if (name === "") dispatch(initNewCurrent())
 
     return (
         <div className="App" style={{overflow: "hidden"}}>

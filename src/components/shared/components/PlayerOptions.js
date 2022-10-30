@@ -46,25 +46,15 @@ const PlayerOptions = ({additional = false}) => {
         ]
     })
 
-    const handleTypeChange = (event) => {
-        dispatch(setPlayerType(event.target.value, additional))
-    }
+    const handleTypeChange = (event) => dispatch(setPlayerType(event.target.value, additional))
 
-    const handleNumberChange = (event) => {
-        dispatch(setTotalStepsSync(event.target.value, additional))
-    }
+    const handleNumberChange = (event) => dispatch(setTotalStepsSync(event.target.value, additional))
 
-    const handleTotalStepInputChange = (event) => {
-        dispatch(setTotalSteps(Number(event.target.value), additional))
-    }
+    const handleTotalStepInputChange = (event) => dispatch(setTotalSteps(Number(event.target.value), additional))
 
-    const handleStepTimeInputChange = (event) => {
-        dispatch(setStepTime(Number(event.target.value)))
-    }
+    const handleStepTimeInputChange = (event) => dispatch(setStepTime(Number(event.target.value)))
 
-    const setDefaultStepTime = () => {
-        dispatch(setStepTime(500))
-    }
+    const setDefaultStepTime = () => dispatch(setStepTime(500))
 
     return (
         <>

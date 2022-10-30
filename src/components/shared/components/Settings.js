@@ -70,16 +70,12 @@ const Settings = ({additional= false, boxAnchor}) => {
     const handleCloseCredits = () => setModal(false)
 
     const closeColorMenu = (theme) => {
-        if (theme !== "") {
-            dispatch(setTheme(theme))
-        }
+        if (theme !== "") dispatch(setTheme(theme))
         setOpen(false)
     }
 
     const closeMapMenu = (tile) => {
-        if (theme !== "") {
-            dispatch(setMapTile(tile))
-        }
+        if (theme !== "") dispatch(setMapTile(tile))
         setOpen(false)
     }
 
@@ -106,13 +102,6 @@ const Settings = ({additional= false, boxAnchor}) => {
                 <StyledInnerMenuItem onClick={() => closeColorMenu("grannySmithApple")} sx={{background: "linear-gradient(90deg, #dcefd7, #add9a1, #dcefd7)"}}>Granny Smith Apple</StyledInnerMenuItem>
                 <StyledInnerMenuItem onClick={() => closeColorMenu("bone")} sx={{background: "linear-gradient(90deg, #eeecdd, #ddd8ba, #eeecdd)"}}>Bone</StyledInnerMenuItem>
                 <StyledInnerMenuItem onClick={() => closeColorMenu("gold")} sx={{background: "linear-gradient(90deg, #f6e8d5, #e9c694, #f6e8d5)"}}>Gold</StyledInnerMenuItem>
-
-                {/*<StyledInnerMenuItem onClick={() => closeColorMenu("terraCotta")} sx={{background: "linear-gradient(90deg, #d9876b, #d67857, #d9876b)"}}>Terra Cotta</StyledInnerMenuItem>*/}
-                {/*<StyledInnerMenuItem onClick={() => closeColorMenu("oceanGreen")} sx={{background: "linear-gradient(90deg, #6dc6ae, #47bd9c, #6dc6ae)"}}>Ocean Green</StyledInnerMenuItem>*/}
-                {/*<StyledInnerMenuItem onClick={() => closeColorMenu("vistaBlue")} sx={{background: "linear-gradient(90deg, #9eafcf, #7898d4, #9eafcf)"}}>Vista Blue</StyledInnerMenuItem>*/}
-                {/*<StyledInnerMenuItem onClick={() => closeColorMenu("turquoise")} sx={{background: "linear-gradient(90deg, #87d9e0, #34cdda, #87d9e0)"}}>Turquoise</StyledInnerMenuItem>*/}
-                {/*<StyledInnerMenuItem onClick={() => closeColorMenu("darkKhaki")} sx={{background: "linear-gradient(90deg, #ddd456, #cbc56d, #ddd456)"}}>Dark Khaki</StyledInnerMenuItem>*/}
-                {/*<StyledInnerMenuItem onClick={() => closeColorMenu("deepMauve")} sx={{background: "linear-gradient(90deg, #e2b4e2, #d478d3, #e2b4e2)"}}>Deep Mauve</StyledInnerMenuItem>*/}
             </NestedMenuItem>
             <NestedMenuItem
                 label={"Map Background"}

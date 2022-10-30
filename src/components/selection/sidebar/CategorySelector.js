@@ -100,12 +100,13 @@ const StyledManyRangeSlider = styled(StyledRangeSlider)({
 export default function CategorySelector() {
     const dispatch = useDispatch()
 
-    const categories = useSelector(state => {
-        return state.savings.current.category
-    })
-
-    const intensities = useSelector(state => {
-        return state.savings.current.intensity
+    const [categories,
+        intensities
+    ] = useSelector(state => {
+        const current = state.savings.current
+        return [current.category,
+            current.intensity
+        ]
     })
 
     const isSelected = (value) => {
@@ -120,11 +121,8 @@ export default function CategorySelector() {
                 let locIntensities = [...intensities]
                 locIntensities.splice(entryIndex, 1)
                 dispatch(setCurrent({name: "intensity", value: locIntensities}))
-                if (locIntensities.length === 0) {
-                    dispatch(changeFilter([{type: "add", filter: [{"category": {'$in': categoryList}}]}, {type: "remove", filter: ["auspraegung"]}]))
-                } else {
+                locIntensities.length === 0 ? dispatch(changeFilter([{type: "add", filter: [{"category": {'$in': categoryList}}]}, {type: "remove", filter: ["auspraegung"]}])) :
                     dispatch(changeFilter([{type: "add", filter: [{"auspraegung": {'$in': configureFilter(locIntensities)}}, {"category": {'$in': categoryList}}]}]))
-                }
             } else {
                 dispatch(changeFilter([{type: "add", filter: [{"category": {'$in': categoryList}}]}]))
             }
@@ -161,18 +159,11 @@ export default function CategorySelector() {
         if ((entryIndex === -1 && !(val[0]===0 && val[1] === max)) ||
             (entryIndex !== -1 && !(val[0]===intensities[entryIndex].value[0] && val[1]===intensities[entryIndex].value[1]))) {
             let locIntensities = [...intensities]
-            if (entryIndex !== -1) {
-                locIntensities.splice(entryIndex, 1)
-            }
-            if (!(val[0] === 0 && val[1] === max)) {
-                locIntensities.push({category: cat, value: val})
-            }
+            if (entryIndex !== -1) locIntensities.splice(entryIndex, 1)
+            if (!(val[0] === 0 && val[1] === max)) locIntensities.push({category: cat, value: val})
             dispatch(setCurrent({name: "intensity", value: locIntensities}))
-            if (locIntensities.length === 0) {
-                dispatch(changeFilter([{type: "remove", filter: ["auspraegung"]}]))
-            } else {
+            locIntensities.length === 0 ? dispatch(changeFilter([{type: "remove", filter: ["auspraegung"]}])) :
                 dispatch(changeFilter([{type: "add", filter: [{"auspraegung": {'$in': configureFilter(locIntensities)}}]}]))
-            }
         }
     }
 

@@ -10,9 +10,7 @@ import {
 export default function ImageSelect() {
     const dispatch = useDispatch()
 
-    const images = useSelector(state => {
-        return state.savings.current.images
-    })
+    const images = useSelector(state => state.savings.current.images)
 
     const handleChange = (event) => {
         const val = event.target.value

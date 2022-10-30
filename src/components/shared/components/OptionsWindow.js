@@ -3,11 +3,11 @@ import PlayerOptions from "./PlayerOptions";
 import {ImageButton} from "../../../static/style/muiStyling";
 import Close from "../../../static/images/close.png";
 
-const OptionsWindow = ({additional = false, setOpenHistOptions}) => {
+const OptionsWindow = ({additional = false, setOptionsOpen}) => {
     return(
         <>
             <ImageButton
-                onClick={() => setOpenHistOptions(false)}
+                onClick={() => setOptionsOpen(false)}
                 sx={{position: "absolute", right: "10px", padding: "4px", minWidth: "27px"}}>
                 <img src={Close} width={18} alt={"close"}/>
             </ImageButton>

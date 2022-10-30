@@ -20,7 +20,8 @@ const arrangeIntensityInfo = (array) => {
         const intensities = Object.entries(groupByIntensity).map(i => {
             return {intensity: i[0], count: i[1].length}
         })
-        return {category: e[0], intensities: intensities}
+        const totalCount = intensities.map(e => e.count).reduce((a, b) => {return a + b}, 0)
+        return {category: e[0], count: totalCount, intensities: intensities}
     })
 }
 
@@ -112,12 +113,9 @@ export const MultiMarkerEventPopup = ({data, isCluster, position}) => {
                 {e[1].map(c => (
                     <React.Fragment key={c.category}>
                         <p>{e[0]}: </p>
-                        <p>{getCategoryName(c.category)}: </p>
+                        <p>{getCategoryName(c.category)} ({c.count}): </p>
                         <div>
-                            {c.intensities.map(i => <p key={i.intensity}>{getIntensityName(c.category, i.intensity)}:</p>)}
-                        </div>
-                        <div style={{alignItems: "flex-end"}}>
-                            {c.intensities.map(i => <p key={i.intensity}>{i.count}</p>)}
+                            {c.intensities.map(i => <p key={i.intensity}>{getIntensityName(c.category, i.intensity)} ({i.count})</p>)}
                         </div>
                     </React.Fragment>
                 ))}

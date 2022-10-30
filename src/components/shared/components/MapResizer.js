@@ -6,9 +6,7 @@ const MapResizer = () => {
     const map = useMap()
     if (map !== undefined) {
         const resizeObserver = new ResizeObserver(() => {
-            if (map._panes.length !== 0) {
-                map.invalidateSize()
-            }
+            if (map._panes.length !== 0) map.invalidateSize()
         });
         resizeObserver.observe(mapDiv)
     }

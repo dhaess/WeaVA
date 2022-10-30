@@ -92,9 +92,7 @@ const Histogram = ({dimensions}) => {
         const toDelay = inPlayerMode ? false : controlBinNumber(timeRange, binType, binCount, divided, dispatch)
 
         if (!toDelay) {
-            if (document.getElementsByTagName('g').length>0) {
-                d3.select(svgRef.current).select('g').remove()
-            }
+            if (document.getElementsByTagName('g').length>0) d3.select(svgRef.current).select('g').remove()
             if (inPlayerMode || data.length !== 0) {
                 const [binTimeStart, binTimeBorder] = setBinTimeBorders(binType, binCount, timeRange)
                 let histDataFocused, histDataUnfocused, imageHistData, yMax
@@ -107,7 +105,7 @@ const Histogram = ({dimensions}) => {
                     yMax = d3.max(histDataUnfocused, (d) => {return d.length})
                 } else {
                     histDataUnfocused = isFocused ?
-                        setHistData(data, binTimeStart, binTimeBorder, timeRange) : [];
+                        setHistData(data, binTimeStart, binTimeBorder, timeRange) : []
 
                     histDataFocused = isFocused ?
                         setHistData(focusedData, binTimeStart, binTimeBorder, timeRange) :
@@ -127,11 +125,11 @@ const Histogram = ({dimensions}) => {
                 const x = d3
                     .scaleTime()
                     .domain([binTimeBorder[0], binTimeBorder.slice(-1)[0]])
-                    .range([0, width-25]);
+                    .range([0, width-25])
 
                 const y = d3.scaleLinear()
                     .domain([0, yMax]).nice()
-                    .range([height, 0]);
+                    .range([height, 0])
 
                 const marginLeft = margin.left+20
                 const svg = d3.select(svgRef.current)
@@ -140,13 +138,9 @@ const Histogram = ({dimensions}) => {
 
                 const appendData = (data, color, opacity, x, y) => {
                     svg.append("svg")
-                        .on("mousedown", (event) => {
-                            handleMouseDown(event)
-                        })
+                        .on("mousedown", (event) => handleMouseDown(event))
                         .on("mousemove", (event) => {
-                            if (event.buttons === 1) {
-                                handleMouseOver(event)
-                            }
+                            if (event.buttons === 1) handleMouseOver(event)
                         })
                         .attr("cursor", inPlayerMode ? "default" : "pointer")
                         .selectAll("rect")
@@ -161,25 +155,15 @@ const Histogram = ({dimensions}) => {
                         .style("opacity", opacity)
                 }
 
-                if (inPlayerMode || isFocused) {
-                    appendData(histDataUnfocused, "var(--opacity-bg-color)", "0.4", x, y)
-                }
-                if (histDataFocused.length !== 0) {
-                    appendData(histDataFocused, "var(--main-bg-color)", "1", x, y)
-                }
-                if (divided && imageHistData.length !== 0) {
-                    appendData(imageHistData, "var(--shadow-bg-color)", "1", x, y)
-                }
+                if (inPlayerMode || isFocused) appendData(histDataUnfocused, "var(--opacity-bg-color)", "0.4", x, y)
+                if (histDataFocused.length !== 0) appendData(histDataFocused, "var(--main-bg-color)", "1", x, y)
+                if (divided && imageHistData.length !== 0) appendData(imageHistData, "var(--shadow-bg-color)", "1", x, y)
 
-                let formatDate = d3.timeFormat("%d.%m.%y");
-                if (d3.timeMonth.count(binTimeBorder[0], binTimeBorder.slice(-1))===0) {
-                    if (d3.timeDay.count(binTimeBorder[0], binTimeBorder.slice(-1))<2) {
-                        formatDate = d3.timeFormat("%d.%m. %H:%M");
-                    } else {
-                        formatDate = d3.timeFormat("%d.%m.");
-                    }
-                }
                 // Add the X Axis
+                let formatDate = d3.timeFormat("%d.%m.%y");
+                if (d3.timeMonth.count(binTimeBorder[0], binTimeBorder.slice(-1))===0)
+                    formatDate = d3.timeDay.count(binTimeBorder[0], binTimeBorder.slice(-1))<2 ?
+                        d3.timeFormat("%d.%m. %H:%M") : d3.timeFormat("%d.%m.")
                 svg.append("g")
                     .attr("class", "x axis")
                     .attr("transform", "translate(0," + height + ")")
@@ -204,7 +188,7 @@ const Histogram = ({dimensions}) => {
                     .attr("y", 6)
                     .attr("dy", "-2.9em")
                     .style("text-anchor", "end")
-                    .text("Number of Reports");
+                    .text("Number of Reports")
             }
         }
     }, [binCount, binType, data, dimensions, dispatch, divided, dragStart, focusedData, focusedImageData, imageData, inPlayerMode, isFocused, playerData, playerImageData, timeRange]);

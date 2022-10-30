@@ -17,29 +17,13 @@ const Player = ({isComparison}) => {
             player.isPrepared]
     })
 
-    const rewindPlayer = () => {
-        if (isPlaying) {
-            dispatch(playFromStart(isComparison))
-        } else {
-            dispatch(moveToStep(0))
-        }
-    }
+    const rewindPlayer = () => isPlaying ? dispatch(playFromStart(isComparison)) : dispatch(moveToStep(0))
 
-    const playPlayer = () => {
-        if (isPrepared) {
-            dispatch(resume())
-        } else {
-            dispatch(playFromStart(isComparison))
-        }
-    }
+    const playPlayer = () => isPrepared ? dispatch(resume()) : dispatch(playFromStart(isComparison))
 
-    const pausePlayer = () => {
-        dispatch(pause())
-    }
+    const pausePlayer = () => dispatch(pause())
 
-    const stopPlayer = () => {
-        dispatch(stop())
-    }
+    const stopPlayer = () => dispatch(stop())
 
     return (
         <div>

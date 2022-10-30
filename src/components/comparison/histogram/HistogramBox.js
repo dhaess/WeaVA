@@ -45,9 +45,7 @@ const HistogramBox = ({dimensions, id}) => {
 
     const [openDelete, setOpen] = useState(false)
 
-    const setVisibility = (hide) => {
-        dispatch(changeVisibility(id, hide))
-    }
+    const setVisibility = (hide) => dispatch(changeVisibility(id, hide))
 
     const editEvent = () => {
         dispatch(setSelection(event))
@@ -55,15 +53,11 @@ const HistogramBox = ({dimensions, id}) => {
         navigate(`/selection`)
     }
 
-    const deleteId = () => {
-        setOpen(true)
-    }
+    const deleteId = () => setOpen(true)
 
     const handleClose = (deleteConfirmed) => {
         setOpen(false)
-        if (deleteConfirmed) {
-            dispatch(deleteEvent(id))
-        }
+        if (deleteConfirmed) dispatch(deleteEvent(id))
     }
 
     return (

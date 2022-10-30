@@ -18,9 +18,7 @@ const configureAddFilter = (query, filter) => {
 
     let queryArray = [...query['$and']]
     const entryIndex = queryArray.findIndex(entry => Object.keys(entry)[0] === dictKey)
-    if (entryIndex !== -1) {
-        queryArray.splice(entryIndex, 1)
-    }
+    if (entryIndex !== -1) queryArray.splice(entryIndex, 1)
     queryArray.push({[dictKey]: dictValue})
 
     return {'$and': queryArray}
@@ -49,18 +47,11 @@ const getNewProximityPoints = (initialProximityPoints, data, distance) => {
     const initPoints = initialProximityPoints.map(e => e[0])
     const newProximityPoints = []
     initPoints.forEach(p => {
-        let existIndex
-        if (newProximityPoints.length > 0) {
-            existIndex = newProximityPoints.findIndex(list => {
-                    return list.findIndex(e => e.coordinates[0] === p.coordinates[0] && e.coordinates[1] === p.coordinates[1]) !== -1
-                }
-            )
-        } else {
-            existIndex = -1
-        }
-        if (existIndex === -1 && data.findIndex(c => c[0] === p[0] && c[1] === p[1]) !== -1) {
-            newProximityPoints.push(getProximityPoints(p, data, distance))
-        }
+        const existIndex = newProximityPoints.length === 0 ? -1 :
+            newProximityPoints.findIndex(list => {
+                return list.findIndex(e => e.coordinates[0] === p.coordinates[0] && e.coordinates[1] === p.coordinates[1]) !== -1
+            })
+        if (existIndex === -1 && data.findIndex(c => c[0] === p[0] && c[1] === p[1]) !== -1) newProximityPoints.push(getProximityPoints(p, data, distance))
     })
     return newProximityPoints
 }
@@ -114,11 +105,7 @@ const getData = async (filter, areaFilter) => {
                 })
             }
 
-            if (isAreaFocused || isPointFocused || isProximityFocused) {
-                newData = [...new Map(newData.map(item => [item.id, item])).values()]
-            } else {
-                newData = data
-            }
+            newData = isAreaFocused || isPointFocused || isProximityFocused ? [...new Map(newData.map(item => [item.id, item])).values()] : data
             return newData
         })
 }
@@ -132,9 +119,7 @@ export const changeFilter = createAsyncThunk('posts/changeFilter',
         for (let e of filterData) {
             if (e.type === "add") {
                 isChanged = true
-                for (let fe of e.filter) {
-                    filter = configureAddFilter(filter, fe)
-                }
+                for (let fe of e.filter) filter = configureAddFilter(filter, fe)
             } else {
                 let isRemoved = false
                 for (let fe of e.filter) {
@@ -144,18 +129,16 @@ export const changeFilter = createAsyncThunk('posts/changeFilter',
             }
         }
 
-        let timeRange
         let timestampInfo = filterData.find(e => e.type === "add")
         timestampInfo = timestampInfo === undefined ? undefined :
             timestampInfo.filter.find(e => Object.keys(e).includes("timestamp"))
-        if (timestampInfo !== undefined) {
-            timeRange = [timestampInfo.timestamp['$gt'], timestampInfo.timestamp['$lt']]
-        } else {
-            timeRange = state.savings.current.timeRange
-        }
+        const timeRange = timestampInfo === undefined ? state.savings.current.timeRange : [timestampInfo.timestamp['$gt'], timestampInfo.timestamp['$lt']]
         if (isChanged) {
             dispatch(resetPlayer())
-            const data = await getData(filter, areaFilter)
+            let data = []
+            if (filter['$and'].find(e => e["properties.category"] !== undefined)["properties.category"]["$in"].length > 0) {
+                data = await getData(filter, areaFilter)
+            }
             dispatch(setHistogramData(data, timeRange))
             dispatch(setMapData(data))
         }
@@ -229,9 +212,7 @@ export const resetMapFilters = createAsyncThunk('posts/restMapFilters',
         dispatch(setHistogramData(data, state.savings.current.timeRange))
         dispatch(setMapData(data))
 
-        dispatch(saveMapFilters({
-            hasMapFilter: false
-        }))
+        dispatch(saveMapFilters({hasMapFilter: false}))
         dispatch(deleteAllAreas())
     })
 
@@ -303,7 +284,7 @@ export const initNewCurrent = () => {
 
 
 // const initialTimeRange = [new Date("2021-10-07T08:00").getTime(), new Date("2022-06-02T20:00").getTime()]
-const initialTimeRange = [new Date("2022-01-01T09:00").getTime(), new Date("2022-01-02T10:00").getTime()]
+const initialTimeRange = [new Date("2022-01-01T09:00").getTime(), new Date("2022-01-01T10:00").getTime()]
 
 const initalCurrent = {
     id: 0,
@@ -363,11 +344,7 @@ export const savingsSlice = createSlice({
         },
         saveMapFilters: (state, action) => {
             state.current.hasMapFilter = action.payload.hasMapFilter
-            if (action.payload.hasMapFilter) {
-                state.current.mapFilter.push(action.payload.mapFilter)
-            } else {
-                state.current.mapFilter = []
-            }
+            action.payload.hasMapFilter ? state.current.mapFilter.push(action.payload.mapFilter) : state.current.mapFilter = []
         },
         initCurrent: (state, action) => {
             state.current = action.payload.info

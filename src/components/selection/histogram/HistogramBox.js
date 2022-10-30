@@ -48,6 +48,10 @@ const OpenCloseButton = styled(Button)({
 
 const SettingsButton = styled(Button)({
     color: "var(--main-bg-color)",
+    minWidth: "0",
+    position: 'absolute',
+    top: 0,
+    left: 0,
     "&:hover": {
         backgroundColor: "var(--light-bg-color)",
         boxShadow: "1px 1px var(--border-bg-color)"
@@ -100,7 +104,7 @@ const HistogramBox = ({dimensions}) => {
 
     let anchorRef = useRef()
     const [anchorEl, setAnchorEl] = useState(null)
-    const [open, setOpen] = useState(false)
+    const [optionsOpen, setOptionsOpen] = useState(false)
 
     useEffect(() => {
         setTimeout(() => setAnchorEl(anchorRef?.current), 1)
@@ -124,23 +128,24 @@ const HistogramBox = ({dimensions}) => {
         }
     }, [showHistogram])
 
+    useEffect(() => {
+        if (optionsOpen === false) {
+            setAnchorEl(null)
+        }
+    }, [optionsOpen])
+
     const handleCloseClick = () => {
         setHistogram(false)
-        setOpen(false)
-        setAnchorEl(null)
+        setOptionsOpen(false)
     }
 
-    const handleOpenClick = () => {
-        setHistogram(true)
-    }
+    const handleOpenClick = () => setHistogram(true)
 
-    const resetSelection = () => {
-        dispatch(changeFocusedTimeRange([]))
-    }
+    const resetSelection = () => dispatch(changeFocusedTimeRange([]))
 
     const openSettings = (e) => {
         setAnchorEl(e.currentTarget)
-        setOpen(!open)
+        setOptionsOpen(!optionsOpen)
     }
 
     const zoomSelection = async () => {
@@ -192,30 +197,43 @@ const HistogramBox = ({dimensions}) => {
             <>
                 <div style={{margin: "25px", ...histContentStyle}} className="histogramContent">
                     <OpenCloseButton onClick={handleCloseClick}><img src={Arrow} width={16} alt={"close"}/></OpenCloseButton>
+                    <SettingsButton onClick={openSettings} ref={anchorRef}><img src={SettingsIcon} width={20} alt={"Settings"}/></SettingsButton>
                     <div className={"histogramLoading"} style={histLoadingStyle}>
                         <CircularProgress size={80}/>
                     </div>
                     <div style={{"fontSize": "40px", "flex": "1"}}>No Data</div>
                 </div>
-                <div style={{position: "relative", display: "none"}} className={"histogramMini"}>
+                <div style={{position: "relative", ...histMiniStyle}} className={"histogramMini"}>
                     <OpenCloseButton onClick={handleOpenClick}><img src={Arrow} width={16} alt={"open"} style={{transform: "rotate(180deg)"}}/></OpenCloseButton>
                 </div>
+                { optionsOpen &&
+                    <Popper open={optionsOpen} anchorEl={anchorEl} placement={"top-start"}>
+                        <Box sx={{
+                            border: "2px solid var(--border-bg-color)",
+                            borderLeft: "0",
+                            p: 1,
+                            backgroundColor: 'white',
+                            marginBottom: "3px",
+                            marginLeft: "-2px"
+                        }}>
+                            <OptionsWindow setOpenHistOptions={setOptionsOpen}/>
+                        </Box>
+                    </Popper>
+                }
             </>
         )
     } else {
         return <>
-            <div className="histogramContent" ref={anchorRef}>
+            <div style={histContentStyle} className="histogramContent">
                 <OpenCloseButton onClick={handleCloseClick}><img src={Arrow} width={16} alt={"close"}/></OpenCloseButton>
+                <SettingsButton onClick={openSettings}><img src={SettingsIcon} width={20} alt={"Settings"}/></SettingsButton>
                 <div className={"histogramLoading"} style={{display: "none"}}>
                     <CircularProgress size={80}/>
                 </div>
-                <div style={{alignItems: "flex-start"}}>
-                    <SettingsButton onClick={openSettings} sx={{minWidth: "0", margin: "2px", marginRight: "25px"}}><img src={SettingsIcon} width={20} alt={"Settings"}/></SettingsButton>
-                    <div style={{flexDirection: "column", alignItems: "flex-start", padding: "6px 0px"}}>
-                        <p style={{marginTop: "10px"}}>Total reports: {data.length}{imageInfo}</p>
-                        <p hidden={!isFocused}>Selected reports: {focusedData.length}{focusedImageInfo}</p>
-                        <p hidden={focusedTimeRange.length===0}>Time range: {styleDateString(focusedTimeRange[0])} to {styleDateString(focusedTimeRange[1])}</p>
-                    </div>
+                <div style={{alignItems: "flex-start", padding: '6px 0 6px 63px', flexDirection: "column"}}>
+                    <p style={{marginTop: "10px"}}>Total reports: {data.length}{imageInfo}</p>
+                    <p hidden={!isFocused}>Selected reports: {focusedData.length}{focusedImageInfo}</p>
+                    <p hidden={focusedTimeRange.length===0}>Time range: {styleDateString(focusedTimeRange[0])} to {styleDateString(focusedTimeRange[1])}</p>
                 </div>
                 <div>
                     <div style={{flexDirection: "column", alignItems: "center"}}>
@@ -244,23 +262,22 @@ const HistogramBox = ({dimensions}) => {
                     </div>
                 </div>
             </div>
-            { anchorEl &&
-                <Popper open={open} anchorEl={anchorEl} placement={"top-start"}>
+            <div style={{position: "relative", ...histMiniStyle}} className={"histogramMini"}>
+                <OpenCloseButton onClick={handleOpenClick}><img src={Arrow} width={16} alt={"open"} style={{transform: "rotate(180deg)"}}/></OpenCloseButton>
+            </div>
+            { optionsOpen &&
+                <Popper open={optionsOpen} anchorEl={anchorEl} placement={"top-start"}>
                     <Box sx={{
                         border: "2px solid var(--border-bg-color)",
                         borderLeft: "0",
                         p: 1,
                         backgroundColor: 'white',
-                        marginBottom: "3px",
-                        marginLeft: "-2px"
+                        marginBottom: "1px",
                     }}>
-                        <OptionsWindow setOpenHistOptions={setOpen}/>
+                        <OptionsWindow setOpenOptions={setOptionsOpen}/>
                     </Box>
                 </Popper>
             }
-            <div style={{position: "relative", ...histMiniStyle}} className={"histogramMini"}>
-                <OpenCloseButton onClick={handleOpenClick}><img src={Arrow} width={16} alt={"open"} style={{transform: "rotate(180deg)"}}/></OpenCloseButton>
-            </div>
         </>
     }
 }

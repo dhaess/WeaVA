@@ -113,20 +113,10 @@ export const getPieIcon = (data, props = {}) => {
     })
 }
 
-export const createClusterCustomIcon = (cluster, size) => {
-    const color = cluster.getAllChildMarkers()[0].options.color
-    const pieSize = size === undefined ? 26 : size
-    const markerList = cluster.getAllChildMarkers().map(e => e.options.data)
-    const dataList = markerList.map(e => {
-        if (e.count === undefined) {
-            return e
-        } else {
-            return e.focused
-        }
-    }).flat()
-    if (color !== undefined) {
-        return getPieIcon(dataList, {color: color, size: pieSize})
-    } else {
-        return getPieIcon(dataList, {size: pieSize})
-    }
-}
+// export const createClusterCustomIcon = (cluster, size) => {
+//     const color = cluster.getAllChildMarkers()[0].options.color
+//     const pieSize = size === undefined ? 26 : size
+//     const markerList = cluster.getAllChildMarkers().map(e => e.options.data)
+//     const dataList = markerList.map(e => e.focused === undefined ? e : e.focused).flat()
+//     return getPieIcon(dataList, color === undefined ? {size: pieSize} : {color: color, size: pieSize})
+// }

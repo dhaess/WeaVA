@@ -17,9 +17,7 @@ const PlayerBox = () => {
             player.totalSteps]
     })
 
-    const handleSliderChange = (event) => {
-        dispatch(moveToStep(event.target.value))
-    }
+    const handleSliderChange = (event) => dispatch(moveToStep(event.target.value))
 
     return (
         <div className={"playerBox"}>

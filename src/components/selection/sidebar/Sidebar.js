@@ -13,28 +13,20 @@ const Sidebar = () => {
     const [containerStyle, setContainerStyle] = useState({})
     const [sidebarStyle, setSidebarStyle] = useState({})
 
-    const navStatus = () => {
-        if (document.getElementById("hamburger").classList.contains('hamburger-active')) {
-            navClose();
-        } else {
-            navOpen();
-        }
-    }
+    const navStatus = () => (document.getElementById("hamburger").classList.contains('hamburger-active')) ? navClose() : navOpen()
 
     const navClose = () => {
         setContainerStyle({opacity: "0"})
         setTimeout(function () {
-            document.getElementById("hamburger").classList.remove('hamburger-active');
+            document.getElementById("hamburger").classList.remove('hamburger-active')
             setSidebarStyle({width: "63px"})
         }, 300);
     }
 
     const navOpen = () => {
-        document.getElementById("hamburger").classList.add('hamburger-active');
+        document.getElementById("hamburger").classList.add('hamburger-active')
         setSidebarStyle({width: "320px"})
-        setTimeout(function () {
-            setContainerStyle({opacity: "1"})
-        }, 500)
+        setTimeout(() => setContainerStyle({opacity: "1"}), 500)
     }
 
     return (
@@ -61,8 +53,8 @@ const Sidebar = () => {
                 <span className="hamburger-icon"></span>
             </div>
         </div>
-    );
-};
+    )
+}
 
 export default Sidebar;
 

@@ -209,7 +209,7 @@ p {
     height: 0;
     border-top: 118px solid transparent;
     border-bottom: 118px solid transparent;
-    border-right: 30px solid var(--main-bg-color);
+    border-right: 30px solid var(--border-bg-color);
 }
 
 .pin {

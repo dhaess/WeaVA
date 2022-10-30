@@ -11,33 +11,25 @@ export default function EndButtons() {
     const dispatch = useDispatch()
     const navigate = useNavigate()
 
-    const isSaved = useSelector(state => {
-        return !state.savings.isSaved
-    })
-
-    const data = useSelector(state => {
-        return state.map.allData
-    })
+    const isSaved = useSelector(state => !state.savings.isSaved)
+    const data = useSelector(state => state.map.allData)
 
     const [open, setOpen] = useState(false)
     const [dialogValue, setValue] = useState("")
 
-    const handleSave = () => {
-        dispatch(save(data))
-    }
+    const handleSave = () => dispatch(save(data))
 
-    const handleReset = () => {
-        dispatch(reset())
-    }
+    const handleReset = () => dispatch(reset())
 
-    const handleRevert = () => {
-        dispatch(revert())
-    }
+    const handleRevert = () => dispatch(revert())
 
     const handleGoTo = () => {
         let savingsState = dispatch(checkChanges())
 
-        if (savingsState.isChanged) {
+        if (data.length === 0) {
+            setValue("noData")
+            setOpen(true)
+        } else if (savingsState.isChanged) {
             setValue("changed")
             setOpen(true)
         } else if (!savingsState.isSaved) {

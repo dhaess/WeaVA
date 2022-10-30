@@ -121,9 +121,7 @@ export default function TimePicker() {
         const hours = Math.floor(dist / 3600000)
         dist -= hours * 3600000
         const minutes = Math.floor(dist / 60000)
-        if (days < 0) {
-            return [0, 0, 0]
-        }
+        if (days < 0) return [0, 0, 0]
         return [days, hours, minutes]
     })
 
@@ -133,11 +131,8 @@ export default function TimePicker() {
         events.filter(event => event.info.id !== state.savings.current.id)
             .forEach(event => {
                 const index = timeRanges.findIndex(e => e.timeRange[0] === event.info.timeRange[0] && e.timeRange[1] === event.info.timeRange[1])
-                if (index === -1) {
-                    timeRanges.push({name: event.info.name, timeRange: event.info.timeRange})
-                } else {
+                index === -1 ? timeRanges.push({name: event.info.name, timeRange: event.info.timeRange}) :
                     timeRanges[index].name = timeRanges[index].name + ", " + event.info.name
-                }
             })
         return timeRanges
     })
@@ -154,9 +149,7 @@ export default function TimePicker() {
                 startVal,
                 startVal + 1000 * 60 * ( 60 * ( 24 * duration[0] + duration[1]) + duration[2])
             ]
-            if (timeRange[1].getTime() === maxDataDate) {
-                timeVal[1] = maxDataDate
-            }
+            if (timeRange[1].getTime() === maxDataDate) timeVal[1] = maxDataDate
             const delayDebounceFn = setTimeout(() => {
                 const filter = {"timestamp": {
                         '$gt': timeVal[0],
@@ -230,7 +223,6 @@ export default function TimePicker() {
                     minDate={minDataDate}
                     maxDate={maxDataDate}
                     value={timeRange[0]}
-                    // onError={(e) => {console.log(e, "invalidDate", e === "invalidDate")}}
                     onChange={handleStartTimeChange}
                     renderInput={(params) => <StyledTimeTextField size={"small"} {...params} />}
                     sx={{}}
@@ -244,7 +236,6 @@ export default function TimePicker() {
                     minDate={timeRange[0]}
                     maxDate={maxDataDate}
                     value={timeRange[1]}
-                    // onError={(e) => {console.log(e)}}
                     onChange={handleEndTimeChange}
                 />
                 <p style={{fontSize: "14px", marginTop: "-12px"}}>or</p>

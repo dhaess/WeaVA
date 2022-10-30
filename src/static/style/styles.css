@@ -1,52 +1,4 @@
 :root,
-/*:root.terraCotta {*/
-/*    --main-bg-color: #d67857;*/
-/*    --light-bg-color: #f8e5e0;*/
-/*    --opacity-bg-color: #d6785785;*/
-/*    --border-bg-color: #d9876b;*/
-/*    --gray-bg-color: #d8d8d8;*/
-/*}*/
-
-/*:root.oceanGreen {*/
-/*    --main-bg-color: #47bd9c;*/
-/*    --light-bg-color: #e0f3ed;*/
-/*    --opacity-bg-color: #47bd9c85;*/
-/*    --border-bg-color: #6dc6ae;*/
-/*    --gray-bg-color: #d8d8d8;*/
-/*}*/
-
-/*:root.vistaBlue {*/
-/*    --main-bg-color: #7898d4;*/
-/*    --light-bg-color: #e6ebf7;*/
-/*    --opacity-bg-color: #7898d485;*/
-/*    --border-bg-color: #9eafcf;*/
-/*    --gray-bg-color: #d8d8d8;*/
-/*}*/
-
-/*:root.turquoise {*/
-/*    --main-bg-color: #34cdda;*/
-/*    --light-bg-color: #def6f9;*/
-/*    --opacity-bg-color: #34cdda85;*/
-/*    --border-bg-color: #87d9e0;*/
-/*    --gray-bg-color: #d8d8d8;*/
-/*}*/
-
-/*:root.darkKhaki {*/
-/*    --main-bg-color: #cbc56d;*/
-/*    --light-bg-color: #f5f4e5;*/
-/*    --opacity-bg-color: #cbc56d85;*/
-/*    --border-bg-color: #ddd456;*/
-/*    --gray-bg-color: #d8d8d8;*/
-/*}*/
-
-/*:root.deepMauve {*/
-/*    --main-bg-color: #d478d3;*/
-/*    --light-bg-color: #f8e5f7;*/
-/*    --opacity-bg-color: #d478d385;*/
-/*    --border-bg-color: #e2b4e2;*/
-/*    --gray-bg-color: #d8d8d8;*/
-/*}*/
-
 :root.lightGray { /* changes in HSL */
     --main-bg-color: #d4d4d4;
     --light-bg-color: #f5f5f5; /* +20L */
@@ -137,7 +89,7 @@
     --gray-bg-color: #d8d8d8;
 }
 
-/*use with var(--main-bg-color)*/
+/*use with var(--main-bg-color) etc*/
 
 body {
     background-color: #000000cc;
@@ -422,6 +374,7 @@ body {
 
 .multiPopup {
     display: grid;
+    gap: 3px;
     grid-template-columns: auto auto auto;
     padding: 5px;
 }
@@ -439,7 +392,7 @@ body {
 .multiEventPopup {
     display: grid;
     gap: 3px;
-    grid-template-columns: auto auto auto auto;
+    grid-template-columns: auto auto auto;
     padding: 5px;
 }
 

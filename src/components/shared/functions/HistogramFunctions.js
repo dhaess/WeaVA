@@ -1,25 +1,25 @@
 import * as d3 from "d3";
 import {setBins} from "../features/SettingsSlice";
 
-export const controlBinNumber = (timeRange, binType, binCount, divided, dispatch) => {
+export const controlBinNumber = (timeRange, binType, binCount, divided, dispatch, isComparison= false) => {
     let toDelay = false
     switch (binType) {
         case "day":
             if (d3.timeDay.count(d3.timeDay.floor(timeRange[0]), d3.timeDay.ceil(timeRange[1])) > 100) {
                 toDelay = true
-                dispatch(setBins({type: "month", bins: binCount, divided: divided}))
+                dispatch(setBins({type: "month", bins: binCount, divided: divided}, isComparison))
             }
             break
         case "hour":
             if (d3.timeHour.count(d3.timeHour.floor(timeRange[0]), d3.timeHour.ceil(timeRange[1])) > 100) {
                 toDelay = true
-                dispatch(setBins({type: "day", bins: binCount, divided: divided}))
+                dispatch(setBins({type: "day", bins: binCount, divided: divided}, isComparison))
             }
             break
         case "minute":
             if (d3.timeMinute.count(d3.timeMinute.floor(timeRange[0]), d3.timeMinute.ceil(timeRange[1])) > 100) {
                 toDelay = true
-                dispatch(setBins({type: "hour", bins: binCount, divided: divided}))
+                dispatch(setBins({type: "hour", bins: binCount, divided: divided}, isComparison))
             }
             break
         default:

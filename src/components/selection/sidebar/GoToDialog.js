@@ -20,14 +20,16 @@ const LocalStyledButton = styled(StyledButton)({
 const GoToDialog = (props) => {
     const { onClose, value, open } = props
 
-    const handleClose = (event) => {
-        onClose({type: value, answer: event.target.name})
-    }
+    const handleClose = (event) => onClose({type: value, answer: event.target.name})
 
     let dialogInfo = ""
     let dialogQuestion = ""
 
     switch (value) {
+        case "noData":
+            dialogInfo = "You have no report selected."
+            dialogQuestion = "Do you want to continue without a new event?"
+            break
         case "noSave":
             dialogInfo = "You have no event saved."
             dialogQuestion = "Do you want to continue without a new event?"
@@ -43,7 +45,7 @@ const GoToDialog = (props) => {
         default:
     }
 
-    if (value === "noSave") {
+    if (value === "noData" || value === "noSave") {
         return (
             <Dialog
                 onClose={handleClose}

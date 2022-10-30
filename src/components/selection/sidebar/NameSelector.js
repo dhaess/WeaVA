@@ -5,13 +5,9 @@ import {StyledTextField} from "../../../static/style/muiStyling";
 export default function NameSelector() {
     const dispatch = useDispatch()
 
-    const name = useSelector(state => {
-        return state.savings.current.name
-    })
+    const name = useSelector(state => state.savings.current.name)
 
-    const handleChange = (event) => {
-        dispatch(setCurrent({name: "name", value: event.target.value}))
-    }
+    const handleChange = (event) => dispatch(setCurrent({name: "name", value: event.target.value}))
 
     return (
         <div>
@@ -20,7 +16,7 @@ export default function NameSelector() {
                 label="Name"
                 variant="outlined"
                 size="small"
-                value={name}
+                defaultValue={name}
                 sx={{
                     width: "100%"
                 }}

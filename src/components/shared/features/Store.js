@@ -1,9 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit'
+import settingsReducer from './SettingsSlice'
+import savedReducer from './SavingsSlice'
 import histogramReducer from './HistogramSlice'
 import mapReducer from './MapSlice'
-import savedReducer from './SavingsSlice'
 import comparisonReducer from './ComparisonSlice'
-import settingsReducer from './SettingsSlice'
 import playerReducer from './PlayerSlice'
 
 export default configureStore({

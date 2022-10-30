@@ -1,10 +1,18 @@
-import {LayerGroup, LayersControl, MapContainer, Marker, Polygon, TileLayer, ZoomControl} from "react-leaflet";
+import {LayerGroup,
+    LayersControl,
+    MapContainer,
+    Marker,
+    // Polygon,
+    TileLayer,
+    ZoomControl} from "react-leaflet";
 import {useSelector} from "react-redux";
 import {useEffect, useState} from "react";
-import {createClusterCustomIcon, getMapIcon, getPieIcon} from "../shared/functions/WeatherIcons";
-import {getClusterList, getGridData} from "../shared/functions/MapFunctions";
 import {getCategoryName, getIntensityName} from "../shared/functions/WeatherCategories";
-import MarkerClusterGroup from "../shared/components/MarkerClusterGroup";
+import {getMapIcon, getPieIcon} from "../shared/functions/WeatherIcons";
+import {getGridData} from "../shared/functions/MapFunctions";
+// import {createClusterCustomIcon, getMapIcon, getPieIcon} from "../shared/functions/WeatherIcons";
+// import {getClusterList, getGridData} from "../shared/functions/MapFunctions";
+// import MarkerClusterGroup from "../shared/components/MarkerClusterGroup";
 import {MultiMarkerEventPopup} from "../shared/components/MultiMarkerPopup";
 import MapEvents from "../shared/components/MapEvents";
 import MapResizer from "../shared/components/MapResizer";
@@ -34,14 +42,14 @@ const Map = () => {
             player.currentStep]
     })
 
-    const [selectionButton, setButton] = useState(null)
+    // const [selectionButton, setButton] = useState(null)
     const [pointsData, setPointsData] = useState([])
-    const [markerPos, setMarkerPos] = useState(null)
-    const [clusterPopup, setClusterPopup] = useState(null)
-    const [clusterData, setClusterData] = useState(null)
+    // const [markerPos, setMarkerPos] = useState(null)
+    // const [clusterPopup, setClusterPopup] = useState(null)
+    // const [clusterData, setClusterData] = useState(null)
     const [zoomLevel, setZoomLevel] = useState(8)
     const [gridData, setGridData] = useState([])
-    const [hoverPoint, setHoverPoint] = useState(null)
+    // const [hoverPoint, setHoverPoint] = useState(null)
 
     useEffect(() => {
         if (inPlayerMode) {
@@ -56,11 +64,10 @@ const Map = () => {
                     const e2 = {...e}
                     let index = coordsList.findIndex(c => [0, 1].every(k => e.coordinates[k] === c[k]))
                     if (index === -1) {
-                        newPointsData.push({coordinates: e.coordinates, count: 1, focused: [e2], unfocused:[]})
+                        newPointsData.push({coordinates: e.coordinates, focused: [e2], unfocused:[]})
                         coordsList.push(e.coordinates)
                     } else {
                         let pointsIndex = newPointsData.findIndex(c => [0, 1].every(k => e.coordinates[k] === c.coordinates[k]))
-                        newPointsData[pointsIndex].count += 1
                         newPointsData[pointsIndex].focused.push(e2)
                     }
                 })
@@ -75,12 +82,12 @@ const Map = () => {
         setGridData(getGridData(data, zoomLevel))
     }, [currentStep, inPlayerMode, playerFlatData, pointsData, zoomLevel])
 
-    const showClusterPopup = (event) => {
-        let dataList = getClusterList(event)
-        setClusterData(dataList)
-        setMarkerPos(event.latlng)
-        setClusterPopup(true)
-    }
+    // const showClusterPopup = (event) => {
+    //     let dataList = getClusterList(event)
+    //     setClusterData(dataList)
+    //     setMarkerPos(event.latlng)
+    //     setClusterPopup(true)
+    // }
 
     return (
         <MapContainer style={{width: "100vw", height: "100vh", zIndex: "0"}} center={[46.3985, 8.2318]} zoom={8} zoomControl={false}>
@@ -96,7 +103,7 @@ const Map = () => {
                 <LayersControl.BaseLayer name={MarkerMode["Grid"]} checked={markerMode===MarkerMode["Grid"]}>
                     <LayerGroup>
                         {gridData.map(e => {
-                            if (e.count === 1) {
+                            if (e.focused.length === 1) {
                                 const singlePoint = e.focused[0]
                                 return (
                                     <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
@@ -114,10 +121,10 @@ const Map = () => {
                                             data={e}
                                             position={e.coordinates}
                                             icon={getPieIcon(e.focused, {sum: e.focused.length})}
-                                            eventHandlers={{
-                                                mouseover: e => setHoverPoint(selectionButton===null ? e.target.options.data: null),
-                                                mouseout: () => setHoverPoint(null)
-                                            }}
+                                            // eventHandlers={{
+                                            //     mouseover: e => setHoverPoint(selectionButton===null ? e.target.options.data: null),
+                                            //     mouseout: () => setHoverPoint(null)
+                                            // }}
                                     >
                                         <MultiMarkerEventPopup data={e}/>
                                     </Marker>
@@ -125,61 +132,59 @@ const Map = () => {
                             }
                         })}
                     </LayerGroup>
-                    {hoverPoint &&
-                        <Polygon
-                            pathOptions={{color: 'var(--border-bg-color)', fillOpacity: "0.4", zIndex: "2000"}}
-                            positions={hoverPoint.convexHull}
-                            pane={"markerPane"}
-                            eventHandlers={{
-                                mouseout: () => setHoverPoint(null)
-                            }}
-                        >
-                            <MultiMarkerEventPopup data={hoverPoint}/>
-                        </Polygon>}
+                    {/*{hoverPoint &&*/}
+                    {/*    <Polygon*/}
+                    {/*        pathOptions={{color: 'var(--border-bg-color)', fillOpacity: "0.4", zIndex: "2000"}}*/}
+                    {/*        positions={hoverPoint.convexHull}*/}
+                    {/*        pane={"markerPane"}*/}
+                    {/*        eventHandlers={{*/}
+                    {/*            mouseout: () => setHoverPoint(null)*/}
+                    {/*        }}*/}
+                    {/*    >*/}
+                    {/*        <MultiMarkerEventPopup data={hoverPoint}/>*/}
+                    {/*    </Polygon>}*/}
                 </LayersControl.BaseLayer>
-                <LayersControl.BaseLayer name={MarkerMode["Cluster"]} checked={markerMode===MarkerMode["Cluster"]}>
-                    <MarkerClusterGroup
-                        iconCreateFunction={d => createClusterCustomIcon(d)}
-                        zoomToBoundsOnClick={false}
-                        chunkedLoading={true}
-                        eventHandlers={{
-                            clusterclick: e => {
-                                showClusterPopup(e)
-                            }
-                        }}
-                    >
-                        {pointsData.filter(e => e.focused.length !== 1).map(e => {
-                            if (e.focused.length === 1 && e.unfocused.length === 0) {
-                                return (
-                                    <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}
-                                            data={e.focused[0]}
-                                            position={e.coordinates}
-                                            icon={getMapIcon(e.focused[0].category, e.focused[0].color)}
-                                    >
-                                        <MultiMarkerEventPopup data={e}/>
-                                    </Marker>
-                                )
-                            } else {
-                                return (
-                                    <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}
-                                            data={e}
-                                            position={e.coordinates}
-                                            icon={getPieIcon(e.focused)}
-                                    >
-                                        <MultiMarkerEventPopup data={e}/>
-                                    </Marker>
-                                )
-                            }
-                        })}
-                    </MarkerClusterGroup>
-                    {clusterPopup &&
-                        <MultiMarkerEventPopup
-                            position={markerPos}
-                            data={clusterData}
-                            isCluster={true}
-                        />
-                    }
-                </LayersControl.BaseLayer>
+                {/*<LayersControl.BaseLayer name={MarkerMode["Cluster"]} checked={markerMode===MarkerMode["Cluster"]}>*/}
+                {/*    <MarkerClusterGroup*/}
+                {/*        iconCreateFunction={d => createClusterCustomIcon(d)}*/}
+                {/*        zoomToBoundsOnClick={false}*/}
+                {/*        chunkedLoading={true}*/}
+                {/*        eventHandlers={{*/}
+                {/*            clusterclick: e => showClusterPopup(e)*/}
+                {/*        }}*/}
+                {/*    >*/}
+                {/*        {pointsData.filter(e => e.focused.length !== 1).map(e => {*/}
+                {/*            if (e.focused.length === 1 && e.unfocused.length === 0) {*/}
+                {/*                return (*/}
+                {/*                    <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}*/}
+                {/*                            data={e.focused[0]}*/}
+                {/*                            position={e.coordinates}*/}
+                {/*                            icon={getMapIcon(e.focused[0].category, e.focused[0].color)}*/}
+                {/*                    >*/}
+                {/*                        <MultiMarkerEventPopup data={e}/>*/}
+                {/*                    </Marker>*/}
+                {/*                )*/}
+                {/*            } else {*/}
+                {/*                return (*/}
+                {/*                    <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}*/}
+                {/*                            data={e}*/}
+                {/*                            position={e.coordinates}*/}
+                {/*                            icon={getPieIcon(e.focused)}*/}
+                {/*                    >*/}
+                {/*                        <MultiMarkerEventPopup data={e}/>*/}
+                {/*                    </Marker>*/}
+                {/*                )*/}
+                {/*            }*/}
+                {/*        })}*/}
+                {/*    </MarkerClusterGroup>*/}
+                {/*    {clusterPopup &&*/}
+                {/*        <MultiMarkerEventPopup*/}
+                {/*            position={markerPos}*/}
+                {/*            data={clusterData}*/}
+                {/*            isCluster={true}*/}
+                {/*        />*/}
+                {/*    }*/}
+                {/*</LayersControl.BaseLayer>*/}
                 <LayersControl.BaseLayer name={MarkerMode["Location"]} checked={markerMode===MarkerMode["Location"]}>
                     <LayerGroup>
                         {pointsData.map(e => {

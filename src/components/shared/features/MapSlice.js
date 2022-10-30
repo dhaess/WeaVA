@@ -32,27 +32,25 @@ export const setMapData = (originalData) => {
 }
 
 const focusTime = (state, timeRange, data) => {
-    if (timeRange.length !== 0) {
-        let newData = [...data]
-        newData.forEach(p => {
-            let newFocused = []
-            let newUnfocused = []
-            let allMultiPoints = p.focused.concat(p.unfocused)
-            allMultiPoints.forEach(e => {
-                if (e.timestamp >= timeRange[0]
-                    && e.timestamp <= timeRange[1]) {
-                    newFocused.push(e)
-                } else {
-                    newUnfocused.push(e)
-                }
-            })
-            p.focused = newFocused
-            p.unfocused = newUnfocused
+    if (timeRange.length === 0) return [data, false]
+
+    let newData = [...data]
+    newData.forEach(p => {
+        let newFocused = []
+        let newUnfocused = []
+        let allMultiPoints = p.focused.concat(p.unfocused)
+        allMultiPoints.forEach(e => {
+            if (e.timestamp >= timeRange[0]
+                && e.timestamp <= timeRange[1]) {
+                newFocused.push(e)
+            } else {
+                newUnfocused.push(e)
+            }
         })
-        return [newData, true]
-    } else {
-        return [data, false]
-    }
+        p.focused = newFocused
+        p.unfocused = newUnfocused
+    })
+    return [newData, true]
 }
 
 const setFocuses = (state, timeRange, areas, points, proximityPoints, loadedData = null) => {
@@ -83,9 +81,7 @@ const setFocuses = (state, timeRange, areas, points, proximityPoints, loadedData
     const isMapFocused = isAreaFocused || isPointFocused || isProximityFocused
 
     let isTimeFocused
-    if (timeRange.length !== 0) {
-        [data, isTimeFocused] = focusTime(state, timeRange, data)
-    }
+    if (timeRange.length !== 0) [data, isTimeFocused] = focusTime(state, timeRange, data)
 
     const isFocused = isTimeFocused || isMapFocused;
 
@@ -127,12 +123,7 @@ export const changeFocusedArea = (type, id, newArea = {}) => {
         const points = state.map.mapFilters.focusedSpecialPoints
         const proximityPoints = state.map.mapFilters.focusedProximityPoints
 
-        if (type === "delete") {
-            id.forEach(e => delete areas[e])
-        } else {
-            areas[id] = newArea
-        }
-
+        type === "delete" ? id.forEach(e => delete areas[e]) : areas[id] = newArea
         const [focusedData, data, isFocused, isMapFocused] = setFocuses(state, timeRange, areas, points, proximityPoints)
 
         dispatch(setAreaFocus({
@@ -293,8 +284,7 @@ export const deleteAllAreas = () => {
 
 export const isMapFilterChanged = () => {
     return (_, getState) => {
-        const state = getState()
-        return !l.isEqual(state.map.mapFilters, initialMapFilter)
+        return !l.isEqual(getState().map.mapFilters, initialMapFilter)
     }
 }
 
@@ -362,9 +352,7 @@ export const mapSlice = createSlice({
             state.focusedData = action.payload.focusedData
             state.pointsData = action.payload.pointsData
             state.mapFilters.focusedProximityPoints = action.payload.focusedProximityPoints
-            if (action.payload.proximityDistance !== undefined) {
-                state.mapFilters.proximityDistance = action.payload.proximityDistance
-            }
+            if (action.payload.proximityDistance !== undefined) state.mapFilters.proximityDistance = action.payload.proximityDistance
         },
         setDeleted: (state, action) => {
             state.isFocused = action.payload.isFocused

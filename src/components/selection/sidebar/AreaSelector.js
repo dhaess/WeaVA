@@ -27,17 +27,15 @@ const placeList = locations.map(entry => {
         return {place: entry["Ortschaftsname"], canton: entry["Kantonskürzel"]}
     }
 })
-let placeOptions = [];
-placeList.filter(function(item){
-    let i = placeOptions.findIndex(x => (x.place === item.place && x.canton === item.canton));
-    if(i <= -1){
-        placeOptions.push(item);
-    }
-    return null;
-});
+let placeOptions = []
+placeList.filter((item) => {
+    let i = placeOptions.findIndex(x => (x.place === item.place && x.canton === item.canton))
+    if (i <= -1) placeOptions.push(item)
+    return null
+})
 placeOptions.sort((a, b) => -b.canton.localeCompare(a.canton) || -b.place.localeCompare(a.place))
 
-const cantonList = locations.map(entry => {return entry["Kantonskürzel"]})
+const cantonList = locations.map(entry => entry["Kantonskürzel"])
 cantonList.push("FL")
 const cantonOptions = [...new Set(cantonList)]
 cantonOptions.sort()
@@ -49,12 +47,13 @@ const swissPlaces = locations
 export default function AreaSelector() {
     const dispatch = useDispatch()
 
-    const dimension = useSelector(state => {
-        return state.savings.current.area.dimension
-    })
-
-    const locElements = useSelector(state => {
-        return state.savings.current.area.entries
+    const [dimension,
+        locElements
+    ] = useSelector(state => {
+        const area = state.savings.current.area
+        return [area.dimension,
+            area.entries
+        ]
     })
 
     const cantonValue = dimension === "cantons" ? locElements : []
@@ -79,15 +78,10 @@ export default function AreaSelector() {
     }
 
     const handleFieldClick = (val) => {
-        if (dimension !== val) {
-            handleClick(val)
-        }
+        if (dimension !== val) handleClick(val)
     }
 
-    const handleRadioChange = (event) => {
-        const val = event.target.value
-        handleClick(val)
-    }
+    const handleRadioChange = (event) => handleClick(event.target.value)
 
     const handleTextChange = (val) => {
         switch (dimension) {

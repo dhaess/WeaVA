@@ -6,12 +6,8 @@ const MapEvents = ({setZoomLevel}) => {
     const dispatch = useDispatch()
 
     const mapEvents = useMapEvents({
-        zoomend: () => {
-            setZoomLevel(mapEvents.getZoom())
-        },
-        baselayerchange: e => {
-            dispatch(setMarkerMode(e.name))
-        }
+        zoomend: () => setZoomLevel(mapEvents.getZoom()),
+        baselayerchange: e => dispatch(setMarkerMode(e.name))
     });
     return null
 }

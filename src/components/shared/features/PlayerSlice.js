@@ -7,8 +7,6 @@ const setPlayerData = (state, props, event) => {
     const totalTimeRange = props.timeRange === undefined ? state.savings.current.timeRange : props.timeRange
     const type = props.type === undefined ? state.player.type : props.type
     const totalSteps = props.totalSteps === undefined ? state.player.totalSteps : props.totalSteps
-    // const stepSyncType = props.syncType === undefined ? state.player.stepSyncType : props.syncType
-    // const totalSteps = props.totalSteps === undefined ? getTotalSteps(state, totalTimeRange, stepSyncType) : props.totalSteps
     const stepDuration = (totalTimeRange[1]-totalTimeRange[0])/totalSteps
     let timeSteps
 
@@ -25,27 +23,21 @@ const setPlayerData = (state, props, event) => {
         default:
     }
     let playerData = timeSteps.map(e => data.filter(d => d.timestamp >= e[0] && d.timestamp <= e[1]))
-    if (type === "delete") {
-        playerData.push([])
-    } else {
-        playerData.unshift([])
-    }
+    type === "delete" ? playerData.push([]) : playerData.unshift([])
+
     const histData = playerData.map(e => e.map(e2 => e2.timestamp))
     const histImageData = playerData.map(e => e.filter(e2 => e2.imageName !== null).map(e2 => e2.timestamp))
 
-    if (event !== undefined) {
-        return [playerData, histData, histImageData]
-    }
+    if (event !== undefined) return [playerData, histData, histImageData]
 
     const mapData = playerData.map(e => setPointsData(e))
     return [playerData, mapData, histData, histImageData]
 }
 
 const getTimeRanges = (state) => {
-    const histSyncType = state.settings.histogram.type
     const events = state.comparison.events
     let timeRanges = {}
-    switch (histSyncType) {
+    switch (state.comparison.syncType) {
         case "syncDuration":
             const durations = events.map(e => e.info.timeRange[1]-e.info.timeRange[0])
             const maxDuration = Math.max(...durations)
@@ -56,7 +48,7 @@ const getTimeRanges = (state) => {
             const minStart = Math.min(...starts)
             const ends = events.map(e => e.info.timeRange[1])
             const maxEnds = Math.max(...ends)
-            events.for(e => timeRanges[e.info.id] = [minStart, maxEnds])
+            events.forEach(e => timeRanges[e.info.id] = [minStart, maxEnds])
             break
         default: events.forEach(e => timeRanges[e.info.id] = [e.info.timeRange[0], e.info.timeRange[1]])
     }
@@ -96,29 +88,53 @@ const playData = (dispatch, state, currentStep) => {
     timerId = setInterval(() => {
         dispatch(setCurrentStep(currentStep))
         currentStep++;
-        if (currentStep === totalSteps+1) {
-            clearInterval(timerId);
-        }
+        if (currentStep === totalSteps+1) clearInterval(timerId)
     }, stepTime)
     dispatch(setTimerId(timerId))
 }
 
-const getTotalSteps = (state, timeRange, syncType) => {
+export const getTotalSteps = (state, syncType, binData) => {
     const stepSyncType = syncType===undefined ? state.player.stepSyncType : syncType
-    if (stepSyncType === "custom") {
-        return state.player.totalSteps
+    const binSyncType = state.comparison.syncType
+    const events = state.comparison.events
+    const timeRanges = getTimeRanges(state)
+
+    if (stepSyncType === "custom" || binSyncType === "noSync") return state.player.customSteps
+
+    if (binSyncType === "syncAll") {
+        const event0id = events[0].info.id
+        switch (state.settings.histogram.type) {
+            case "month":
+                return d3.timeMonth.count(d3.timeMonth.floor(timeRanges[event0id][0]), d3.timeMonth.ceil(timeRanges[event0id][1]))
+            case "day":
+                return d3.timeDay.count(d3.timeDay.floor(timeRanges[event0id][0]), d3.timeDay.ceil(timeRanges[event0id][1]))
+            case "hour":
+                return d3.timeHour.count(d3.timeHour.floor(timeRanges[event0id][0]), d3.timeHour.ceil(timeRanges[event0id][1]))
+            case "minute":
+                return d3.timeMinute.count(d3.timeMinute.floor(timeRanges[event0id][0]), d3.timeMinute.ceil(timeRanges[event0id][1]))
+            default:
+                return binData === undefined ? state.settings.histogram.bins : binData.bins
+        }
     }
-    switch (state.settings.histogram.type) {
+
+    let steps
+    switch (binData === undefined ? state.settings.histogram.type : binData.type) {
         case "month":
-            return d3.timeMonth.count(d3.timeMonth.floor(timeRange[0]), d3.timeMonth.ceil(timeRange[1]))
+            steps = Object.values(timeRanges).map(timeRange => d3.timeMonth.count(d3.timeMonth.floor(timeRange[0]), d3.timeMonth.ceil(timeRange[1])))
+            break
         case "day":
-            return d3.timeDay.count(d3.timeDay.floor(timeRange[0]), d3.timeDay.ceil(timeRange[1]))
+            steps = Object.values(timeRanges).map(timeRange => d3.timeDay.count(d3.timeDay.floor(timeRange[0]), d3.timeDay.ceil(timeRange[1])))
+            break
         case "hour":
-            return d3.timeHour.count(d3.timeHour.floor(timeRange[0]), d3.timeHour.ceil(timeRange[1]))
+            steps = Object.values(timeRanges).map(timeRange => d3.timeHour.count(d3.timeHour.floor(timeRange[0]), d3.timeHour.ceil(timeRange[1])))
+            break
         case "minute":
-            return d3.timeMinute.count(d3.timeMinute.floor(timeRange[0]), d3.timeMinute.ceil(timeRange[1]))
+            steps = Object.values(timeRanges).map(timeRange => d3.timeMinute.count(d3.timeMinute.floor(timeRange[0]), d3.timeMinute.ceil(timeRange[1])))
+            break
         default:
+            return binData === undefined ? state.settings.histogram.bins: binData.bins
     }
+    return Math.max(...steps)
 }
 
 export const playFromStart = (isComparison= false) => {
@@ -135,8 +151,7 @@ export const playFromStart = (isComparison= false) => {
 
 export const pause = () => {
     return (dispatch, getState) => {
-        const state = getState()
-        clearInterval(state.player.timerId)
+        clearInterval(getState().player.timerId)
         dispatch(setTimerId(null))
     }
 }
@@ -145,15 +160,13 @@ export const resume = () => {
     return (dispatch, getState) => {
         const state = getState()
         const currentStep = state.player.currentStep
-
         return playData(dispatch, state, currentStep)
     }
 }
 
 export const stop = () => {
     return (dispatch, getState) => {
-        const state = getState()
-        clearInterval(state.player.timerId)
+        clearInterval(getState().player.timerId)
         dispatch(stopPlayer())
     }
 }
@@ -161,11 +174,7 @@ export const stop = () => {
 export const moveToStep = (currentStep) => {
     return (dispatch, getState) => {
         const state = getState()
-        if (state.player.timerId === null) {
-            dispatch(setCurrentStep(currentStep))
-        } else {
-            playData(dispatch, state, currentStep)
-        }
+        state.player.timerId === null ? dispatch(setCurrentStep(currentStep)) : playData(dispatch, state, currentStep)
     }
 }
 
@@ -178,9 +187,7 @@ export const setPlayerType = (type, isComparison = false) => {
 
         if (state.player.isActive) {
             let updateId = state.player.updateId
-            if (updateId !== null) {
-                clearTimeout(updateId)
-            }
+            if (updateId !== null) clearTimeout(updateId)
             updateId = setTimeout(() => {
                 const [data, mapData, histData, histImageData] = isComparison ? setEventPlayerData(state, {type: type}) : setPlayerData(state, {type: type})
                 dispatch(initPlayer({data: data, mapData: mapData, histData: histData, histImageData: histImageData, type: type}))
@@ -200,13 +207,11 @@ export const setTotalStepsSync = (syncType, isComparison = false) => {
 
         if (state.player.isActive) {
             let updateId = state.player.updateId
-            if (updateId !== null) {
-                clearTimeout(updateId)
-            }
+            if (updateId !== null) clearTimeout(updateId)
             updateId = setTimeout(() => {
-                const totalSteps = syncType === "equalBins" ? state.settings.histogram.bins : state.player.totalSteps
+                const totalSteps = syncType === "equalBins" ? getTotalSteps(state, syncType) : state.player.totalSteps
                 const [data, mapData, histData, histImageData] = isComparison ? setEventPlayerData(state, {syncType: syncType}) : setPlayerData(state, {syncType: syncType})
-                dispatch(initPlayer({data: data, mapData: mapData, histData: histData, histImageData: histImageData, syncType: syncType}))
+                dispatch(initPlayer({data: data, mapData: mapData, histData: histData, histImageData: histImageData, syncType: syncType, totalSteps: totalSteps}))
             }, 200)
             dispatch(setUpdateId(updateId))
         }
@@ -223,9 +228,7 @@ export const setTotalSteps = (totalSteps, isComparison = false) => {
 
         if (state.player.isActive) {
             let updateId = state.player.updateId
-            if (updateId !== null) {
-                clearTimeout(updateId)
-            }
+            if (updateId !== null) clearTimeout(updateId)
             updateId = setTimeout(() => {
                 const [data, mapData, histData, histImageData] = isComparison ? setEventPlayerData(state, {totalSteps: totalSteps}) : setPlayerData(state, {totalSteps: totalSteps})
                 dispatch(initPlayer({data: data, mapData: mapData, histData: histData, histImageData: histImageData, totalSteps: totalSteps}))
@@ -237,8 +240,7 @@ export const setTotalSteps = (totalSteps, isComparison = false) => {
 
 export const setStepTime = (stepTime) => {
     return (dispatch, getState) => {
-        const state = getState()
-        clearInterval(state.player.timerId)
+        clearInterval(getState().player.timerId)
         dispatch(setTimerId(null))
         dispatch(setLocalStepTime(stepTime))
     }
@@ -254,8 +256,8 @@ export const playerSlice = createSlice(({
         type: "add",
         stepTime: 500,
         stepSyncType: "equalBins",
-        customSteps: 40,
-        totalSteps: 40,
+        customSteps: 20,
+        totalSteps: 20,
         currentStep: 0,
         data: [],
         mapData: [],

@@ -54,23 +54,16 @@ const HistogramOptions = ({additional = false}) => {
         setMinuteStyle(topMinute)
     }, [timeRange])
 
-    const handleImageInfo = (event) => {
-        dispatch(setBinDivided(event.target.checked))
-    }
+    const handleImageInfo = (event) => dispatch(setBinDivided(event.target.checked))
 
     const handleSyncChange = (event) => {
         dispatch(resetPlayer())
         dispatch(setSynchronization(event.target.value))
     }
 
-    const handleBinsChange = (event) => {
-        const val = event.target.value
-        dispatch(setBins({type: val, bins: binCount, divided: divided}))
-    }
+    const handleBinsChange = (event) => dispatch(setBins({type: event.target.value, bins: binCount, divided: divided}, additional))
 
-    const handleBinSliderChange = (event) => {
-        dispatch(setBins({type: "number", bins: event.target.value, divided: divided}))
-    }
+    const handleBinSliderChange = (event) => dispatch(setBins({type: "number", bins: event.target.value, divided: divided}, additional))
 
     const handleBinInputChange = (event) => {
         let inputValue = Number(event.target.value)
@@ -79,7 +72,7 @@ const HistogramOptions = ({additional = false}) => {
         } else if (inputValue > 100) {
             inputValue = 100
         }
-        dispatch(setBins({type: "number", bins: inputValue, divided: divided}))
+        dispatch(setBins({type: "number", bins: inputValue, divided: divided}, additional))
     }
 
     return (

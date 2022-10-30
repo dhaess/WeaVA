@@ -26,13 +26,9 @@ const EditPopup = ({selectionButton, featureRef, editControlRef}) => {
         if (selectionButton !== "editAll") {
             const getAreas = pointInArea([e.latlng.lat, e.latlng.lng])
             setAreas(getAreas)
-            if (getAreas.length > 0) {
-                setPosition(e.latlng)
-            }
+            if (getAreas.length > 0) setPosition(e.latlng)
             Object.keys(featureRef.current._layers).forEach(f => {
-                if (!getAreas.includes(f)) {
-                    featureRef.current._layers[f].editing.disable()
-                }
+                if (!getAreas.includes(f)) featureRef.current._layers[f].editing.disable()
             })
         }
     })
