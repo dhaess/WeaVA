@@ -88,7 +88,7 @@ export const MultiMarkerEventPopup = ({data, isCluster, position}) => {
                 const id = e.info.id
                 focusedIntensityInfo = groupByEventFocused[id]!==undefined ? arrangeIntensityInfo(groupByEventFocused[id]): []
                 unfocusedIntensityInfo = groupByEventUnfocused[id]!==undefined ? arrangeIntensityInfo(groupByEventUnfocused[id]): []
-                return [e.info.name, focusedIntensityInfo, unfocusedIntensityInfo]
+                return [e.info.color, e.info.name, focusedIntensityInfo, unfocusedIntensityInfo]
             })
     } else {
         const groupByEvent = data.reduce((group, el) => {
@@ -102,24 +102,27 @@ export const MultiMarkerEventPopup = ({data, isCluster, position}) => {
             .map(e => {
                 focusedIntensityInfo = groupByEvent[e]!==undefined ? arrangeIntensityInfo(groupByEvent[e]): []
                 unfocusedIntensityInfo = []
-                return [e.info.name, focusedIntensityInfo, unfocusedIntensityInfo]
+                return [e.info.color, e.info.name, focusedIntensityInfo, unfocusedIntensityInfo]
             })
     }
 
     return <StyledPopup position={position} sx={{width: "auto"}}>
         <div className={"multiEventPopup"}>
         {popupInfo.map(e => (
-            <React.Fragment key={e[0]}>
-                {e[1].map(c => (
+            <React.Fragment key={e[1]}>
+                {e[2].map(c => (
                     <React.Fragment key={c.category}>
-                        <p>{e[0]}: </p>
+                        <div style={{flexDirection: "row"}}>
+                            <span className={'dot'} style={{backgroundColor: e[0]}}/>
+                            <p>{e[1]}: </p>
+                        </div>
                         <p>{getCategoryName(c.category)} ({c.count}): </p>
                         <div>
                             {c.intensities.map(i => <p key={i.intensity}>{getIntensityName(c.category, i.intensity)} ({i.count})</p>)}
                         </div>
                     </React.Fragment>
                 ))}
-                {e[2].map(c => (
+                {e[3].map(c => (
                     <React.Fragment key={c.category}>
                         <p style={{opacity: "0.5"}}>{getCategoryName(c.category)}: </p>
                         <div style={{opacity: "0.5"}}>

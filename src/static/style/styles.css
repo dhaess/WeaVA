@@ -418,4 +418,6 @@ a.leaflet-popup-close-button {
     height: 13px;
     width: 13px;
     border-radius: 50%;
+    border: 1px solid #00000085;
+    margin: 2px 2px 0 0;
 }
