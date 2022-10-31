@@ -5,10 +5,13 @@ import intersect from "@turf/intersect";
 import * as turf from "@turf/helpers";
 
 const MapFilterOverlay = ({mapFilter}) => {
+    const localMapFilter = mapFilter.length === undefined ? [mapFilter] : mapFilter
+    if (localMapFilter.length === 0) return null
+
     let remainingPolygons = []
     let remainingPoints = []
 
-    mapFilter.forEach(e => {
+    localMapFilter.forEach(e => {
         const polygons = Object.values(e.focusedArea).map(s => {
             switch (s.type) {
                 case "circle":

@@ -45,25 +45,25 @@ const arrangeArea = (allPoints, focused) => {
 export const focusArea = (focused, areas) => {
     if (Object.keys(areas).length === 0) return [focused, false]
 
-    let newFocused = Object.keys(areas).map(e => {
-        switch (areas[e].type) {
+    let newFocused = Object.values(areas).map(e => {
+        switch (e.type) {
             case "rectangle":
                 return focused.filter(f =>
-                    pointInRectangle(f.coordinates, areas[e]))
+                    pointInRectangle(f.coordinates, e))
             case "circle":
                 return focused.filter(f =>
-                    pointInCircle(f.coordinates, areas[e]))
+                    pointInCircle(f.coordinates, e))
             case "polygon":
                 return focused.filter(f =>
-                    pointInPolygon(f.coordinates, areas[e]))
+                    pointInPolygon(f.coordinates, e))
             case "point":
                 return focused.filter(f =>
-                    f.coordinates[0] === areas[e].latLng.lat && f.coordinates[1] === areas[e].latLng.lng)
+                    f.coordinates[0] === e.latLng.lat && f.coordinates[1] === e.latLng.lng)
             default:
                 return []
         }
     }).flat()
-    newFocused = arrangeArea(focused, newFocused)
+    if (newFocused.length>0 && newFocused[0].category===undefined) newFocused = arrangeArea(focused, newFocused)
     return [newFocused, true]
 }
 
@@ -120,7 +120,6 @@ export const getProximityPoints = (coords, coordsList, distance) => {
     while (queue.length > 0) {
         let node = queue.shift()
         coordsList.forEach((e, i) => {
-            console.log(getDistance(e, node), distance)
             if (!visited[i] && getDistance(e, node) <= distance) {
                 queue.push(e)
                 visited[i] = true

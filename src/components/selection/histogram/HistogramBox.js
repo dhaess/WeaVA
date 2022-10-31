@@ -213,10 +213,9 @@ const HistogramBox = ({dimensions}) => {
                             borderLeft: "0",
                             p: 1,
                             backgroundColor: 'white',
-                            marginBottom: "3px",
-                            marginLeft: "-2px"
+                            marginBottom: "1px",
                         }}>
-                            <OptionsWindow setOpenHistOptions={setOptionsOpen}/>
+                            <OptionsWindow setOptionsOpen={setOptionsOpen}/>
                         </Box>
                     </Popper>
                 }
@@ -274,7 +273,7 @@ const HistogramBox = ({dimensions}) => {
                         backgroundColor: 'white',
                         marginBottom: "1px",
                     }}>
-                        <OptionsWindow setOpenOptions={setOptionsOpen}/>
+                        <OptionsWindow setOptionsOpen={setOptionsOpen}/>
                     </Box>
                 </Popper>
             }

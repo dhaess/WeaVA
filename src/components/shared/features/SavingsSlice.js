@@ -145,6 +145,20 @@ export const changeFilter = createAsyncThunk('posts/changeFilter',
         return filter
     })
 
+export const setMapFilters = createAsyncThunk('posts/setMapFilters',
+    async (mapFilters, {getState,dispatch}) => {
+        const state = getState()
+        let filter = {...state.savings.current.filter}
+        dispatch(resetPlayer())
+        let data = []
+        if (filter['$and'].find(e => e["properties.category"] !== undefined)["properties.category"]["$in"].length > 0) {
+            data = await getData(filter, mapFilters)
+        }
+        dispatch(setHistogramData(data, state.savings.current.timeRange))
+        dispatch(setMapData(data))
+        return mapFilters
+    })
+
 export const reset = createAsyncThunk('posts/resetData',
     async (_,{dispatch, getState}) => {
     let resetCurrent = {...initalCurrent}
@@ -240,12 +254,16 @@ export const saveAllChanges = () => {
 
         let [newData, hasMapFilters] = applyMapFilters(data, areas, points, proximityPoints)
 
-        current.hasMapFilter = hasMapFilters
-        current.mapFilter = {
-            focusedArea: areas,
+        current.hasMapFilter = hasMapFilters || current.hasMapFilter
+        if (hasMapFilters) {
+            const newMapFilter = [...current.mapFilter]
+            newMapFilter.push({
+                focusedArea: areas,
                 focusedSpecialPoints: points,
                 focusedProximityPoints: proximityPoints,
                 proximityDistance: proximityDistance
+            })
+            current.mapFilter = newMapFilter
         }
 
         dispatch(saveEvent({info: current, data: newData}))
@@ -361,6 +379,14 @@ export const savingsSlice = createSlice({
             .addCase(changeFilter.fulfilled, (state, action) => {
                 state.status = 'succeeded'
                 state.current.filter = action.payload
+            })
+            .addCase(setMapFilters.pending, (state) => {
+                state.status = 'loading'
+            })
+            .addCase(setMapFilters.fulfilled, (state, action) => {
+                state.status = 'succeeded'
+                state.current.hasMapFilter = true
+                state.current.mapFilter = action.payload.length===undefined ? [action.payload] : action.payload
             })
     }
 

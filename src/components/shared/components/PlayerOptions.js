@@ -57,7 +57,7 @@ const PlayerOptions = ({additional = false}) => {
     const setDefaultStepTime = () => dispatch(setStepTime(500))
 
     return (
-        <>
+        <div style={{flexDirection: "column", marginLeft: '8px'}}>
             <p style={{marginBottom: "10px", fontWeight: "bold", fontSize: "larger"}}>Player Options</p>
             <p style={{marginBottom: "5px"}}>Player type</p>
             <StyledFormControl>
@@ -137,7 +137,7 @@ const PlayerOptions = ({additional = false}) => {
                 <p style={{marginBottom: "5px"}}>ms</p>
                 <DefaultButton onClick={setDefaultStepTime}>default</DefaultButton>
             </div>
-        </>
+        </div>
     )
 }
 

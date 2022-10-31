@@ -17,7 +17,7 @@ import {
     changeFocusedProximityPoints, changeProximityDistance,
     deleteAllAreas
 } from "../../shared/features/MapSlice";
-import {changeMapFilters, resetMapFilters} from "../../shared/features/SavingsSlice";
+import {changeMapFilters, resetMapFilters, setMapFilters} from "../../shared/features/SavingsSlice";
 import {getCategoryName, getIntensityName} from "../../shared/functions/WeatherCategories";
 import {getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
 import {getGridData} from "../../shared/functions/MapFunctions";
@@ -49,14 +49,16 @@ import Point from "../../../static/images/point.png";
 import Proximity from "../../../static/images/proximity.png";
 import Save from "../../../static/images/save.png";
 import Reset from "../../../static/images/reset.png";
+import Link from "../../../static/images/linked.png";
 import MarkerMode from "../../../static/data/MarkerMode.json";
 import Arrow from "../../../static/images/left-arrow.png";
 import "../../../static/tooltipHelper"
 
 const StyledToggleButtonGroup = styled(ToggleButtonGroup)({
     display: "grid",
-    gridTemplateColumns: "35px 35px 35px 35px 35px",
-    gridTemplateRows: "35px 35px",
+    gridAutoFlow: "column",
+    gridTemplateColumns: "35px 35px 35px 35px",
+    gridTemplateRows: "35px 35px 35px",
     columnGap: "2px",
     rowGap: "0px",
     backgroundColor: "var(--main-bg-color)",
@@ -76,6 +78,22 @@ const StyledToggleButton = styled(ToggleButton)({
     "&.Mui-disabled div": {
         opacity: "40%"
     }
+})
+
+const LinkButton = styled(Button)({
+    color: 'black',
+    background: 'var(--light-bg-color)',
+    fontSize: '13px',
+    height: '25px',
+    '&:hover': {
+        backgroundColor: 'var(--opacity-bg-color)',
+        boxShadow: '1px 1px var(--border-bg-color)',
+    }
+})
+
+const LinkCancelButton = styled(CancelButton)({
+    height: '25px',
+    border: '1px solid black'
 })
 
 const Map = () => {
@@ -135,6 +153,8 @@ const Map = () => {
             player.currentStep]
     })
 
+    const events = useSelector(state => state.comparison.events)
+
     const [mapData, setMapData] = useState([])
 
     const [selectionButton, setButton] = useState(null)
@@ -150,7 +170,7 @@ const Map = () => {
 
     const [zoomLevel, setZoomLevel] = useState(8)
     const [gridData, setGridData] = useState([])
-    const [hoverReset, setHoverReset] = useState(false)
+    const [overlay, setOverlay] = useState(null)
     // const [hoverPoint, setHoverPoint] = useState(null)
 
     const [mapLoadingStyle, setMapLoadingStyle] = useState({})
@@ -221,6 +241,8 @@ const Map = () => {
                     dispatch(resetMapFilters())
                     setButton(null)
                     break
+                case "link":
+                    break
                 default:
             }
         }
@@ -280,7 +302,7 @@ const Map = () => {
     //     setClusterPopup(true)
     // }
 
-    const MapSelection = () => {
+    const MapSelection = ({setOverlay}) => {
         let proximityRef = useRef()
 
         const [anchorEl, setAnchorEl] = useState()
@@ -316,6 +338,13 @@ const Map = () => {
             }
         }
 
+        const handleLinkClose = (response) => {
+            setButton(null)
+            if (response!==null) {
+                dispatch(setMapFilters(response))
+            }
+        }
+
         if (showTools) {
             return (
                 <div id={"SelectionButtons"}>
@@ -348,27 +377,6 @@ const Map = () => {
                                 </div>
                             </StyledTooltip>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"points"} disabled={markerMode!==MarkerMode["Location"] || mapData.length===0}>
-                            <StyledTooltip title={"Select individual points"} arrow enterDelay={500}>
-                                <div className={"selectionButtonsContent"}>
-                                    <img src={Point} width={14} alt={"Point"}/>
-                                </div>
-                            </StyledTooltip>
-                        </StyledToggleButton>
-                        <StyledToggleButton value={"editAll"} disabled={!isMapFocused}>
-                            <StyledTooltip title={"Edit all unsaved map area filters"} arrow enterDelay={500}>
-                                <div className={"selectionButtonsContent"}>
-                                    <img src={Edit} width={20} alt={"Edit all"}/>
-                                </div>
-                            </StyledTooltip>
-                        </StyledToggleButton>
-                        <StyledToggleButton value={"save"} disabled={!isFocused}>
-                            <StyledTooltip title={"Save map filters"} arrow enterDelay={500}>
-                                <div className={"selectionButtonsContent"}>
-                                    <img src={Save} width={21} alt={"Save map filters"}/>
-                                </div>
-                            </StyledTooltip>
-                        </StyledToggleButton>
                         <StyledToggleButton value={"circle"}>
                             <StyledTooltip title={"Select circle"} arrow enterDelay={500}>
                                 <div className={"selectionButtonsContent"}>
@@ -376,12 +384,25 @@ const Map = () => {
                                 </div>
                             </StyledTooltip>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"canton"} disabled={true}>
+                        <StyledToggleButton value={"points"} disabled={markerMode!==MarkerMode["Location"] || mapData.length===0}>
+                            <StyledTooltip title={"Select individual points"} arrow enterDelay={500}>
+                                <div className={"selectionButtonsContent"}>
+                                    <img src={Point} width={14} alt={"Point"}/>
+                                </div>
+                            </StyledTooltip>
                         </StyledToggleButton>
                         <StyledToggleButton value={"proximity"} disabled={markerMode!==MarkerMode["Location"] || mapData.length===0}>
                             <StyledTooltip title={"Select point to get all points with maximal given distance"} arrow enterDelay={500}>
                                 <div className={"selectionButtonsContent"}>
                                     <img src={Proximity} width={20} alt={"Proximity"}/>
+                                </div>
+                            </StyledTooltip>
+                        </StyledToggleButton>
+                        <StyledToggleButton value={""} disabled={true}/>
+                        <StyledToggleButton value={"editAll"} disabled={!isMapFocused}>
+                            <StyledTooltip title={"Edit all unsaved map area filters"} arrow enterDelay={500}>
+                                <div className={"selectionButtonsContent"}>
+                                    <img src={Edit} width={20} alt={"Edit all"}/>
                                 </div>
                             </StyledTooltip>
                         </StyledToggleButton>
@@ -392,10 +413,25 @@ const Map = () => {
                                 </div>
                             </StyledTooltip>
                         </StyledToggleButton>
-                        <StyledToggleButton value={"reset"} disabled={!hasMapFilter} onMouseEnter={() => setHoverReset(true)}  onMouseLeave={() => setHoverReset(false)}>
+                        <StyledToggleButton  value={""} disabled={true}/>
+                        <StyledToggleButton value={"save"} disabled={!isFocused}>
+                            <StyledTooltip title={"Save map filters"} arrow enterDelay={500}>
+                                <div className={"selectionButtonsContent"}>
+                                    <img src={Save} width={21} alt={"Save map filters"}/>
+                                </div>
+                            </StyledTooltip>
+                        </StyledToggleButton>
+                        <StyledToggleButton value={"reset"} disabled={!hasMapFilter} onMouseEnter={() => setOverlay(mapFilter)}  onMouseLeave={() => setOverlay(null)}>
                             <StyledTooltip title={"Reset all saved map filters"} arrow enterDelay={500}>
                                 <div className={"selectionButtonsContent"}>
                                     <img src={Reset} width={21} alt={"Reset map filters"}/>
+                                </div>
+                            </StyledTooltip>
+                        </StyledToggleButton>
+                        <StyledToggleButton value={"link"} disabled={events.filter(e => e.info.id !== id).length===0}>
+                            <StyledTooltip title={"Set map filters equal to other events"} arrow enterDelay={500}>
+                                <div className={"selectionButtonsContent"}>
+                                    <img src={Link} width={22} alt={"Link map filters"}/>
                                 </div>
                             </StyledTooltip>
                         </StyledToggleButton>
@@ -442,7 +478,7 @@ const Map = () => {
                             </Box>
                         </Popper>
                     }
-                    { anchorEl &&
+                    { anchorEl && selectionButton==="deleteAll" &&
                         <Popover
                             id={id}
                             open={selectionButton === "deleteAll"}
@@ -463,6 +499,34 @@ const Map = () => {
                             </Box>
                         </Popover>
                     }
+                    { anchorEl && selectionButton==="link" &&
+                        <Popover
+                            id={id}
+                            open={selectionButton === "link"}
+                            anchorEl={anchorEl}
+                            onClose={() => handleLinkClose(null)}
+                            anchorOrigin={{
+                                vertical: 'bottom',
+                                horizontal: 'left',
+                            }}
+                            sx={{marginTop: "2px"}}
+                        >
+                            <Box sx={{margin: "8px"}}>
+                                <p style={{marginBottom: '8px'}}>Link to event:</p>
+                                {events.map(e => (
+                                    <LinkButton
+                                        key={e.info.id}
+                                        onClick={() => handleLinkClose(e.info.mapFilter)}
+                                    >
+                                        {e.info.name}
+                                    </LinkButton>
+                                ))}
+                                <div style={{marginTop: '9px', display: 'flex', justifyContent: 'flex-end'}}>
+                                    <LinkCancelButton onClick={() => handleLinkClose(null)} autoFocus>Cancel</LinkCancelButton>
+                                </div>
+                            </Box>
+                        </Popover>
+                    }
                 </div>
             )
         } else {
@@ -475,7 +539,7 @@ const Map = () => {
     }
 
     return <div style={{width: "100%", height: "100vh"}}>
-        <MapSelection/>
+        <MapSelection setOverlay={setOverlay}/>
         <MiniMap
             color={color}
             id={id}
@@ -684,9 +748,9 @@ const Map = () => {
                         </LayerGroup>
                     </LayersControl.BaseLayer>
                 </LayersControl>
-                {hasMapFilter && hoverReset &&
+                {hasMapFilter && overlay!==null &&
                     <MapFilterOverlay
-                        mapFilter={mapFilter}
+                        mapFilter={overlay}
                     />
                 }
                 <FeatureGroup ref={featureRef}>

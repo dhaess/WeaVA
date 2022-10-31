@@ -84,7 +84,7 @@ const HistogramOptions = ({additional = false}) => {
     }
 
     return (
-        <>
+        <div style={{flexDirection: "column", marginRight: '8px'}}>
             <p style={{marginBottom: "10px", fontWeight: "bold", fontSize: "larger"}}>Histogram Options</p>
             <StyledFormControlLabel control={<StyledCheckBox checked={divided} onChange={handleImageInfo}/>} label="Divide image information" />
             { additional &&
@@ -180,7 +180,7 @@ const HistogramOptions = ({additional = false}) => {
                     </StyledFormControlLabel>
                 </RadioGroup>
             </StyledFormControl>
-        </>
+        </div>
     )
 }
 

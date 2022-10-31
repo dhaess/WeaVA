@@ -1,4 +1,5 @@
 import {useDispatch, useSelector} from "react-redux";
+import {useEffect, useState} from "react";
 import {setCurrent, changeFilter} from "../../shared/features/SavingsSlice";
 import locations from "../../../static/data/PLZO_CSV_WGS84.json";
 import {Autocomplete, FormGroup, RadioGroup} from "@mui/material";
@@ -56,7 +57,11 @@ export default function AreaSelector() {
         ]
     })
 
-    const cantonValue = dimension === "cantons" ? locElements : []
+    const [cantonValue, setCantonValue] = useState([])
+
+    useEffect(() => {
+        setCantonValue(dimension === "cantons" ? locElements : [])
+    }, [dimension, locElements])
 
     const handleClick = (val) => {
         switch (val) {
