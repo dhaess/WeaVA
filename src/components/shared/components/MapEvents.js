@@ -1,13 +1,14 @@
 import {useDispatch} from "react-redux";
 import {useMapEvents} from "react-leaflet";
-import {setMarkerMode} from "../features/SettingsSlice";
+import {setCenter, setMarkerMode, setZoomLevel} from "../features/SettingsSlice";
 
-const MapEvents = ({setZoomLevel}) => {
+const MapEvents = () => {
     const dispatch = useDispatch()
 
     const mapEvents = useMapEvents({
-        zoomend: () => setZoomLevel(mapEvents.getZoom()),
-        baselayerchange: e => dispatch(setMarkerMode(e.name))
+        zoomend: () => dispatch(setZoomLevel(mapEvents.getZoom())),
+        baselayerchange: e => dispatch(setMarkerMode(e.name)),
+        moveend: () => dispatch(setCenter(mapEvents.getCenter()))
     });
     return null
 }

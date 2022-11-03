@@ -40,6 +40,8 @@ export const settingsSlice = createSlice(({
     initialState: {
         theme: "cobaltBlue",
         mapTile: "CH",
+        zoomLevel: 8,
+        center: [46.3985, 8.2318],
         markerMode: MarkerMode["Grid"],
         binDivided: true,
         histogram: {
@@ -55,6 +57,12 @@ export const settingsSlice = createSlice(({
         setMapTile: (state, action) => {
             state.mapTile = action.payload
         },
+        setZoomLevel: (state, action) => {
+            state.zoomLevel = action.payload
+        },
+        setCenter: (state, action) => {
+            state.center = action.payload
+        },
         setMarkerMode: (state, action) => {
             state.markerMode = action.payload
         },
@@ -67,5 +75,5 @@ export const settingsSlice = createSlice(({
     }
 }))
 
-export const {setTheme, setMapTile, setMarkerMode, setBinDivided, setLocalBins} = settingsSlice.actions
+export const {setTheme, setMapTile, setZoomLevel, setCenter, setMarkerMode, setBinDivided, setLocalBins} = settingsSlice.actions
 export default settingsSlice.reducer

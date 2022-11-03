@@ -225,8 +225,12 @@ export const ChanConvexHull = function () {
                 if (!isNaN(angle) && angle > maxAngle) {
                     maxAngle = angle;
                     pk_1 = subHulls[j][result];
+                } else if (subHulls[j].length === 2 && subHulls[j][0][0] === subHulls[j][1][0] && subHulls[j][0][1] === subHulls[j][1][1]) {
+                    pk_1 = subHulls[j][0]
                 }
             }
+            if (pk_1 === null) pk_1 = subHulls[0]
+
             //we went full circle, have convex hull
             if (pk_1[0] === convexhull[0][0] && pk_1[1] === convexhull[0][1]) return convexhull;
             convexhull.push(pk_1);

@@ -131,7 +131,7 @@ const Histogram = ({dimensions}) => {
                     .domain([0, yMax]).nice()
                     .range([height, 0])
 
-                const marginLeft = margin.left+20
+                const marginLeft = margin.left+25
                 const svg = d3.select(svgRef.current)
                     .append("g")
                     .attr("transform", "translate(" + marginLeft + "," + margin.top + ")")
@@ -186,7 +186,7 @@ const Histogram = ({dimensions}) => {
                 svg.append("text")
                     .attr("transform", "rotate(-90) translate(-25, 0)")
                     .attr("y", 6)
-                    .attr("dy", "-2.9em")
+                    .attr("dy", "-3.2em")
                     .style("text-anchor", "end")
                     .text("Number of Reports")
             }

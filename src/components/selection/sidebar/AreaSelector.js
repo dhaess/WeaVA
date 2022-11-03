@@ -101,7 +101,7 @@ export default function AreaSelector() {
                 dispatch(setCurrent({name: "area", value: {dimension: "cantons", entries: val}}))
                 break
             case "places":
-                const placeFilter = {"place":  {'$in': val}}
+                const placeFilter = {"place":  {'$in': val.map(e => e.place)}}
                 dispatch(changeFilter([{type: "add", filter: [placeFilter]}]))
                 dispatch(setCurrent({name: "area", value: {dimension: "places", entries: val}}))
                 break

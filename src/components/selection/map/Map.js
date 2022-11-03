@@ -34,7 +34,7 @@ import {styled} from "@mui/material/styles";
 import {Box, Button, CircularProgress, Popover, Popper, ToggleButton, ToggleButtonGroup} from "@mui/material";
 import {
     CancelButton,
-    DeleteButton,
+    DeleteButton, LinkButton,
     StyledInputField, StyledPopup,
     StyledSlider,
     StyledTooltip
@@ -80,17 +80,6 @@ const StyledToggleButton = styled(ToggleButton)({
     }
 })
 
-const LinkButton = styled(Button)({
-    color: 'black',
-    background: 'var(--light-bg-color)',
-    fontSize: '13px',
-    height: '25px',
-    '&:hover': {
-        backgroundColor: 'var(--opacity-bg-color)',
-        boxShadow: '1px 1px var(--border-bg-color)',
-    }
-})
-
 const LinkCancelButton = styled(CancelButton)({
     height: '25px',
     border: '1px solid black'
@@ -131,11 +120,15 @@ const Map = () => {
     })
 
     const [mapTile,
+        zoomLevel,
+        center,
         markerMode
     ] = useSelector(state => {
         const settings = state.settings
         return [
             settings.mapTile,
+            settings.zoomLevel,
+            settings.center,
             settings.markerMode]
     })
 
@@ -168,7 +161,6 @@ const Map = () => {
     // const [clusterPopup, setClusterPopup] = useState(null)
     // const [clusterData, setClusterData] = useState(null)
 
-    const [zoomLevel, setZoomLevel] = useState(8)
     const [gridData, setGridData] = useState([])
     const [overlay, setOverlay] = useState(null)
     // const [hoverPoint, setHoverPoint] = useState(null)
@@ -548,14 +540,14 @@ const Map = () => {
         <div style={{display: "contents"}}>
             <MapContainer
                 style={{width: "100%", height: "100vh", zIndex: "0"}}
-                center={[46.3985, 8.2318]}
-                zoom={8}
+                center={center}
+                zoom={zoomLevel}
                 zoomControl={false}
             >
                 <MapResizer/>
                 <ScaleControl imperial={false} position="bottomright" />
                 <ZoomControl position="bottomright" />
-                <MapEvents setZoomLevel={setZoomLevel}/>
+                <MapEvents/>
                 {mapTile === "CH" && <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://tile.osm.ch/switzerland/{z}/{x}/{y}.png" />}
                 {mapTile === "OSM" && <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />}
                 {mapTile === "NationalMapColor" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg" />}
@@ -679,7 +671,8 @@ const Map = () => {
                             {mapData.map(e => {
                                 if (e.focused.length === 1 && e.unfocused.length === 0) {
                                     return (
-                                        <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
+                                        <Marker opacity={1}
+                                                key={e.coordinates[0] + "," + e.coordinates[1]}
                                                 position={e.coordinates}
                                                 icon={getMapIcon(e.focused[0].category, color)}
                                                 eventHandlers={{

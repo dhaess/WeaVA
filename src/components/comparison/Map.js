@@ -22,11 +22,15 @@ import MarkerMode from "../../static/data/MarkerMode.json";
 const Map = () => {
     const events = useSelector(state => state.comparison.events)
     const [mapTile,
+        zoomLevel,
+        center,
         markerMode
     ] = useSelector(state => {
         const settings = state.settings
         return [
             settings.mapTile,
+            settings.zoomLevel,
+            settings.center,
             settings.markerMode
         ]
     })
@@ -47,7 +51,6 @@ const Map = () => {
     // const [markerPos, setMarkerPos] = useState(null)
     // const [clusterPopup, setClusterPopup] = useState(null)
     // const [clusterData, setClusterData] = useState(null)
-    const [zoomLevel, setZoomLevel] = useState(8)
     const [gridData, setGridData] = useState([])
     // const [hoverPoint, setHoverPoint] = useState(null)
 
@@ -90,10 +93,10 @@ const Map = () => {
     // }
 
     return (
-        <MapContainer style={{width: "100vw", height: "100vh", zIndex: "0"}} center={[46.3985, 8.2318]} zoom={8} zoomControl={false}>
+        <MapContainer style={{width: "100vw", height: "100vh", zIndex: "0"}} center={center} zoom={zoomLevel} zoomControl={false}>
             <MapResizer/>
             <ZoomControl position="bottomright" />
-            <MapEvents setZoomLevel={setZoomLevel}/>
+            <MapEvents/>
             {mapTile === "CH" && <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://tile.osm.ch/switzerland/{z}/{x}/{y}.png" />}
             {mapTile === "OSM" && <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />}
             {mapTile === "NationalMapColor" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg" />}

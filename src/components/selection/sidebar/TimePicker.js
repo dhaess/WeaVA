@@ -1,17 +1,13 @@
 import {useDispatch, useSelector} from "react-redux";
 import {changeFilter, setCurrent} from "../../shared/features/SavingsSlice";
 import {styled} from "@mui/material/styles";
-import {FormControl, InputLabel, MenuItem, Select} from "@mui/material";
+import {InputLabel} from "@mui/material";
 import {DateTimePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
-import {StyledRadio, StyledTextField} from "../../../static/style/muiStyling";
+import {StyledInputField, StyledRadio, StyledTextField} from "../../../static/style/muiStyling";
 
 const minDataDate = new Date("2021-10-07T08:00").getTime()
 const maxDataDate = new Date("2022-06-02T20:00").getTime()
-
-const minArray = [...Array(60).keys()]
-const hourArray = [...Array(24).keys()]
-const dayArray = [...Array(365).keys()]
 
 const StyledTimeTextField = styled(StyledTextField)({
     width: "100%",
@@ -23,41 +19,22 @@ const StyledTimeTextField = styled(StyledTextField)({
     marginBottom: "15px"
 })
 
-const StyledFormControl = styled(FormControl)({
-    marginTop: "5px",
-})
-
 const StyledInputLabel = styled(InputLabel)({
-    width: "calc(133% - 16px)",
-    maxWidth: "calc(133% - 16px)",
-    textAlign: "center",
-    marginLeft: "-8px",
+    fontSize: "13px",
     "&.Mui-focused": {
         color: "black",
     }
 })
 
-const StyledSelect = styled(Select)({
-    width: "56px",
-    marginRight: "5px",
-    marginBottom: "10px",
-    "& .MuiOutlinedInput-input.MuiSelect-select": {
-        padding: "8px 0",
-        paddingRight: "0 !important",
-        textAlign: "center",
+const DurationInputField = styled(StyledInputField)({
+    marginLeft: 0,
+    width: "60px",
+    border: "solid 1px #7f7f7f",
+    "&.Mui-focused": {
+        border: "solid 1px var(--border-bg-color)",
     },
-    "& .MuiSelect-icon": {
-        display: "none",
-    },
-    "& .MuiOutlinedInput-notchedOutline": {
-        padding: "0 5px 0 5px",
-    },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-        borderColor: 'var(--border-bg-color)',
-    },
-    '&:hover .MuiOutlinedInput-notchedOutline': {
-        borderColor: 'var(--border-bg-color)',
-        boxShadow: "1px 1px var(--shadow-bg-color)"
+    '&:after': {
+        borderBottom: "1px solid var(--border-bg-color)",
     },
 })
 
@@ -90,20 +67,7 @@ const timePaperProps = {
     }
 }
 
-const menuProps = {
-    sx: {
-        height: "200px",
-    },
-}
-
-const StyledMenuItem = styled(MenuItem)({
-    "&.Mui-selected": {
-        backgroundColor: '#da876b1a',
-    },
-    "&.Mui-selected:hover": {
-        backgroundColor: '#da876b4f',
-    }
-})
+const totalTimeRange = [new Date("2021-10-07T08:00").getTime(), new Date("2022-06-02T20:00").getTime()]
 
 export default function TimePicker() {
     const dispatch = useDispatch()
@@ -178,10 +142,10 @@ export default function TimePicker() {
         return () => clearTimeout(delayDebounceFn)
     }
 
-    const handleSelectChange = (event) => {
+    const handleInputChange = (event, name) => {
         const val = Number(event.target.value)
         let endTime = timeRange[0].getTime()
-        switch (event.target.name) {
+        switch (name) {
             case "day":
                 endTime += val * 86400000 + duration[1] * 3600000 + duration[2] * 60000
                 break
@@ -240,55 +204,66 @@ export default function TimePicker() {
                 />
                 <p style={{fontSize: "14px", marginTop: "-12px"}}>or</p>
                 <p style={{fontSize: "14px", marginTop: "-5px"}}>Duration (from start time)</p>
-                <StyledFormControl size={"small"}>
-                    <StyledInputLabel id="demo-simple-select-label">Days</StyledInputLabel>
-                    <StyledSelect
-                        labelId="daySelect"
-                        id="daySelect"
-                        value={duration[0]}
-                        name={"day"}
-                        label="Days"
-                        onChange={handleSelectChange}
-                        MenuProps={menuProps}
-                    >
-                        {dayArray.map(e => {
-                            return <StyledMenuItem key={e} value={e}>{e}</StyledMenuItem>
-                        })}
-                    </StyledSelect>
-                </StyledFormControl>
-                <StyledFormControl size={"small"}>
-                    <StyledInputLabel id="demo-simple-select-label">Hours</StyledInputLabel>
-                    <StyledSelect
-                        labelId="hourSelect"
-                        id="hourSelect"
-                        value={duration[1]}
-                        name={"hour"}
-                        label="Hours"
-                        onChange={handleSelectChange}
-                        MenuProps={menuProps}
-                    >
-                        {hourArray.map(e => {
-                            return <StyledMenuItem key={e} value={e}>{e}</StyledMenuItem>
-                        })}
-                    </StyledSelect>
-                </StyledFormControl>
-                <StyledFormControl size={"small"}>
-                    <StyledInputLabel id="demo-simple-select-label">Minutes</StyledInputLabel>
-                    <StyledSelect
-                        labelId="minSelect"
-                        id="minSelect"
-                        value={duration[2]}
-                        name={"min"}
-                        label="Minutes"
-                        onChange={handleSelectChange}
-                        MenuProps={menuProps}
-                    >
-                        {minArray.map(e => {
-                            return <StyledMenuItem key={e} value={e}>{e}</StyledMenuItem>
-                        })}
-                    </StyledSelect>
-                </StyledFormControl>
+                <div className={"durationInputs"}>
+                    <div>
+                        <StyledInputLabel>Days</StyledInputLabel>
+                        <DurationInputField
+                            value={duration[0]}
+                            size="small"
+                            onChange={e => handleInputChange(e, "day")}
+                            inputProps={{
+                                step: 1,
+                                min: 0,
+                                type: 'number',
+                            }}
+                            sx={{marginRight: "5px"}}
+                        />
+                    </div>
+                    <div>
+                        <StyledInputLabel>Hours</StyledInputLabel>
+                        <DurationInputField
+                            value={duration[1]}
+                            size="small"
+                            onChange={e => handleInputChange(e, "hour")}
+                            inputProps={{
+                                step: 1,
+                                min: 0,
+                                max: 23,
+                                type: 'number',
+                            }}
+                            sx={{marginRight: "5px"}}
+                        />
+                    </div>
+                    <div>
+                        <StyledInputLabel>Minutes</StyledInputLabel>
+                        <DurationInputField
+                            value={duration[2]}
+                            size="small"
+                            onChange={e => handleInputChange(e, "min")}
+                            inputProps={{
+                                step: 1,
+                                min: 0,
+                                max: 59,
+                                type: 'number',
+                            }}
+                        />
+                    </div>
+                </div>
             </LocalizationProvider>
+            <div className="areaOptions">
+                <StyledRadio
+                    checked={totalTimeRange[0] === timeRange[0].getTime() &&  totalTimeRange[1] === timeRange[1].getTime()}
+                    onChange={isSelected => setTimeRange(totalTimeRange, isSelected)}
+                    value={"totalTime"}
+                    name="event-time-buttons"
+                    inputProps={{ 'aria-label': "totalTime" }}
+                    sx={{
+                        margin: "4px 7px 0px 0px",
+                    }}
+                />
+                <p className="singleAreaChoice"
+                   onClick={() => setTimeRange(totalTimeRange)}>Total available time range</p>
+            </div>
             {eventTimeRanges.map(event => (
                 <div className="areaOptions" key={event.name}>
                     <StyledRadio
@@ -298,7 +273,7 @@ export default function TimePicker() {
                         name="event-time-buttons"
                         inputProps={{ 'aria-label': event.name }}
                         sx={{
-                            margin: "4px 7px 0px 0px;",
+                            margin: "4px 7px 0px 0px",
                         }}
                     />
                     <p className="singleAreaChoice"

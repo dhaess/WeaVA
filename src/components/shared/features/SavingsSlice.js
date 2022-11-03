@@ -145,6 +145,22 @@ export const changeFilter = createAsyncThunk('posts/changeFilter',
         return filter
     })
 
+export const setCopy = (event) => {
+    return (dispatch, getState) => {
+        const state = getState()
+        const currentEvent = state.savings.current
+
+        const newInfo = {...event.info}
+        newInfo.id = currentEvent.id
+        newInfo.name = currentEvent.name
+        newInfo.color = currentEvent.color
+
+        dispatch(copyEvent(newInfo))
+        dispatch(setHistogramData(event.data, newInfo.timeRange))
+        dispatch(setMapData(event.data))
+    }
+}
+
 export const setMapFilters = createAsyncThunk('posts/setMapFilters',
     async (mapFilters, {getState,dispatch}) => {
         const state = getState()
@@ -301,8 +317,8 @@ export const initNewCurrent = () => {
 }
 
 
-// const initialTimeRange = [new Date("2021-10-07T08:00").getTime(), new Date("2022-06-02T20:00").getTime()]
-const initialTimeRange = [new Date("2022-01-01T09:00").getTime(), new Date("2022-01-01T10:00").getTime()]
+const initialTimeRange = [new Date("2021-10-07T08:00").getTime(), new Date("2022-06-02T20:00").getTime()]
+// const initialTimeRange = [new Date("2022-01-01T09:00").getTime(), new Date("2022-01-01T10:00").getTime()]
 
 const initalCurrent = {
     id: 0,
@@ -369,6 +385,9 @@ export const savingsSlice = createSlice({
             state.saved = action.payload.info
             state.savedData = action.payload.data
             state.isSaved = true
+        },
+        copyEvent: (state, action) => {
+            state.current = action.payload
         }
     },
     extraReducers(builder) {
@@ -392,5 +411,5 @@ export const savingsSlice = createSlice({
 
 })
 
-export const { initialize, save, resetState, revertState, setCurrent, saveMapFilters, initCurrent } = savingsSlice.actions
+export const { initialize, save, resetState, revertState, setCurrent, saveMapFilters, initCurrent, copyEvent } = savingsSlice.actions
 export default savingsSlice.reducer

@@ -19,14 +19,14 @@ def get_data():
     for entry in reports.find(
             filterData,
             {"properties.meldungId": 1, "geometry.coordinates": 1, "properties.category": 1,
-             "properties.auspraegung": 1, "properties.timestamp": 1, "properties.imageUrl": 1}):
+             "properties.auspraegung": 1, "properties.timestamp": 1, "properties.imageUrl": 1, "properties.timesReportedForImage": 1}):
         data.append({
             "id": entry["properties"]["meldungId"],
             "coordinates": entry["geometry"]["coordinates"],
             "category": entry["properties"]["category"],
             "auspraegung": entry["properties"]["auspraegung"],
             "timestamp": entry["properties"]["timestamp"],
-            "imageName": None if entry["properties"]["imageUrl"] is None else entry["properties"]["imageUrl"][(entry["properties"]["imageUrl"].rfind("/") + 1):],
+            "imageName": None if entry["properties"]["imageUrl"] is None or entry["properties"]["timesReportedForImage"] > 0 else entry["properties"]["imageUrl"][(entry["properties"]["imageUrl"].rfind("/") + 1):],
         })
     return json.dumps(data)
 

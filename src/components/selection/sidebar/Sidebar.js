@@ -1,6 +1,7 @@
 import {useState} from "react";
-import ToggleButtonsMultiple from "./CategorySelector";
+import FilterCopy from "./FilterCopy";
 import TimePicker from "./TimePicker";
+import CategorySelector from "./CategorySelector";
 import AreaSelector from "./AreaSelector";
 import NameSelector from "./NameSelector";
 import ColorSelector from "./ColorSelector";
@@ -38,7 +39,8 @@ const Sidebar = () => {
                 <div className="Sidebar h-100 scroll-shadows">
                     <div id="filter" className="d-flex flex-column justify-content-between h-100">
                         <h2>Filter options</h2>
-                        <ToggleButtonsMultiple/>
+                        <FilterCopy/>
+                        <CategorySelector/>
                         <TimePicker/>
                         <ImageSelect/>
                         <AreaSelector/>

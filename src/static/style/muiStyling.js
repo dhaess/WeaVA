@@ -190,3 +190,14 @@ export const PlayerSlider = styled(Slider)({
         }
     },
 })
+
+export const LinkButton = styled(Button)({
+    color: 'black',
+    background: 'var(--light-bg-color)',
+    fontSize: '13px',
+    height: '25px',
+    '&:hover': {
+        backgroundColor: 'var(--opacity-bg-color)',
+        boxShadow: '1px 1px var(--border-bg-color)',
+    }
+})

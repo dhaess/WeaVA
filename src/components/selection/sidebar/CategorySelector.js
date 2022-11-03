@@ -97,7 +97,7 @@ const StyledManyRangeSlider = styled(StyledRangeSlider)({
     },
 })
 
-export default function CategorySelector() {
+const CategorySelector = () => {
     const dispatch = useDispatch()
 
     const [categories,
@@ -130,7 +130,7 @@ export default function CategorySelector() {
             dispatch(changeFilter([{type: "add", filter: [{"category": {'$in': categoryList}}]}]))
         }
         dispatch(setCurrent({name: "category", value: categoryList}))
-    };
+    }
 
     const getIntensityValue = (category, max) => {
         const intensityEntry = intensities.length>0 ?
@@ -261,5 +261,7 @@ export default function CategorySelector() {
             </StyledToggleButtonGroup>
             {getSlider()}
         </div>
-    );
+    )
 }
+
+export default CategorySelector;

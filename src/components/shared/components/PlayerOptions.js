@@ -106,12 +106,12 @@ const PlayerOptions = ({additional = false}) => {
                                         value={totalSteps}
                                         size="small"
                                         onChange={handleTotalStepInputChange}
+                                        disabled={stepSyncType!== "custom"}
                                         inputProps={{
                                             step: 1,
                                             min: 1,
                                             max: 100,
                                             type: 'number',
-                                            'aria-labelledby': 'input-slider',
                                         }}
                                     />
                                 </div>
@@ -131,7 +131,6 @@ const PlayerOptions = ({additional = false}) => {
                         min: 1,
                         max: 100,
                         type: 'number',
-                        'aria-labelledby': 'input-slider',
                     }}
                 />
                 <p style={{marginBottom: "5px"}}>ms</p>
