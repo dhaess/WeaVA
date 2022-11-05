@@ -148,16 +148,19 @@ export const setPointsData = (data) => {
 
 export const getGridData = (allData, zoomLevel) => {
     const gridData = []
+    let maxCount = 0
+    let gridDist = 0
+
+    const latList = allData.map(e => e.coordinates[0])
+    const minLat = Math.min(...latList)
+    const maxLat = Math.max(...latList)
+    const lngList = allData.map(e => e.coordinates[1])
+    const minLng = Math.min(...lngList)
+    const maxLng = Math.max(...lngList)
 
     if (allData.length===1) {
         gridData.push({focused: allData, unfocused: [], coordinates: allData[0].coordinates, convexHull: [allData[0].coordinates]})
     } else if (allData.length>1) {
-        const latList = allData.map(e => e.coordinates[0])
-        const minLat = Math.min(...latList)
-        const maxLat = Math.max(...latList)
-        const lngList = allData.map(e => e.coordinates[1])
-        const minLng = Math.min(...lngList)
-        const maxLng = Math.max(...lngList)
 
         const latDist = getDistance([minLat, minLng], [maxLat, minLng])
         const lngDist = getDistance([minLat, minLng], [minLat, maxLng])
@@ -167,6 +170,7 @@ export const getGridData = (allData, zoomLevel) => {
         const lngGrid = Math.ceil(lngDist/maxGridSize)
         const latGridSize = (maxLat-minLat+0.005) / latGrid
         const lngGridSize = (maxLng-minLng+0.005) / lngGrid
+        gridDist = Math.min(latDist/latGrid, lngDist/lngGrid)
 
         const grid = new Array(latGrid)
         for (let i=0; i<latGrid; i++) grid[i] = new Array(lngGrid)
@@ -189,11 +193,12 @@ export const getGridData = (allData, zoomLevel) => {
                     const avgLng =  convexHull.map(e => e[1]).reduce((a, b) => a + b, 0) / convexHull.length
                     // gridData.push({focused: gridContent, unfocused: [], coordinates: [avgLat, avgLng], convexHull: convexHull})
                     gridData.push({focused: gridContent, unfocused: [], coordinates: [avgLat, avgLng]})
+                    if (gridContent.length > maxCount) maxCount = gridContent.length
                 }
             }
         }
     }
-    return gridData
+    return [gridData, maxCount, gridDist]
 }
 
 // export const getClusterList = (event) => {

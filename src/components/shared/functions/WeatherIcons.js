@@ -24,6 +24,8 @@ const iconData = [
     {idName: "TORNADO", url: "../../static/images/tornado.png", icon: Tornado, names: ["TORNADO"]},
 ]
 
+const standardSize = 22
+
 export const getIcon = (category) => {
     return iconData.find(e => e.names.includes(category)).icon
 }
@@ -44,7 +46,7 @@ const MapIcon = (props) => {
     )
 }
 
-export const getMapIcon = (category, color, size= 26, className = '') => {
+export const getMapIcon = (category, color, size= standardSize, className = '') => {
     let icon = <MapIcon
         category = {category}
         size = {size}
@@ -94,10 +96,15 @@ export const getPieIcon = (data, props = {}) => {
         })
     }
 
-    const sum = pieData.map(e => e.value).reduce((a, b) => a + b, 0)
-    const sizeBasic = props.size === undefined ? 26 : props.size
-    const size = sum === 0 ? sizeBasic : sizeBasic*(1+0.3*Math.log(sum))
     const className = props.className === undefined ? "" : props.className
+    const sum = pieData.map(e => e.value).reduce((a, b) => a + b, 0)
+
+    let size = props.size === undefined ? standardSize : props.size
+    if (props.gridDist !== undefined) {
+        const maxSize = (1000 * props.gridDist) / props.meterPerPixel
+        size = size + (maxSize-size) * (sum-1) / (props.maxCount-1)
+    }
+    // const size = sum === 0 ? size : size*(1+0.3*Math.log(sum))  // logarithmic growth
 
     let icon = <PieIcon
         size = {size}

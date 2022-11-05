@@ -9,6 +9,9 @@ import {Button} from "@mui/material";
 import Arrow from "../../../static/images/left-arrow.png";
 import MarkerMode from "../../../static/data/MarkerMode.json";
 
+const meterPerPixel = 40075016.686 * Math.abs(Math.cos(46.3985 / 180 * Math.PI)) / Math.pow(2, 14)
+const minSize = 5.5
+
 const MiniMap = ({color, id, mapData}) => {
     const [events,
         hasEvents
@@ -32,6 +35,9 @@ const MiniMap = ({color, id, mapData}) => {
     const [showMap, setMap] = useState(false)
     const [pointsData, setPointsData] = useState([])
     const [gridData, setGridData] = useState([])
+
+    const [maxCount, setMaxCount] = useState(0)
+    const [gridDist, setGridDist] = useState(0)
 
     const handleCloseClick = () => setMap(false)
 
@@ -71,7 +77,12 @@ const MiniMap = ({color, id, mapData}) => {
     useEffect(() => {
         if (markerMode===MarkerMode["Grid"]) {
             const gridInput = pointsData.map(e => e.focused).flat()
-            setGridData(getGridData(gridInput, 8))
+            const [newGridData, newMaxCount, newDist] = getGridData(gridInput, 8)
+            setGridData(newGridData)
+            setMaxCount(newMaxCount)
+            setGridDist(newDist)
+        } else {
+            setMaxCount(Math.max(...pointsData.map(e => e.focused.length)))
         }
     }, [markerMode, pointsData])
 
@@ -109,7 +120,7 @@ const MiniMap = ({color, id, mapData}) => {
                                     return (
                                         <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
                                                 position={e.coordinates}
-                                                icon={getMapIcon(singlePoint.category, pointColor, 7)}
+                                                icon={getMapIcon(singlePoint.category, pointColor, minSize)}
                                         />
                                     )
                                 } else {
@@ -118,7 +129,9 @@ const MiniMap = ({color, id, mapData}) => {
                                                 color={color}
                                                 data={e}
                                                 position={e.coordinates}
-                                                icon={getPieIcon(e.focused, hasEvents ? {sum: e.focused.length, size: 7} : {color: color, sum: e.focused.length, size: 7})}
+                                                icon={getPieIcon(e.focused, hasEvents ?
+                                                    {sum: e.focused.length, maxCount: maxCount, gridDist: gridDist, meterPerPixel: meterPerPixel, size: minSize} :
+                                                    {color: color, sum: e.focused.length, maxCount: maxCount, gridDist: gridDist, meterPerPixel: meterPerPixel, size: minSize})}
                                         />
                                     )
                                 }
@@ -162,14 +175,14 @@ const MiniMap = ({color, id, mapData}) => {
                                     return (
                                         <Marker key={e.coordinates[0] + "," + e.coordinates[1]}
                                                 position={e.coordinates}
-                                                icon={getMapIcon(e.focused[0].category, hasEvents ? e.focused[0].color : color, 7, "minimapMarkers minimapSingle")}
+                                                icon={getMapIcon(e.focused[0].category, hasEvents ? e.focused[0].color : color, minSize, "minimapMarkers minimapSingle")}
                                         />
                                     )
                                 } else {
                                     return (
                                         <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}
                                                 position={e.coordinates}
-                                                icon={getPieIcon(e.focused, hasEvents ? {size: 7, className: "minimapMarkers"} : {color: color, size: 7, className: "minimapMarkers"})}
+                                                icon={getPieIcon(e.focused, hasEvents ? {size: minSize, className: "minimapMarkers"} : {color: color, size: minSize, className: "minimapMarkers"})}
                                         />
                                     )
                                 }

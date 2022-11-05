@@ -48,9 +48,14 @@ const Map = () => {
 
     // const [selectionButton, setButton] = useState(null)
     const [pointsData, setPointsData] = useState([])
+    const [maxCount, setMaxCount] = useState(0)
+    const [gridDist, setGridDist] = useState(0)
+    const [meterPerPixel, setMeterPerPixel] = useState(0)
+
     // const [markerPos, setMarkerPos] = useState(null)
     // const [clusterPopup, setClusterPopup] = useState(null)
     // const [clusterData, setClusterData] = useState(null)
+
     const [gridData, setGridData] = useState([])
     // const [hoverPoint, setHoverPoint] = useState(null)
 
@@ -81,9 +86,21 @@ const Map = () => {
     }, [currentStep, events, inPlayerMode, playerData])
 
     useEffect(() => {
-        let data = inPlayerMode ? playerFlatData[currentStep] : pointsData.map(e => e.focused).flat()
-        setGridData(getGridData(data, zoomLevel))
-    }, [currentStep, inPlayerMode, playerFlatData, pointsData, zoomLevel])
+        if (markerMode === MarkerMode['Grid']) {
+            let data = inPlayerMode ? playerFlatData[currentStep] : pointsData.map(e => e.focused).flat()
+            const [newGridData, newMaxCount, newDist] = getGridData(data, zoomLevel)
+            setGridData(newGridData)
+            if (!inPlayerMode) setMaxCount(newMaxCount)
+            setGridDist(newDist)
+        } else if (!inPlayerMode) {
+            setMaxCount(Math.max(...pointsData.map(e => e.focused.length)))
+        }
+    }, [currentStep, inPlayerMode, markerMode, playerFlatData, pointsData, zoomLevel])
+
+    useEffect(() => {
+        const lat = center.lat === undefined ? center[0] : center.lat
+        setMeterPerPixel(40075016.686 * Math.abs(Math.cos(lat / 180 * Math.PI)) / Math.pow(2, zoomLevel+8))
+    }, [zoomLevel, center])
 
     // const showClusterPopup = (event) => {
     //     let dataList = getClusterList(event)
@@ -123,7 +140,7 @@ const Map = () => {
                                     <Marker opacity={1}  key={e.coordinates[0] + "," + e.coordinates[1]}
                                             data={e}
                                             position={e.coordinates}
-                                            icon={getPieIcon(e.focused, {sum: e.focused.length})}
+                                            icon={getPieIcon(e.focused, {sum: e.focused.length, maxCount: maxCount, gridDist: gridDist, meterPerPixel: meterPerPixel})}
                                             // eventHandlers={{
                                             //     mouseover: e => setHoverPoint(selectionButton===null ? e.target.options.data: null),
                                             //     mouseout: () => setHoverPoint(null)

@@ -157,6 +157,10 @@ const Map = () => {
     const [changedProximity, setProximity] = useState(null)
     const [selectionStyle, setSelectionStyle] = useState({})
 
+    const [maxCount, setMaxCount] = useState(0)
+    const [gridDist, setGridDist] = useState(0)
+    const [meterPerPixel, setMeterPerPixel] = useState(0)
+
     // const [markerPos, setMarkerPos] = useState(null)
     // const [clusterPopup, setClusterPopup] = useState(null)
     // const [clusterData, setClusterData] = useState(null)
@@ -172,8 +176,22 @@ const Map = () => {
     }, [currentStep, inPlayerMode, playerData, pointsData])
 
     useEffect(() => {
-        if (markerMode === MarkerMode["Grid"]) setGridData(getGridData(inPlayerMode ? playerFlatData[currentStep] : focusedData, zoomLevel))
+        if (markerMode === MarkerMode["Grid"]) {
+            const [newGridData, newMaxCount, newDist] = getGridData(inPlayerMode ? playerFlatData[currentStep] : focusedData, zoomLevel)
+            setGridData(newGridData)
+            setGridDist(newDist)
+            if (!inPlayerMode) setMaxCount(newMaxCount)
+        }
     }, [currentStep, focusedData, inPlayerMode, markerMode, playerFlatData, zoomLevel])
+
+    useEffect(() => {
+        if (markerMode === MarkerMode["Location"] && !inPlayerMode) setMaxCount(Math.max(...pointsData.map(e => e.focused.length)))
+    }, [inPlayerMode, markerMode, pointsData])
+
+    useEffect(() => {
+        const lat = center.lat === undefined ? center[0] : center.lat
+        setMeterPerPixel(40075016.686 * Math.abs(Math.cos(lat / 180 * Math.PI)) / Math.pow(2, zoomLevel+8))
+    }, [zoomLevel, center])
 
     useEffect(() => {
         const overlayPanes = document.getElementsByClassName("leaflet-overlay-pane")
@@ -581,7 +599,7 @@ const Map = () => {
                                                 color={color}
                                                 data={e}
                                                 position={e.coordinates}
-                                                icon={getPieIcon(e.focused, {color: color, sum: e.focused.length})}
+                                                icon={getPieIcon(e.focused, {color: color, sum: e.focused.length, maxCount: maxCount, gridDist: gridDist, meterPerPixel: meterPerPixel})}
                                                 eventHandlers={{
                                                     click: event => {
                                                         addPoint(true, event)
@@ -723,7 +741,7 @@ const Map = () => {
                                     )
                                 } else {
                                     return (
-                                        <Marker opacity={1}  key={e.coordinates[0] + "," + e.coordinates[1]}
+                                        <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}
                                                 position={e.coordinates}
                                                 icon={getPieIcon(e.focused, {color: color})}
                                                 eventHandlers={{
