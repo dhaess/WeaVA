@@ -67,13 +67,15 @@ const EditPopup = ({selectionButton, featureRef, editControlRef}) => {
     })
 
     return position === null ? null : (
-        <Popup position={position} closeButton={false} style={{display: 'flex'}}>
-            <StyledPopupButtons onClick={() => handleEdit(clickedAreas)}>
-                <img src={Edit} width={20} alt={"edit"}/>
-            </StyledPopupButtons>
-            <StyledPopupButtons onClick={() => handleDelete(clickedAreas)}>
-                <img src={Delete} width={20} alt={"delete"}/>
-            </StyledPopupButtons>
+        <Popup position={position} closeButton={false}>
+            <div style={{display: "flex"}}>
+                <StyledPopupButtons onClick={() => handleEdit(clickedAreas)}>
+                    <img src={Edit} width={20} alt={"edit"}/>
+                </StyledPopupButtons>
+                <StyledPopupButtons onClick={() => handleDelete(clickedAreas)}>
+                    <img src={Delete} width={20} alt={"delete"}/>
+                </StyledPopupButtons>
+            </div>
         </Popup>
     )
 }
