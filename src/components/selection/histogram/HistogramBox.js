@@ -4,7 +4,7 @@ import * as d3 from "d3";
 import {changeFilter, setCurrent} from "../../shared/features/SavingsSlice";
 import {setBins} from "../../shared/features/SettingsSlice";
 import {changeFocusedTimeRange} from "../../shared/features/MapSlice";
-import OptionsWindow from "../../shared/components/OptionsWindow";
+import OptionsWindow from "../../shared/components/histogram/OptionsWindow";
 import Histogram from "./Histogram";
 import PlayerBox from "./PlayerBox";
 import {styled} from "@mui/material/styles";
@@ -61,6 +61,8 @@ const SettingsButton = styled(Button)({
 const HistogramBox = ({dimensions}) => {
     const dispatch = useDispatch()
 
+    let anchorRef = useRef()
+
     const isLoading = useSelector(state => state.savings.status === "loading")
 
     const [data,
@@ -102,7 +104,6 @@ const HistogramBox = ({dimensions}) => {
     const [histContentStyle, setHistContentStyle] = useState({})
     const [histLoadingStyle, setHistLoadingStyle] = useState({})
 
-    let anchorRef = useRef()
     const [anchorEl, setAnchorEl] = useState(null)
     const [optionsOpen, setOptionsOpen] = useState(false)
 

@@ -1,10 +1,10 @@
 import {useDispatch, useSelector} from "react-redux";
-import {moveToStep, pause, playFromStart, resume, stop} from "../features/PlayerSlice";
-import {ImageButton} from "../../../static/style/muiStyling";
-import Pause from "../../../static/images/pause.png";
-import Play from "../../../static/images/play.png";
-import Rewind from "../../../static/images/rewind.png";
-import Stop from "../../../static/images/stop.png";
+import {moveToStep, pause, playFromStart, resume, stop} from "../../features/PlayerSlice";
+import {ImageButton} from "../../../../static/style/muiStyling";
+import Pause from "../../../../static/images/pause.png";
+import Play from "../../../../static/images/play.png";
+import Rewind from "../../../../static/images/rewind.png";
+import Stop from "../../../../static/images/stop.png";
 
 const Player = ({isComparison}) => {
     const dispatch = useDispatch()

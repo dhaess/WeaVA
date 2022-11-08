@@ -1,7 +1,7 @@
 import {useSelector} from "react-redux";
-import React from "react";
-import {getCategoryName, getIntensityName} from "../functions/WeatherCategories";
-import {StyledPopup} from "../../../static/style/muiStyling";
+import React, {useEffect, useState} from "react";
+import {getCategoryName, getIntensityName, getIntensityValue} from "../../functions/WeatherCategories";
+import {StyledPopup} from "../../../../static/style/muiStyling";
 
 const arrangeIntensityInfo = (array) => {
     const groupByCategory = array.reduce((group, el) => {
@@ -17,24 +17,29 @@ const arrangeIntensityInfo = (array) => {
             group[auspraegung].push(el)
             return group
         }, {})
-        const intensities = Object.entries(groupByIntensity).map(i => {
-            return {intensity: i[0], count: i[1].length}
+        let intensities = Object.entries(groupByIntensity).map(i => {
+            return {intensity: i[0], intensityId: getIntensityValue(e[0], i[0]), count: i[1].length}
         })
+        intensities.sort((a, b) => a.intensityId-b.intensityId)
         const totalCount = intensities.map(e => e.count).reduce((a, b) => {return a + b}, 0)
         return {category: e[0], count: totalCount, intensities: intensities}
     })
 }
 
 export const MultiMarkerPopup = ({data, isCluster, position}) => {
-    let focusedIntensityInfo
-    let unfocusedIntensityInfo
-    if (isCluster === undefined) {
-        focusedIntensityInfo = arrangeIntensityInfo(data.focused)
-        unfocusedIntensityInfo = arrangeIntensityInfo(data.unfocused)
-    } else {
-        focusedIntensityInfo = arrangeIntensityInfo(data)
-        unfocusedIntensityInfo = []
-    }
+
+    const [focusedIntensityInfo, setFocusedIntensityInfo] = useState([])
+    const [unfocusedIntensityInfo, setUnfocusedIntensityInfo] = useState([])
+
+    useEffect(() => {
+        if (isCluster === undefined) {
+            setFocusedIntensityInfo(arrangeIntensityInfo(data.focused))
+            setUnfocusedIntensityInfo(arrangeIntensityInfo(data.unfocused))
+        } else {
+            setFocusedIntensityInfo(arrangeIntensityInfo(data))
+            setUnfocusedIntensityInfo([])
+        }
+    }, [isCluster, data])
 
     return <StyledPopup position={position}>
         <div className={"multiPopup"}>

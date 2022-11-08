@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import {setPointsData} from "../functions/MapFunctions";
 
 const setPlayerData = (state, props, event) => {
-    const data = event === undefined ? state.map.allData : event.data
+    const data = event === undefined ? state.map.allData : event.data.filter(e => !e.hidden)
     const totalTimeRange = props.timeRange === undefined ? state.savings.current.timeRange : props.timeRange
     const type = props.type === undefined ? state.player.type : props.type
     const totalSteps = props.totalSteps === undefined ? state.player.totalSteps : props.totalSteps
@@ -45,14 +45,16 @@ const setEventPlayerData = (state, props) => {
     let newProps = {...props}
 
     events.forEach(event => {
-        newProps.timeRange = timeRanges[event.info.id]
-        const [playerData, histData, histImageData] = setPlayerData(state, newProps, event)
-        eventBasicPlayerData[event.info.id] = playerData
-        eventHistData[event.info.id] = histData
-        eventHistImageData[event.info.id] = histImageData
+        if (!event.hidden) {
+            newProps.timeRange = timeRanges[event.info.id]
+            const [playerData, histData, histImageData] = setPlayerData(state, newProps, event)
+            eventBasicPlayerData[event.info.id] = playerData
+            eventHistData[event.info.id] = histData
+            eventHistImageData[event.info.id] = histImageData
+        }
     })
 
-    const eventPlayerData = [...new Array(totalSteps+1)].map((e, i) => events.map((event) => eventBasicPlayerData[event.info.id][i]).flat())
+    const eventPlayerData = [...new Array(totalSteps+1)].map((e, i) => events.filter(event => !event.hidden).map(event => eventBasicPlayerData[event.info.id][i]).flat())
     const eventMapData = eventPlayerData.map(e => setPointsData(e))
 
     return[eventPlayerData, eventMapData, eventHistData, eventHistImageData]
@@ -92,6 +94,47 @@ const getTimeRanges = (state) => {
             events.forEach(e => timeRanges[e.info.id] = [e.info.timeRange[0], e.info.timeRange[1]])
     }
     return timeRanges
+}
+
+export const playFromStart = (isComparison= false) => {
+    return (dispatch, getState) => {
+        const state = getState()
+
+        if (!state.player.isPrepared) {
+            const [data, mapData, histData, histImageData] = isComparison ? setEventPlayerData(state, {}) : setPlayerData(state, {})
+            dispatch(initPlayer({data: data, mapData: mapData, histData: histData, histImageData: histImageData}))
+        }
+        return playData(dispatch, state, 0)
+    }
+}
+
+export const pause = () => {
+    return (dispatch, getState) => {
+        clearInterval(getState().player.timerId)
+        dispatch(setTimerId(null))
+    }
+}
+
+export const resume = () => {
+    return (dispatch, getState) => {
+        const state = getState()
+        const currentStep = state.player.currentStep
+        return playData(dispatch, state, currentStep)
+    }
+}
+
+export const stop = () => {
+    return (dispatch, getState) => {
+        clearInterval(getState().player.timerId)
+        dispatch(stopPlayer())
+    }
+}
+
+export const moveToStep = (currentStep) => {
+    return (dispatch, getState) => {
+        const state = getState()
+        state.player.timerId === null ? dispatch(setCurrentStep(currentStep)) : playData(dispatch, state, currentStep)
+    }
 }
 
 export const getBinsValid = () => {
@@ -148,47 +191,6 @@ export const getTotalSteps = (state, syncType, binData) => {
             return binData === undefined ? state.settings.histogram.bins: binData.bins
     }
     return Math.max(...steps)
-}
-
-export const playFromStart = (isComparison= false) => {
-    return (dispatch, getState) => {
-        const state = getState()
-
-        if (!state.player.isPrepared) {
-            const [data, mapData, histData, histImageData] = isComparison ? setEventPlayerData(state, {}) : setPlayerData(state, {})
-            dispatch(initPlayer({data: data, mapData: mapData, histData: histData, histImageData: histImageData}))
-        }
-        return playData(dispatch, state, 0)
-    }
-}
-
-export const pause = () => {
-    return (dispatch, getState) => {
-        clearInterval(getState().player.timerId)
-        dispatch(setTimerId(null))
-    }
-}
-
-export const resume = () => {
-    return (dispatch, getState) => {
-        const state = getState()
-        const currentStep = state.player.currentStep
-        return playData(dispatch, state, currentStep)
-    }
-}
-
-export const stop = () => {
-    return (dispatch, getState) => {
-        clearInterval(getState().player.timerId)
-        dispatch(stopPlayer())
-    }
-}
-
-export const moveToStep = (currentStep) => {
-    return (dispatch, getState) => {
-        const state = getState()
-        state.player.timerId === null ? dispatch(setCurrentStep(currentStep)) : playData(dispatch, state, currentStep)
-    }
 }
 
 export const setPlayerType = (type, isComparison = false) => {

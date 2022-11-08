@@ -10,27 +10,6 @@ import {
 
 const standardProximity = 20
 
-export const setMapData = (originalData) => {
-    return (dispatch, getState) => {
-        const state = getState()
-
-        const points = setPointsData(originalData)
-        const [focusedData, data, isFocused, isMapFocused] = setFocuses(state, [], state.map.mapFilters.focusedArea, {add: [], delete: []}, [], points)
-        dispatch(setData({
-            isFocused: isFocused,
-            isMapFocused: isMapFocused,
-            focusedData: focusedData,
-            allData: originalData,
-            pointsData: data
-        }))
-        dispatch(setHistogramFocused({
-            isFocused: isFocused,
-            focusedData: focusedData.map(e => e.timestamp),
-            focusedImageData: focusedData.filter(e => e.imageName !== null).map(e => e.timestamp)
-        }))
-    }
-}
-
 const focusTime = (state, timeRange, data) => {
     if (timeRange.length === 0) return [data, false]
 
@@ -87,6 +66,27 @@ const setFocuses = (state, timeRange, areas, points, proximityPoints, loadedData
 
     const focusedData = data.map(e => e.focused).flat()
     return [focusedData, data, isFocused, isMapFocused]
+}
+
+export const setMapData = (originalData) => {
+    return (dispatch, getState) => {
+        const state = getState()
+
+        const points = setPointsData(originalData)
+        const [focusedData, data, isFocused, isMapFocused] = setFocuses(state, [], state.map.mapFilters.focusedArea, {add: [], delete: []}, [], points)
+        dispatch(setData({
+            isFocused: isFocused,
+            isMapFocused: isMapFocused,
+            focusedData: focusedData,
+            allData: originalData,
+            pointsData: data
+        }))
+        dispatch(setHistogramFocused({
+            isFocused: isFocused,
+            focusedData: focusedData.map(e => e.timestamp),
+            focusedImageData: focusedData.filter(e => e.imageName !== null).map(e => e.timestamp)
+        }))
+    }
 }
 
 export const changeFocusedTimeRange = (timeRange) => {

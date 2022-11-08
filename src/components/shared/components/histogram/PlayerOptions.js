@@ -1,5 +1,5 @@
 import {useDispatch, useSelector} from "react-redux";
-import {setPlayerType, setStepTime, setTotalSteps, setTotalStepsSync} from "../features/PlayerSlice";
+import {setPlayerType, setStepTime, setTotalSteps, setTotalStepsSync} from "../../features/PlayerSlice";
 import {styled} from "@mui/material/styles";
 import {Button, RadioGroup} from "@mui/material";
 import {
@@ -7,7 +7,7 @@ import {
     StyledFormControlLabel,
     StyledInputField,
     StyledRadio
-} from "../../../static/style/muiStyling";
+} from "../../../../static/style/muiStyling";
 
 const OptionStyledInputField = styled(StyledInputField)({
     height: '28px',

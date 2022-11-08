@@ -94,12 +94,11 @@ export const focusPoints = (focused, points) => {
 
 export const focusProximity = (data, proximityPoints) => {
     if (proximityPoints.length === 0) return [data, false]
-
     let newData = [...data]
     proximityPoints.flat().forEach(c => {
         const index = newData.findIndex(v => [0, 1].every(k => v.coordinates[k]===c[k]))
         if (index!==-1) {
-            const el = newData[index]
+            const el = {...newData[index]}
             el.focused = el.focused.concat(el.unfocused)
             el.unfocused = []
             newData[index] = el
@@ -166,11 +165,12 @@ export const getGridData = (allData, zoomLevel) => {
         const lngDist = getDistance([minLat, minLng], [minLat, maxLng])
 
         const maxGridSize = 10240 / (Math.pow(2, zoomLevel))
-        const latGrid = Math.ceil(latDist/maxGridSize)
-        const lngGrid = Math.ceil(lngDist/maxGridSize)
+        const latGrid = Math.ceil(latDist/maxGridSize) > 0 ? Math.ceil(latDist/maxGridSize) : 1
+        const lngGrid = Math.ceil(lngDist/maxGridSize) > 0 ? Math.ceil(lngDist/maxGridSize) : 1
         const latGridSize = (maxLat-minLat+0.005) / latGrid
         const lngGridSize = (maxLng-minLng+0.005) / lngGrid
         gridDist = Math.min(latDist/latGrid, lngDist/lngGrid)
+        if (gridDist === 0) gridDist = 40
 
         const grid = new Array(latGrid)
         for (let i=0; i<latGrid; i++) grid[i] = new Array(lngGrid)

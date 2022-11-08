@@ -1,6 +1,6 @@
 import {useDispatch, useSelector} from "react-redux";
 import {moveToStep} from "../../shared/features/PlayerSlice";
-import Player from "../../shared/components/Player";
+import Player from "../../shared/components/histogram/Player";
 import {PlayerSlider, StyledTooltip} from "../../../static/style/muiStyling";
 import {Box} from "@mui/material";
 

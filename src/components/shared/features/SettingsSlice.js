@@ -38,11 +38,11 @@ export const setBins = (binData, isComparison= false) => {
 export const settingsSlice = createSlice(({
     name: "settingsSlice",
     initialState: {
-        theme: "cobaltBlue",
+        theme: "crystal",
         mapTile: "CH",
         zoomLevel: 8,
         center: [46.3985, 8.2318],
-        markerMode: MarkerMode["Grid"],
+        markerMode: MarkerMode["ClutterFree"],
         binDivided: true,
         histogram: {
             type: "number",

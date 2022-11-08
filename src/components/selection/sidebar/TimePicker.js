@@ -6,9 +6,6 @@ import {DateTimePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDateFns} from "@mui/x-date-pickers/AdapterDateFns";
 import {StyledInputField, StyledRadio, StyledTextField} from "../../../static/style/muiStyling";
 
-const minDataDate = new Date("2021-10-07T08:00").getTime()
-const maxDataDate = new Date("2022-06-02T20:00").getTime()
-
 const StyledTimeTextField = styled(StyledTextField)({
     width: "100%",
     '& label': {
@@ -104,16 +101,16 @@ export default function TimePicker() {
     const handleStartTimeChange = (val) => {
         if (!isNaN(val)) {
             let startVal = val.getTime()
-            if (startVal < minDataDate) {
-                startVal = minDataDate
-            } else if (startVal > maxDataDate) {
-                startVal = maxDataDate
+            if (startVal < totalTimeRange[0]) {
+                startVal = totalTimeRange[0]
+            } else if (startVal > totalTimeRange[1]) {
+                startVal = totalTimeRange[1]
             }
             let timeVal = [
                 startVal,
                 startVal + 1000 * 60 * ( 60 * ( 24 * duration[0] + duration[1]) + duration[2])
             ]
-            if (timeRange[1].getTime() === maxDataDate) timeVal[1] = maxDataDate
+            if (timeRange[1].getTime() === totalTimeRange[1]) timeVal[1] = totalTimeRange[1]
             const delayDebounceFn = setTimeout(() => {
                 const filter = {"timestamp": {
                         '$gt': timeVal[0],
@@ -129,7 +126,7 @@ export default function TimePicker() {
 
     const handleEndTimeChange = (val) => {
         const timeVal = [timeRange[0].getTime(), val.getTime()]
-        if (timeVal[1] > maxDataDate) timeVal[1] = maxDataDate
+        if (timeVal[1] > totalTimeRange[1]) timeVal[1] = totalTimeRange[1]
         const delayDebounceFn = setTimeout(() => {
             const filter = {"timestamp": {
                     '$gt': timeVal[0],
@@ -155,7 +152,7 @@ export default function TimePicker() {
             default: endTime += duration[0] * 86400000 + duration[1] * 3600000 + val * 60000
         }
         const timeVal = [timeRange[0].getTime(), endTime]
-        if (endTime > maxDataDate) timeVal[1] = maxDataDate
+        if (endTime > totalTimeRange[1]) timeVal[1] = totalTimeRange[1]
         const filter = {"timestamp": {
                 '$gt': timeVal[0],
                 '$lt': timeVal[1]
@@ -184,8 +181,8 @@ export default function TimePicker() {
                     PaperProps={timePaperProps}
                     inputFormat="dd.MM.yyyy HH:mm"
                     label="Start time"
-                    minDate={minDataDate}
-                    maxDate={maxDataDate}
+                    minDate={totalTimeRange[0]}
+                    maxDate={totalTimeRange[1]}
                     value={timeRange[0]}
                     onChange={handleStartTimeChange}
                     renderInput={(params) => <StyledTimeTextField size={"small"} {...params} />}
@@ -198,7 +195,7 @@ export default function TimePicker() {
                     renderInput={(params) => <StyledTimeTextField size={"small"} {...params} />}
                     label="End time"
                     minDate={timeRange[0]}
-                    maxDate={maxDataDate}
+                    maxDate={totalTimeRange[1]}
                     value={timeRange[1]}
                     onChange={handleEndTimeChange}
                 />

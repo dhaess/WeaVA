@@ -5,13 +5,14 @@ import {changeFocusedTimeRange} from "../../shared/features/MapSlice";
 import {setBins} from "../../shared/features/SettingsSlice";
 import {
     controlBinNumber,
-    getBinTimeRange,
     setBinTimeBorders,
     setHistData
 } from "../../shared/functions/HistogramFunctions";
 
 const Histogram = ({dimensions}) => {
     const dispatch = useDispatch()
+
+    const svgRef = useRef(null)
 
     const [binType,
         binCount,
@@ -49,8 +50,6 @@ const Histogram = ({dimensions}) => {
             player.isPrepared ? player.histImageData[player.currentStep] : []]
     })
 
-    const svgRef = useRef(null);
-
     const [dragStart, setDrag] = useState(undefined)
 
     useEffect(() => {
@@ -62,10 +61,26 @@ const Histogram = ({dimensions}) => {
         const width = dimensions.width - dimensions.margin.left - dimensions.margin.right
         const height = dimensions.height - dimensions.margin.top - dimensions.margin.bottom
 
+        const getBinTimeRange = (x, rectList) => {
+            let rectBound = []
+            for (let rect of rectList) {
+                rectBound.push({
+                    x: [rect.getBoundingClientRect().left, rect.getBoundingClientRect().right],
+                    t: [rect.__data__.x0, rect.__data__.x1]
+                })
+            }
+            const xRect = rectBound.find(rect => rect.x[0] <= x && rect.x[1] >= x)
+            if (xRect !== undefined) {
+                return xRect.t
+            } else {
+                return undefined
+            }
+        }
+
         const handleMouseDown = (event) => {
             if (!inPlayerMode) {
                 const rectList = document.querySelectorAll('rect')
-                const newTimeRange = getBinTimeRange(event.screenX, rectList)
+                const newTimeRange = getBinTimeRange(event.clientX, rectList)
                 if (newTimeRange !== undefined) {
                     setDrag(newTimeRange)
                     dispatch(changeFocusedTimeRange(newTimeRange))
@@ -76,7 +91,7 @@ const Histogram = ({dimensions}) => {
         const handleMouseOver = (event) => {
             if (!inPlayerMode) {
                 const rectList = document.querySelectorAll('rect')
-                const newTimeRange = getBinTimeRange(event.screenX, rectList)
+                const newTimeRange = getBinTimeRange(event.clientX, rectList)
                 if (newTimeRange !== undefined) {
                     if (dragStart !== undefined) {
                         const start = dragStart[0] < newTimeRange[0] ? dragStart[0] : newTimeRange[0]

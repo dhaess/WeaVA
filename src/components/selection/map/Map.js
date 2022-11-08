@@ -24,9 +24,9 @@ import {getGridData} from "../../shared/functions/MapFunctions";
 // import {createClusterCustomIcon, getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
 // import {getClusterList, getGridData} from "../../shared/functions/MapFunctions";
 // import MarkerClusterGroup from "../../shared/components/MarkerClusterGroup";
-import {MultiMarkerPopup} from "../../shared/components/MultiMarkerPopup";
-import MapResizer from "../../shared/components/MapResizer";
-import MapEvents from "../../shared/components/MapEvents";
+import {MultiMarkerPopup} from "../../shared/components/map/MultiMarkerPopup";
+import MapResizer from "../../shared/components/map/MapResizer";
+import MapEvents from "../../shared/components/map/MapEvents";
 import MiniMap from "./MiniMap";
 import EditPopup from "./EditPopup";
 import MapFilterOverlay from "./MapFilterOverlay";
@@ -176,7 +176,7 @@ const Map = () => {
     }, [currentStep, inPlayerMode, playerData, pointsData])
 
     useEffect(() => {
-        if (markerMode === MarkerMode["Grid"]) {
+        if (markerMode === MarkerMode["ClutterFree"]) {
             const [newGridData, newMaxCount, newDist] = getGridData(inPlayerMode ? playerFlatData[currentStep] : focusedData, zoomLevel)
             setGridData(newGridData)
             setGridDist(newDist)
@@ -572,7 +572,7 @@ const Map = () => {
                 {mapTile === "NationalMapGrey" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-grau/default/current/3857/{z}/{x}/{y}.jpeg" />}
                 {mapTile === "SWISSIMAGE" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg" />}
                 <LayersControl position="bottomright">
-                    <LayersControl.BaseLayer name={MarkerMode["Grid"]} checked={markerMode===MarkerMode["Grid"]}>
+                    <LayersControl.BaseLayer name={MarkerMode["ClutterFree"]} checked={markerMode===MarkerMode["ClutterFree"]}>
                         <LayerGroup>
                             {gridData.map(e => {
                                 if (e.focused.length === 1) {

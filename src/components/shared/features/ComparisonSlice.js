@@ -2,6 +2,22 @@ import {createSlice} from "@reduxjs/toolkit";
 import {clearMap} from "./MapSlice";
 import {clearHistogram} from "./HistogramSlice";
 
+const getSyncedTime = (syncType, events) => {
+    let timeRanges = events.map(e => e.info.timeRange)
+    let syncedTime
+    switch (syncType) {
+        case "syncDuration":
+            syncedTime = Math.max(...timeRanges.map(e => e[1]-e[0]))
+            break
+        case "syncAll":
+            syncedTime = [Math.min(...timeRanges.map(e => e[0])), Math.max(...timeRanges.map(e => e[1]))]
+            break
+        default:
+            syncedTime = undefined
+    }
+    return syncedTime
+}
+
 export const saveEvent = (eventInfo) => {
     return (dispatch, getState) => {
         const state = getState()
@@ -37,8 +53,17 @@ export const deleteEvent = (id) => {
         const index = events.findIndex(event => event.info.id === id)
         if (index !== -1) {
             events.splice(index, 1)
-            dispatch(editComparison(events))
+            const syncedTime = getSyncedTime(state.comparison.syncType, events)
+            dispatch(editComparison({events: events, syncedTime: syncedTime}))
         }
+    }
+}
+
+export const setSynchronization = (syncType) => {
+    return (dispatch, getState) => {
+        const state = getState()
+        const syncedTime = getSyncedTime(syncType, state.comparison.events)
+        dispatch(setSyncs({syncType: syncType, syncedTime: syncedTime}))
     }
 }
 
@@ -50,31 +75,8 @@ export const changeVisibility = (id, hidden) => {
         const event = {...events[index]}
         event.hidden = hidden
         events[index] = event
-        dispatch(editComparison(events))
-    }
-}
-
-const getSyncedTime = (syncType, events) => {
-    let timeRanges = events.map(e => e.info.timeRange)
-    let syncedTime
-    switch (syncType) {
-    case "syncDuration":
-        syncedTime = Math.max(...timeRanges.map(e => e[1]-e[0]))
-        break
-    case "syncAll":
-        syncedTime = [Math.min(...timeRanges.map(e => e[0])), Math.max(...timeRanges.map(e => e[1]))]
-        break
-    default:
-        syncedTime = undefined
-    }
-    return syncedTime
-}
-
-export const setSynchronization = (syncType) => {
-    return (dispatch, getState) => {
-        const state = getState()
-        const syncedTime = getSyncedTime(syncType, state.comparison.events)
-        dispatch(setSyncs({syncType: syncType, syncedTime: syncedTime}))
+        const syncedTime = getSyncedTime(state.comparison.syncType, events)
+        dispatch(editComparison({events: events, syncedTime: syncedTime}))
     }
 }
 

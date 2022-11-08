@@ -145,22 +145,6 @@ export const changeFilter = createAsyncThunk('posts/changeFilter',
         return filter
     })
 
-export const setCopy = (event) => {
-    return (dispatch, getState) => {
-        const state = getState()
-        const currentEvent = state.savings.current
-
-        const newInfo = {...event.info}
-        newInfo.id = currentEvent.id
-        newInfo.name = currentEvent.name
-        newInfo.color = currentEvent.color
-
-        dispatch(copyEvent(newInfo))
-        dispatch(setHistogramData(event.data, newInfo.timeRange))
-        dispatch(setMapData(event.data))
-    }
-}
-
 export const setMapFilters = createAsyncThunk('posts/setMapFilters',
     async (mapFilters, {getState,dispatch}) => {
         const state = getState()
@@ -173,6 +157,27 @@ export const setMapFilters = createAsyncThunk('posts/setMapFilters',
         dispatch(setHistogramData(data, state.savings.current.timeRange))
         dispatch(setMapData(data))
         return mapFilters
+    })
+
+export const resetMapFilters = createAsyncThunk('posts/restMapFilters',
+    async (_, {dispatch, getState}) => {
+        const state = getState()
+        const areaFilter = {
+            focusedArea: {},
+            focusedSpecialPoints: {
+                add: [],
+                delete: []
+            },
+            focusedProximityPoints: [],
+            proximityDistance: state.map.proximityDistance
+        }
+        dispatch(resetPlayer())
+        const data = await getData(state.savings.current.filter, areaFilter)
+        dispatch(setHistogramData(data, state.savings.current.timeRange))
+        dispatch(setMapData(data))
+
+        dispatch(saveMapFilters({hasMapFilter: false}))
+        dispatch(deleteAllAreas())
     })
 
 export const reset = createAsyncThunk('posts/resetData',
@@ -198,6 +203,22 @@ export const revert = createAsyncThunk('posts/revertData',
         dispatch(setMapData(data))
     })
 
+export const setCopy = (event) => {
+    return (dispatch, getState) => {
+        const state = getState()
+        const currentEvent = state.savings.current
+
+        const newInfo = {...event.info}
+        newInfo.id = currentEvent.id
+        newInfo.name = currentEvent.name
+        newInfo.color = currentEvent.color
+
+        dispatch(copyEvent(newInfo))
+        dispatch(setHistogramData(event.data, newInfo.timeRange))
+        dispatch(setMapData(event.data))
+    }
+}
+
 export const changeMapFilters = () => {
     return (dispatch, getState) => {
         const state = getState()
@@ -222,39 +243,6 @@ export const changeMapFilters = () => {
             }
         }))
         dispatch(deleteAllAreas())
-    }
-}
-
-export const resetMapFilters = createAsyncThunk('posts/restMapFilters',
-    async (_, {dispatch, getState}) => {
-        const state = getState()
-        const areaFilter = {
-            focusedArea: {},
-            focusedSpecialPoints: {
-                add: [],
-                delete: []
-            },
-            focusedProximityPoints: [],
-            proximityDistance: state.map.proximityDistance
-        }
-        dispatch(resetPlayer())
-        const data = await getData(state.savings.current.filter, areaFilter)
-        dispatch(setHistogramData(data, state.savings.current.timeRange))
-        dispatch(setMapData(data))
-
-        dispatch(saveMapFilters({hasMapFilter: false}))
-        dispatch(deleteAllAreas())
-    })
-
-export const checkChanges = () => {
-    return (dispatch, getState) => {
-        const state = getState()
-        return {
-            isSaved: state.savings.isSaved,
-            isChanged: !l.isEqual(state.savings.savedData, state.map.allData) || !l.isEqual(state.savings.current, state.savings.saved),
-            hasMapFilter: dispatch(isMapFilterChanged()),
-            state: state
-        }
     }
 }
 
@@ -316,6 +304,17 @@ export const initNewCurrent = () => {
     }
 }
 
+export const checkChanges = () => {
+    return (dispatch, getState) => {
+        const state = getState()
+        return {
+            isSaved: state.savings.isSaved,
+            isChanged: !l.isEqual(state.savings.savedData, state.map.allData) || !l.isEqual(state.savings.current, state.savings.saved),
+            hasMapFilter: dispatch(isMapFilterChanged()),
+            state: state
+        }
+    }
+}
 
 const initialTimeRange = [new Date("2021-10-07T08:00").getTime(), new Date("2022-06-02T20:00").getTime()]
 // const initialTimeRange = [new Date("2022-01-01T09:00").getTime(), new Date("2022-01-01T10:00").getTime()]

@@ -36,8 +36,8 @@ const Sidebar = () => {
                 <div id="TopContainer">
                     <Settings/>
                 </div>
-                <div className="Sidebar h-100 scroll-shadows">
-                    <div id="filter" className="d-flex flex-column justify-content-between h-100">
+                <div className="Sidebar scroll-shadows">
+                    <div id="filter">
                         <h2>Filter options</h2>
                         <FilterCopy/>
                         <CategorySelector/>

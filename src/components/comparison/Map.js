@@ -13,9 +13,9 @@ import {getGridData} from "../shared/functions/MapFunctions";
 // import {createClusterCustomIcon, getMapIcon, getPieIcon} from "../shared/functions/WeatherIcons";
 // import {getClusterList, getGridData} from "../shared/functions/MapFunctions";
 // import MarkerClusterGroup from "../shared/components/MarkerClusterGroup";
-import {MultiMarkerEventPopup} from "../shared/components/MultiMarkerPopup";
-import MapEvents from "../shared/components/MapEvents";
-import MapResizer from "../shared/components/MapResizer";
+import {MultiMarkerEventPopup} from "../shared/components/map/MultiMarkerPopup";
+import MapEvents from "../shared/components/map/MapEvents";
+import MapResizer from "../shared/components/map/MapResizer";
 import {StyledPopup} from "../../static/style/muiStyling";
 import MarkerMode from "../../static/data/MarkerMode.json";
 
@@ -120,7 +120,7 @@ const Map = () => {
             {mapTile === "NationalMapGrey" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-grau/default/current/3857/{z}/{x}/{y}.jpeg" />}
             {mapTile === "SWISSIMAGE" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg" />}
             <LayersControl position="bottomright">
-                <LayersControl.BaseLayer name={MarkerMode["Grid"]} checked={markerMode===MarkerMode["Grid"]}>
+                <LayersControl.BaseLayer name={MarkerMode["Clutterfree"]} checked={markerMode===MarkerMode["ClutterFree"]}>
                     <LayerGroup>
                         {gridData.map(e => {
                             if (e.focused.length === 1) {

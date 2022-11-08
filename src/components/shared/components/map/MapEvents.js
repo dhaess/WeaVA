@@ -1,6 +1,6 @@
 import {useDispatch} from "react-redux";
 import {useMapEvents} from "react-leaflet";
-import {setCenter, setMarkerMode, setZoomLevel} from "../features/SettingsSlice";
+import {setCenter, setMarkerMode, setZoomLevel} from "../../features/SettingsSlice";
 
 const MapEvents = () => {
     const dispatch = useDispatch()

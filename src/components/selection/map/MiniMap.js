@@ -1,5 +1,5 @@
 import {useSelector} from "react-redux";
-import {LayerGroup, MapContainer, Marker, TileLayer} from "react-leaflet";
+import {LayerGroup, MapContainer, Marker, TileLayer, useMap} from "react-leaflet";
 import {useEffect, useState} from "react";
 import {getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
 // import {createClusterCustomIcon, getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
@@ -9,7 +9,6 @@ import {Button} from "@mui/material";
 import Arrow from "../../../static/images/left-arrow.png";
 import MarkerMode from "../../../static/data/MarkerMode.json";
 
-const meterPerPixel = 40075016.686 * Math.abs(Math.cos(46.3985 / 180 * Math.PI)) / Math.pow(2, 14)
 const minSize = 5.5
 
 const MiniMap = ({color, id, mapData}) => {
@@ -23,11 +22,15 @@ const MiniMap = ({color, id, mapData}) => {
     })
     const data = useSelector(state => state.map.focusedData)
     const [mapTile,
-        markerMode
+        zoomLevel,
+        center,
+        markerMode,
     ] = useSelector(state => {
         const settings = state.settings
         return [
             settings.mapTile,
+            settings.zoomLevel,
+            settings.center,
             settings.markerMode
         ]
     })
@@ -38,10 +41,7 @@ const MiniMap = ({color, id, mapData}) => {
 
     const [maxCount, setMaxCount] = useState(0)
     const [gridDist, setGridDist] = useState(0)
-
-    const handleCloseClick = () => setMap(false)
-
-    const handleOpenClick = () => setMap(true)
+    const [meterPerPixel, setMeterPerPixel] = useState(0)
 
     useEffect(() => setMap(hasEvents), [hasEvents])
 
@@ -75,16 +75,33 @@ const MiniMap = ({color, id, mapData}) => {
     }, [color, data, events, id, mapData, showMap])
 
     useEffect(() => {
-        if (markerMode===MarkerMode["Grid"]) {
+        if (markerMode===MarkerMode["ClutterFree"]) {
             const gridInput = pointsData.map(e => e.focused).flat()
-            const [newGridData, newMaxCount, newDist] = getGridData(gridInput, 8)
+            const [newGridData, newMaxCount, newDist] = getGridData(gridInput, zoomLevel)
             setGridData(newGridData)
             setMaxCount(newMaxCount)
             setGridDist(newDist)
         } else {
             setMaxCount(Math.max(...pointsData.map(e => e.focused.length)))
         }
-    }, [markerMode, pointsData])
+    }, [markerMode, pointsData, zoomLevel])
+
+    useEffect(() => {
+        const lat = center.lat === undefined ? center[0] : center.lat
+        setMeterPerPixel(40075016.686 * Math.abs(Math.cos(lat / 180 * Math.PI)) / Math.pow(2, zoomLevel-2+8))
+    }, [zoomLevel, center])
+
+    const handleCloseClick = () => setMap(false)
+
+    const handleOpenClick = () => setMap(true)
+
+    const MiniMapResize = ({center, zoomLevel}) => {
+        const map = useMap()
+
+        useEffect(() => {
+            map.setView(center, zoomLevel-2 < 0 ? 0 : zoomLevel-2)
+        }, [center, map, zoomLevel])
+    }
 
     if (showMap) {
         return (
@@ -94,24 +111,24 @@ const MiniMap = ({color, id, mapData}) => {
                     <Button id={"previewButton"} onClick={handleCloseClick}><img src={Arrow} width={16} alt={"close"} style={{transform: "rotate(180deg)"}}/></Button>
                 </div>
                 <div>
-
                 </div>
                 <MapContainer
                     style={{ height: 170, width: 250, pointerEvents: "none" }}
-                    center={[46.798333, 8.231944]}
-                    zoom={6}
+                    center={center}
+                    zoom={zoomLevel-2 < 0 ? 0 : zoomLevel-2}
                     dragging={false}
                     doubleClickZoom={false}
                     scrollWheelZoom={false}
                     attributionControl={false}
                     zoomControl={false}
                 >
+                    <MiniMapResize center={center} zoomLevel={zoomLevel}/>
                     {mapTile === "CH" && <TileLayer url="https://tile.osm.ch/switzerland/{z}/{x}/{y}.png" />}
                     {mapTile === "OSM" && <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />}
                     {mapTile === "NationalMapColor" && <TileLayer url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg" />}
                     {mapTile === "NationalMapGrey" && <TileLayer url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-grau/default/current/3857/{z}/{x}/{y}.jpeg" />}
                     {mapTile === "SWISSIMAGE" && <TileLayer url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg" />}
-                    {markerMode===MarkerMode["Grid"] &&
+                    {markerMode===MarkerMode["ClutterFree"] &&
                         <LayerGroup>
                             {gridData.map(e => {
                                 if (e.focused.length === 1) {

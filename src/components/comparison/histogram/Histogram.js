@@ -6,6 +6,8 @@ import {controlBinNumber, setBinTimeBorders, setHistData} from "../../shared/fun
 const Histogram = ({dimensions, id}) => {
     const dispatch = useDispatch()
 
+    const svgRef = useRef(null)
+
     const [data,
         localTimeRange,
         hidden
@@ -42,11 +44,9 @@ const Histogram = ({dimensions, id}) => {
     ] = useSelector(state => {
         const player = state.player
         return [player.isActive,
-            player.isPrepared ? player.histData[id][player.currentStep] : [],
-            player.isPrepared ? player.histImageData[id][player.currentStep] : []]
+            player.isPrepared && !hidden ? player.histData[id][player.currentStep] : [],
+            player.isPrepared && !hidden ? player.histImageData[id][player.currentStep] : []]
     })
-
-    const svgRef = useRef(null);
 
     const [histData, setLocalHistData] = useState([])
     const [imageData, setImageData] = useState([])
@@ -65,7 +65,7 @@ const Histogram = ({dimensions, id}) => {
 
         // const handleMouseDown = (event) => {
         //     const rectList = document.querySelector('#histogram').querySelectorAll('rect')
-        //     const newTimeRange = getBinTimeRange(event.screenX, rectList)
+        //     const newTimeRange = getBinTimeRange(event.clientX, rectList)
         //     if (newTimeRange !== undefined) {
         //         setDrag(newTimeRange)
         //         dispatch(changeFocusedTimeRange(newTimeRange))
@@ -74,7 +74,7 @@ const Histogram = ({dimensions, id}) => {
         //
         // const handleMouseOver = (event) => {
         //     const rectList = document.querySelector('#histogram').querySelectorAll('rect')
-        //     const newTimeRange = getBinTimeRange(event.screenX, rectList)
+        //     const newTimeRange = getBinTimeRange(event.clientX, rectList)
         //     if (newTimeRange !== undefined) {
         //         if (dragStart !== undefined) {
         //             const start = dragStart[0] < newTimeRange[0] ? dragStart[0] : newTimeRange[0]

@@ -3,6 +3,7 @@ import {initNewCurrent} from "../shared/features/SavingsSlice";
 import Map from "./map/Map";
 import Sidebar from "./sidebar/Sidebar";
 import HistogramBox from "./histogram/HistogramBox";
+import {useEffect} from "react";
 
 const dimensions = {
     width: 500,
@@ -20,7 +21,9 @@ const Selection = () => {
 
     const name = useSelector(state => state.savings.current.name)
 
-    if (name === "") dispatch(initNewCurrent())
+    useEffect(() => {
+        if (name === "") dispatch(initNewCurrent())
+    })
 
     return (
         <div className="App" style={{overflow: "hidden"}}>

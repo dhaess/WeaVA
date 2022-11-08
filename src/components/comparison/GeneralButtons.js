@@ -4,7 +4,7 @@ import {useEffect, useRef, useState} from "react";
 import {moveToStep, resetPlayer} from "../shared/features/PlayerSlice";
 import {initNewCurrent} from "../shared/features/SavingsSlice";
 import Settings from "../shared/components/Settings";
-import Player from "../shared/components/Player";
+import Player from "../shared/components/histogram/Player";
 import {PlayerSlider, StyledButton} from "../../static/style/muiStyling";
 
 const GeneralButtons = () => {

@@ -102,9 +102,11 @@ export const getPieIcon = (data, props = {}) => {
     let size = props.size === undefined ? standardSize : props.size
     if (props.gridDist !== undefined) {
         const maxSize = (1000 * props.gridDist) / props.meterPerPixel
-        size = size + (maxSize-size) * (sum-1) / (props.maxCount-1)
+        size = maxSize-size > props.maxCount-1 ? size + (maxSize-size) * Math.sqrt((sum-1)/(maxSize-size)) :
+            size + (maxSize-size) * Math.sqrt((sum-1) / (props.maxCount-1))
+            // size + (maxSize-size) * (sum-1) / (props.maxCount-1)
     }
-    // const size = sum === 0 ? size : size*(1+0.3*Math.log(sum))  // logarithmic growth
+    // const size = sum === 0 ? 22 : 22*(1+0.3*Math.log(sum))  // logarithmic growth
 
     let icon = <PieIcon
         size = {size}

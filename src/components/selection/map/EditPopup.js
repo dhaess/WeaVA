@@ -22,17 +22,6 @@ const EditPopup = ({selectionButton, featureRef, editControlRef}) => {
     const [position, setPosition] = useState(null)
     const [clickedAreas, setAreas] = useState(null)
 
-    useMapEvent('click', (e) => {
-        if (selectionButton !== "editAll") {
-            const getAreas = pointInArea([e.latlng.lat, e.latlng.lng])
-            setAreas(getAreas)
-            if (getAreas.length > 0) setPosition(e.latlng)
-            Object.keys(featureRef.current._layers).forEach(f => {
-                if (!getAreas.includes(f)) featureRef.current._layers[f].editing.disable()
-            })
-        }
-    })
-
     const pointInArea = (coords) => {
         return Object.keys(focusedArea).filter(k => {
             switch (focusedArea[k].type) {
@@ -66,8 +55,19 @@ const EditPopup = ({selectionButton, featureRef, editControlRef}) => {
         dispatch(changeFocusedArea("delete", clickedAreas))
     }
 
+    useMapEvent('click', (e) => {
+        if (selectionButton !== "editAll") {
+            const getAreas = pointInArea([e.latlng.lat, e.latlng.lng])
+            setAreas(getAreas)
+            if (getAreas.length > 0) setPosition(e.latlng)
+            Object.keys(featureRef.current._layers).forEach(f => {
+                if (!getAreas.includes(f)) featureRef.current._layers[f].editing.disable()
+            })
+        }
+    })
+
     return position === null ? null : (
-        <Popup position={position} closeButton={false}>
+        <Popup position={position} closeButton={false} style={{display: 'flex'}}>
             <StyledPopupButtons onClick={() => handleEdit(clickedAreas)}>
                 <img src={Edit} width={20} alt={"edit"}/>
             </StyledPopupButtons>

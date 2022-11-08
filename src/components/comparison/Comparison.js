@@ -25,13 +25,18 @@ const Comparison = () => {
             <div id="Map">
                 <Map/>
                 <div id="ComparisonHistogram">
-                    {events.map(e => (
-                        <HistogramBox
-                            key={e.info.id}
-                            id={e.info.id}
-                            dimensions={dimensions}
-                        />
-                    ))}
+                    <div style={{border: '1.5px solid var(--border-bg-color)'}}></div>
+                    <div className={"HistogramList scroll-shadows"}>
+                        <div>
+                            {events.map(e => (
+                                <HistogramBox
+                                    key={e.info.id}
+                                    id={e.info.id}
+                                    dimensions={dimensions}
+                                />
+                            ))}
+                        </div>
+                    </div>
                     <GeneralButtons/>
                 </div>
             </div>

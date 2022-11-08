@@ -48,6 +48,7 @@ export default function EndButtons() {
     const handleClose = (response) => {
         setOpen(false)
         if (response.answer === "noSave") {
+            dispatch(reset())
             dispatch(resetPlayer())
             navigate(`/comparison`)
         } else if (response.answer === "save") {

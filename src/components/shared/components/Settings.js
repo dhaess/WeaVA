@@ -2,7 +2,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {useRef, useEffect, useState} from "react";
 import {setMapTile, setTheme} from "../features/SettingsSlice";
 import Credits from "./Credits";
-import OptionsWindow from "./OptionsWindow";
+import OptionsWindow from "./histogram/OptionsWindow";
 import {NestedMenuItem} from "mui-nested-menu";
 import {styled} from "@mui/material/styles";
 import {Box, Button, Menu, MenuItem, Modal, Popper} from "@mui/material";

@@ -1,7 +1,7 @@
 import HistogramOptions from "./HistogramOptions";
 import PlayerOptions from "./PlayerOptions";
-import {ImageButton} from "../../../static/style/muiStyling";
-import Close from "../../../static/images/close.png";
+import {ImageButton} from "../../../../static/style/muiStyling";
+import Close from "../../../../static/images/close.png";
 
 const OptionsWindow = ({additional = false, setOptionsOpen}) => {
     return(

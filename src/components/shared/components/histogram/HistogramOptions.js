@@ -1,9 +1,9 @@
 import {useDispatch, useSelector} from "react-redux";
 import {useEffect, useState} from "react";
 import * as d3 from "d3";
-import {setBinDivided, setBins} from "../features/SettingsSlice";
-import {getBinsValid, resetPlayer} from "../features/PlayerSlice";
-import {setSynchronization} from "../features/ComparisonSlice";
+import {setBinDivided, setBins} from "../../features/SettingsSlice";
+import {getBinsValid, resetPlayer} from "../../features/PlayerSlice";
+import {setSynchronization} from "../../features/ComparisonSlice";
 import {styled} from "@mui/material/styles";
 import {Checkbox, RadioGroup} from "@mui/material";
 import {
@@ -12,7 +12,7 @@ import {
     StyledInputField,
     StyledRadio,
     StyledSlider
-} from "../../../static/style/muiStyling";
+} from "../../../../static/style/muiStyling";
 
 const StyledCheckBox = styled(Checkbox)({
     color: 'var(--main-bg-color)',

@@ -45,7 +45,10 @@ const HistogramBox = ({dimensions, id}) => {
 
     const [openDelete, setOpen] = useState(false)
 
-    const setVisibility = (hide) => dispatch(changeVisibility(id, hide))
+    const setVisibility = (hide) => {
+        dispatch(changeVisibility(id, hide))
+        dispatch(resetPlayer())
+    }
 
     const editEvent = () => {
         dispatch(setSelection(event))
@@ -57,7 +60,10 @@ const HistogramBox = ({dimensions, id}) => {
 
     const handleClose = (deleteConfirmed) => {
         setOpen(false)
-        if (deleteConfirmed) dispatch(deleteEvent(id))
+        if (deleteConfirmed) {
+            dispatch(deleteEvent(id))
+            dispatch(resetPlayer())
+        }
     }
 
     return (
@@ -94,10 +100,15 @@ const HistogramBox = ({dimensions, id}) => {
                             />
                         </div>
                     </div>
-                    <Histogram
-                        id={id}
-                        dimensions={dimensions}
-                    />
+                    {!hidden &&
+                        <Histogram
+                            id={id}
+                            dimensions={dimensions}
+                        />
+                    }
+                    {hidden &&
+                        <div style={{height: "3px"}}/>
+                    }
                 </div>
             </div>
         )

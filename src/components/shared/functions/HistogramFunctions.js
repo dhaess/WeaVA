@@ -27,22 +27,6 @@ export const controlBinNumber = (timeRange, binType, binCount, divided, dispatch
     return toDelay
 }
 
-export const getBinTimeRange = (x, rectList) => {
-    let rectBound = []
-    for (let rect of rectList) {
-        rectBound.push({
-            x: [rect.getBoundingClientRect().left, rect.getBoundingClientRect().right],
-            t: [rect.__data__.x0, rect.__data__.x1]
-        })
-    }
-    const xRect = rectBound.find(rect => rect.x[0] <= x && rect.x[1] >= x)
-    if (xRect !== undefined) {
-        return xRect.t
-    } else {
-        return undefined
-    }
-}
-
 export const setBinTimeBorders = (binType, binCount, timeRange) => {
     let binTimeStart, binTimeBorder, startTime, endTime
     switch (binType) {

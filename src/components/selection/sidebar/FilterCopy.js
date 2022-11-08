@@ -20,7 +20,7 @@ const FilterCopy = () => {
 
     if (otherEvents.length === 0) return null
 
-    return <div>
+    return <div className={"filterCopyContainer"}>
         <p>Copy filters from event:</p>
         {otherEvents.map(e => (
             <LinkButton
