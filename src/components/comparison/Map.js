@@ -86,7 +86,7 @@ const Map = () => {
     }, [currentStep, events, inPlayerMode, playerData])
 
     useEffect(() => {
-        if (markerMode === MarkerMode['Grid']) {
+        if (markerMode === MarkerMode['ClutterFree']) {
             let data = inPlayerMode ? playerFlatData[currentStep] : pointsData.map(e => e.focused).flat()
             const [newGridData, newMaxCount, newDist] = getGridData(data, zoomLevel)
             setGridData(newGridData)
