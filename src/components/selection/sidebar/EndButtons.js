@@ -69,7 +69,7 @@ export default function EndButtons() {
         <div id="EndButtonContainer">
             <div id="SaveButtons">
                 <StyledButton onClick={handleSave}>Save</StyledButton>
-                <StyledButton onClick={handleReset}>Reset</StyledButton>
+                <StyledButton onClick={handleReset}>New</StyledButton>
             </div>
             <StyledButton sx={{width: "65%"}} onClick={handleRevert} disabled={isSaved}>Set last save</StyledButton>
             <StyledButton sx={{marginBottom: "15px", width: "100%"}} onClick={handleGoTo}>Go to Comparison View</StyledButton>

@@ -79,7 +79,7 @@ const Histogram = ({dimensions}) => {
 
         const handleMouseDown = (event) => {
             if (!inPlayerMode) {
-                const rectList = document.querySelectorAll('rect')
+                const rectList = document.querySelectorAll('.histBin')
                 const newTimeRange = getBinTimeRange(event.clientX, rectList)
                 if (newTimeRange !== undefined) {
                     setDrag(newTimeRange)
@@ -90,7 +90,7 @@ const Histogram = ({dimensions}) => {
 
         const handleMouseOver = (event) => {
             if (!inPlayerMode) {
-                const rectList = document.querySelectorAll('rect')
+                const rectList = document.querySelectorAll('.histBin')
                 const newTimeRange = getBinTimeRange(event.clientX, rectList)
                 if (newTimeRange !== undefined) {
                     if (dragStart !== undefined) {
@@ -153,15 +153,12 @@ const Histogram = ({dimensions}) => {
 
                 const appendData = (data, color, opacity, x, y) => {
                     svg.append("svg")
-                        .on("mousedown", (event) => handleMouseDown(event))
-                        .on("mousemove", (event) => {
-                            if (event.buttons === 1) handleMouseOver(event)
-                        })
                         .attr("cursor", inPlayerMode ? "default" : "pointer")
                         .selectAll("rect")
                         .data(data)
                         .enter()
                         .append("rect")
+                        .attr("class", "histBin")
                         .attr("x", 1)
                         .attr("transform", (d) => {return "translate(" + x(d.x0) + "," + y(d.length) + ")"})
                         .attr("width", (d) => {return x(d.x1) - x(d.x0) -1})
@@ -173,6 +170,18 @@ const Histogram = ({dimensions}) => {
                 if (inPlayerMode || isFocused) appendData(histDataUnfocused, "var(--opacity-bg-color)", "0.4", x, y)
                 if (histDataFocused.length !== 0) appendData(histDataFocused, "var(--main-bg-color)", "1", x, y)
                 if (divided && imageHistData.length !== 0) appendData(imageHistData, "var(--shadow-bg-color)", "1", x, y)
+
+                svg.append("svg")
+                    .on("mousedown", (event) => handleMouseDown(event))
+                    .on("mousemove", (event) => {
+                        if (event.buttons === 1) handleMouseOver(event)
+                    })
+                    .attr("cursor", inPlayerMode ? "default" : "pointer")
+                    .append("rect")
+                    .attr("x", 1)
+                    .attr("width", width-25)
+                    .attr("height", height)
+                    .style("opacity", 0)
 
                 // Add the X Axis
                 let formatDate = d3.timeFormat("%d.%m.%y");

@@ -107,7 +107,7 @@ const MiniMap = ({color, id, mapData}) => {
         return (
             <div className={"leaflet-minimap"}>
                 <div>
-                    <div className={"MapBoxTitle"}>Preview</div>
+                    <div className={"MapBoxTitle"}>Comparison Preview</div>
                     <Button id={"previewButton"} onClick={handleCloseClick}><img src={Arrow} width={16} alt={"close"} style={{transform: "rotate(180deg)"}}/></Button>
                 </div>
                 <div>

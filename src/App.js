@@ -22,7 +22,7 @@ export default function App() {
             <Routes>
                 <Route path="/selection" element={<Selection />} />
                 <Route path="/comparison" element={<Comparison />} />
-                <Route path="/" element={<Navigate replace to="selection" />} />
+                <Route path="/" element={<Navigate replace to="comparison" />} />
             </Routes>
         </Router>
     );
