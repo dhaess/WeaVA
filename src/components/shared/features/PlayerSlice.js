@@ -145,7 +145,7 @@ export const getBinsValid = () => {
         const hourBins = getTotalSteps(state, "equalBins", {type: "hour"})
         if (hourBins > 100)  return [true, false, false]
         const minuteBins = getTotalSteps(state, "equalBins", {type: "minute"})
-        return [true, true, minuteBins > 100]
+        return [true, true, minuteBins <= 100]
     }
 }
 

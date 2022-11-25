@@ -120,7 +120,7 @@ const Map = () => {
             {mapTile === "NationalMapGrey" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-grau/default/current/3857/{z}/{x}/{y}.jpeg" />}
             {mapTile === "SWISSIMAGE" && <TileLayer attribution='&copy; <a href="https://www.swisstopo.admin.ch/">swisstopo</a>' url="https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg" />}
             <LayersControl position="bottomright">
-                <LayersControl.BaseLayer name={MarkerMode["Clutterfree"]} checked={markerMode===MarkerMode["ClutterFree"]}>
+                <LayersControl.BaseLayer name={MarkerMode["ClutterFree"]} checked={markerMode===MarkerMode["ClutterFree"]}>
                     <LayerGroup>
                         {gridData.map(e => {
                             if (e.focused.length === 1) {
@@ -131,7 +131,9 @@ const Map = () => {
                                             icon={getMapIcon(singlePoint.category, singlePoint.color)}
                                     >
                                         <StyledPopup>
-                                            <p>{getCategoryName(singlePoint.category)}: {getIntensityName(singlePoint.category, singlePoint.auspraegung)}</p>
+                                            <div className={'eventPopup'}>
+                                                <p>{getCategoryName(singlePoint.category)}: {getIntensityName(singlePoint.category, singlePoint.auspraegung)}</p>
+                                            </div>
                                         </StyledPopup>
                                     </Marker>
                                 )
@@ -215,7 +217,9 @@ const Map = () => {
                                             icon={getMapIcon(e.focused[0].category, e.focused[0].color)}
                                     >
                                         <StyledPopup>
-                                            <p>{getCategoryName(e.focused[0].category)}: {getIntensityName(e.focused[0].category, e.focused[0].auspraegung)}</p>
+                                            <div className={'eventPopup'}>
+                                                <p>{getCategoryName(e.focused[0].category)}: {getIntensityName(e.focused[0].category, e.focused[0].auspraegung)}</p>
+                                            </div>
                                         </StyledPopup>
                                     </Marker>
                                 )
@@ -227,7 +231,9 @@ const Map = () => {
                                             icon={getMapIcon(e.unfocused[0].category, "var(--gray-bg-color)")}
                                     >
                                         <StyledPopup>
-                                            <p>{getCategoryName(e.unfocused[0].category)}: {getIntensityName(e.unfocused[0].category, e.unfocused[0].auspraegung)}</p>
+                                            <div className={'eventPopup'}>
+                                                <p>{getCategoryName(e.unfocused[0].category)}: {getIntensityName(e.unfocused[0].category, e.unfocused[0].auspraegung)}</p>
+                                            </div>
                                         </StyledPopup>
                                     </Marker>
                                 )

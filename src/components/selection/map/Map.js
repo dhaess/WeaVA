@@ -589,7 +589,9 @@ const Map = () => {
                                                 }}
                                         >
                                             <StyledPopup>
-                                                <p>{getCategoryName(singlePoint.category)}: {getIntensityName(singlePoint.category, singlePoint.auspraegung)}</p>
+                                                <div className={'eventPopup'}>
+                                                    <p>{getCategoryName(singlePoint.category)}: {getIntensityName(singlePoint.category, singlePoint.auspraegung)}</p>
+                                                </div>
                                             </StyledPopup>
                                         </Marker>
                                     )
@@ -701,7 +703,9 @@ const Map = () => {
                                                 }}
                                         >
                                             <StyledPopup>
-                                                <p>{getCategoryName(e.focused[0].category)}: {getIntensityName(e.focused[0].category, e.focused[0].auspraegung)}</p>
+                                                <div className={'eventPopup'}>
+                                                    <p>{getCategoryName(e.focused[0].category)}: {getIntensityName(e.focused[0].category, e.focused[0].auspraegung)}</p>
+                                                </div>
                                             </StyledPopup>
                                         </Marker>
                                     )
@@ -719,7 +723,9 @@ const Map = () => {
                                                 }}
                                         >
                                             <StyledPopup>
-                                                <p>{getCategoryName(e.unfocused[0].category)}: {getIntensityName(e.unfocused[0].category, e.unfocused[0].auspraegung)}</p>
+                                                <div className={'eventPopup'}>
+                                                    <p>{getCategoryName(e.unfocused[0].category)}: {getIntensityName(e.unfocused[0].category, e.unfocused[0].auspraegung)}</p>
+                                                </div>
                                             </StyledPopup>
                                         </Marker>
                                     )

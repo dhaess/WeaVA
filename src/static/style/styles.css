@@ -410,6 +410,15 @@ body {
     flex-direction: column;
 }
 
+.eventPopup {
+    padding: 5px;
+}
+
+.eventPopup p {
+    white-space: nowrap;
+    margin: 1px;
+}
+
 a.leaflet-popup-close-button {
     display: none;
 }
