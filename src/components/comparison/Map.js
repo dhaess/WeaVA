@@ -1,10 +1,12 @@
-import {LayerGroup,
+import {
+    LayerGroup,
     LayersControl,
     MapContainer,
-    Marker,
+    Marker, ScaleControl,
     // Polygon,
     TileLayer,
-    ZoomControl} from "react-leaflet";
+    ZoomControl
+} from "react-leaflet";
 import {useSelector} from "react-redux";
 import {useEffect, useState} from "react";
 import {getCategoryName, getIntensityName} from "../shared/functions/WeatherCategories";
@@ -112,6 +114,7 @@ const Map = () => {
     return (
         <MapContainer style={{width: "100vw", height: "100vh", zIndex: "0"}} center={center} zoom={zoomLevel} zoomControl={false}>
             <MapResizer/>
+            <ScaleControl imperial={false} position="bottomright" />
             <ZoomControl position="bottomright" />
             <MapEvents/>
             {mapTile === "CH" && <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://tile.osm.ch/switzerland/{z}/{x}/{y}.png" />}
