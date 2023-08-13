@@ -6,6 +6,7 @@ import {initNewCurrent} from "../shared/features/SavingsSlice";
 import Settings from "../shared/components/Settings";
 import Player from "../shared/components/histogram/Player";
 import {PlayerSlider, StyledButton} from "../../static/style/muiStyling";
+import ImagePic from "../../static/images/image.png";
 
 const GeneralButtons = () => {
     const dispatch = useDispatch()
@@ -13,8 +14,16 @@ const GeneralButtons = () => {
 
     const boxRef = useRef()
 
-    const divided = useSelector(state => state.settings.histogram.divided)
+    const [divided,
+        histColor
+    ] = useSelector(state => {
+        const histogram = state.settings.histogram
+        return [histogram.divided,
+            histogram.color
+        ]})
+
     const events = useSelector(state => state.comparison.events)
+
     const [currentStep,
         totalSteps
     ] = useSelector(state => {
@@ -27,6 +36,8 @@ const GeneralButtons = () => {
     const [anchorEl, setAnchorEl] = useState()
     const [legendStyle, setLegendStyle] = useState({})
 
+    const [themeColor, setThemeColor] = useState(false)
+
     useEffect(() => {
         divided && events.length > 0 ? setLegendStyle({flexDirection: "column"}) : setLegendStyle({display: "none", flexDirection: "column"})
     }, [divided, events.length])
@@ -34,6 +45,14 @@ const GeneralButtons = () => {
     useEffect(() => {
         setTimeout(() => setAnchorEl(boxRef?.current), 1)
     },  [boxRef])
+
+    useEffect(() => {
+        if (histColor === "theme") {
+            setThemeColor(true)
+        } else {
+            setThemeColor(false)
+        }
+    }, [histColor])
 
     const handleClick = () => {
         dispatch(initNewCurrent())
@@ -66,10 +85,12 @@ const GeneralButtons = () => {
             }
             <div id={"GeneralButtons"}>
                 <StyledButton sx={{marginBottom: "10px"}} onClick={handleClick}>Add Event</StyledButton>
-                <div style={{padding: "0 5px 5px 5px", backgroundColor: "white", borderRadius: "8px", ...legendStyle}}>
-                    <div className="histLegend"><span style={{backgroundColor: "var(--main-bg-color)"}}></span><p>Without images</p></div>
-                    <div className="histLegend"><span style={{backgroundColor: "var(--shadow-bg-color)"}}></span><p>With images</p></div>
-                </div>
+                {themeColor &&
+                    <div style={{padding: "5px 5px 1px 5px", backgroundColor: "white", borderRadius: "8px", ...legendStyle}}>
+                        <div className="histLegend"><span style={{backgroundColor: "var(--main-bg-color)"}}></span><div><div><div/></div><img src={ImagePic} width={18} alt={"noImagePic"}/></div></div>
+                        <div className="histLegend"><span style={{backgroundColor: "var(--shadow-bg-color)"}}></span><div><img src={ImagePic} width={18} alt={"imagePic"}/></div></div>
+                    </div>
+                }
                 <Settings additional boxAnchor={anchorEl}/>
             </div>
         </div>

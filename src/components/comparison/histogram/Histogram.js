@@ -1,7 +1,12 @@
 import {useDispatch, useSelector} from "react-redux";
 import {useEffect, useRef, useState} from "react";
 import * as d3 from "d3";
-import {controlBinNumber, setBinTimeBorders, setHistData} from "../../shared/functions/HistogramFunctions";
+import {
+    controlBinNumber,
+    getHistColor,
+    setBinTimeBorders,
+    setHistData
+} from "../../shared/functions/HistogramFunctions";
 
 const Histogram = ({dimensions, id}) => {
     const dispatch = useDispatch()
@@ -10,23 +15,28 @@ const Histogram = ({dimensions, id}) => {
 
     const [data,
         localTimeRange,
+        color,
         hidden
     ] = useSelector(state => {
         const event = state.comparison.events.find(e => e.info.id === id)
+        console.log(event)
         return [
             event.data,
             event.info.timeRange,
+            event.info.color,
             event.hidden
         ]})
 
     const [binType,
         binCount,
-        divided
+        divided,
+        histColor
     ] = useSelector(state => {
         const histogram = state.settings.histogram
         return [histogram.type,
             histogram.bins,
-            histogram.divided]
+            histogram.divided,
+            histogram.color]
     })
 
     const [syncType,
@@ -98,7 +108,7 @@ const Histogram = ({dimensions, id}) => {
                 timeRange = localTimeRange
         }
 
-        const toDelay = inPlayerMode ? false : controlBinNumber(timeRange, binType, binCount, divided, dispatch, true)
+        const toDelay = inPlayerMode ? false : controlBinNumber(timeRange, binType, binCount, divided, histColor, dispatch, true)
 
         if (!toDelay) {
             if (document.getElementsByTagName('g').length>0) d3.select(svgRef.current).select('g').remove()
@@ -156,9 +166,11 @@ const Histogram = ({dimensions, id}) => {
                         .style("opacity", opacity)
                 }
 
-                if (inPlayerMode) appendHistData(histDataUnfocused, "var(--opacity-bg-color)", "0.4", x, y)
-                if (histDataFocused.length !== 0) appendHistData(histDataFocused, "var(--main-bg-color)", "1")
-                if (divided && imageHistData.length!==0) appendHistData(imageHistData, "var(--shadow-bg-color)", "1")
+                const currentHistColor = getHistColor(histColor, color)
+
+                if (inPlayerMode) appendHistData(histDataUnfocused, currentHistColor[0], "0.4", x, y)
+                if (histDataFocused.length !== 0) appendHistData(histDataFocused, currentHistColor[1], "1")
+                if (divided && imageHistData.length!==0) appendHistData(imageHistData, currentHistColor[2], "1")
 
                 // Add the X Axis
                 let formatDate = d3.timeFormat("%d.%m.%y");
@@ -188,11 +200,11 @@ const Histogram = ({dimensions, id}) => {
                     .attr("transform", "rotate(-90) translate(-25, 0)")
                     .attr("y", 6)
                     .attr("dy", "-2.9em")
-                    .style("text-anchor", "end")
+                    .attr("dx", "-6.7em")
                     .text("Number of Reports");
             }
         }
-    }, [binCount, binType, dimensions, dispatch, divided, histData, imageData, inPlayerMode, localTimeRange, playerData, playerImageData, syncType, syncedTime]);
+    }, [binCount, binType, dimensions, dispatch, divided, histData, imageData, inPlayerMode, localTimeRange, playerData, playerImageData, syncType, syncedTime, color, histColor]);
 
     return (
         <div style={{opacity: hidden ? "0.4" : "1", pointerEvents: hidden ? "none" : "all"}}>

@@ -172,18 +172,30 @@ body {
 .histLegend {
     flex-direction: row;
     display: flex;
+    align-items: center;
 }
 
 .histLegend span {
     height: 13px;
     width: 13px;
     border-radius: 50%;
-    margin-top: 7px;
-    margin-right: 5px;
+    margin-top: -4px;
+    margin-right: 6px;
 }
 
-.histLegend p {
-    font-size: 14px;
+.histLegend div  {
+    position: relative;
+}
+.histLegend div div {
+    position: absolute;
+    margin-bottom: -4px;
+}
+
+.histLegend div div div {
+    border-bottom: 3px solid red;
+    transform: rotate(35deg);
+    transform-origin: top left;
+    width: 26px;
 }
 
 .flex-container {

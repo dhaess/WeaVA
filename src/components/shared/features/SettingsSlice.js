@@ -47,7 +47,8 @@ export const settingsSlice = createSlice(({
         histogram: {
             type: "number",
             bins: 20,
-            divided: true
+            divided: true,
+            color: "eventColor"
         }
     },
     reducers: {
@@ -69,11 +70,14 @@ export const settingsSlice = createSlice(({
         setBinDivided: (state, action) => {
             state.histogram.divided = action.payload
         },
+        setHistColor: (state, action) => {
+            state.histogram.color = action.payload
+        },
         setLocalBins: (state, action) => {
             state.histogram = action.payload
         }
     }
 }))
 
-export const {setTheme, setMapTile, setZoomLevel, setCenter, setMarkerMode, setBinDivided, setLocalBins} = settingsSlice.actions
+export const {setTheme, setMapTile, setZoomLevel, setCenter, setMarkerMode, setBinDivided, setHistColor, setLocalBins} = settingsSlice.actions
 export default settingsSlice.reducer

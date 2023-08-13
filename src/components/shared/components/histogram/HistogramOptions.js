@@ -1,7 +1,7 @@
 import {useDispatch, useSelector} from "react-redux";
 import {useEffect, useState} from "react";
 import * as d3 from "d3";
-import {setBinDivided, setBins} from "../../features/SettingsSlice";
+import {setBinDivided, setBins, setHistColor} from "../../features/SettingsSlice";
 import {getBinsValid, resetPlayer} from "../../features/PlayerSlice";
 import {setSynchronization} from "../../features/ComparisonSlice";
 import {styled} from "@mui/material/styles";
@@ -28,12 +28,14 @@ const HistogramOptions = ({additional = false}) => {
 
     const [binType,
         binCount,
-        divided]
+        divided,
+        histColor]
         = useSelector(state => {
         const histogram = state.settings.histogram
         return [histogram.type,
             histogram.bins,
-            histogram.divided]
+            histogram.divided,
+            histogram.color]
     })
     const histTimeRange = useSelector(state => state.histogram.timeRange)
     const eventTimeRange = useSelector(state => state.histogram.timeRange)
@@ -64,14 +66,16 @@ const HistogramOptions = ({additional = false}) => {
 
     const handleImageInfo = (event) => dispatch(setBinDivided(event.target.checked))
 
+    const handleHistColorChange = (event) => dispatch(setHistColor(event.target.value))
+
     const handleSyncChange = (event) => {
         dispatch(resetPlayer())
         dispatch(setSynchronization(event.target.value))
     }
 
-    const handleBinsChange = (event) => dispatch(setBins({type: event.target.value, bins: binCount, divided: divided}, additional))
+    const handleBinsChange = (event) => dispatch(setBins({type: event.target.value, bins: binCount, divided: divided, color: histColor}, additional))
 
-    const handleBinSliderChange = (event) => dispatch(setBins({type: "number", bins: event.target.value, divided: divided}, additional))
+    const handleBinSliderChange = (event) => dispatch(setBins({type: "number", bins: event.target.value, divided: divided, color: histColor}, additional))
 
     const handleBinInputChange = (event) => {
         let inputValue = Number(event.target.value)
@@ -80,13 +84,31 @@ const HistogramOptions = ({additional = false}) => {
         } else if (inputValue > 100) {
             inputValue = 100
         }
-        dispatch(setBins({type: "number", bins: inputValue, divided: divided}, additional))
+        dispatch(setBins({type: "number", bins: inputValue, divided: divided, color: histColor}, additional))
     }
 
     return (
         <div style={{flexDirection: "column", marginRight: '8px'}}>
             <p style={{marginBottom: "10px", fontWeight: "bold", fontSize: "larger"}}>Histogram Options</p>
             <StyledFormControlLabel control={<StyledCheckBox checked={divided} onChange={handleImageInfo}/>} label="Divide image information" />
+            <p style={{marginBottom: "5px"}}>Histogram color</p>
+            <StyledFormControl>
+                <RadioGroup
+                    aria-labelledby="histColor-group-label"
+                    value={histColor}
+                    onChange={handleHistColorChange}
+                    name="histColor-group"
+                >
+                    <StyledFormControlLabel
+                        value="eventColor"
+                        control={<StyledRadio />}
+                        label="Event color" />
+                    <StyledFormControlLabel
+                        value="theme"
+                        control={<StyledRadio />}
+                        label="Theme" />
+                </RadioGroup>
+            </StyledFormControl>
             { additional &&
                 <>
                     <p style={{marginBottom: "5px"}}>Synchronization Type</p>

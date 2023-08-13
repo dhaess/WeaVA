@@ -11,6 +11,8 @@ import {styled} from "@mui/material/styles";
 import {Box, Button, CircularProgress, Popper} from "@mui/material";
 import Arrow from "../../../static/images/left-arrow.png";
 import SettingsIcon from "../../../static/images/settings.png";
+import {getHistColor} from "../../shared/functions/HistogramFunctions";
+import ImagePic from "../../../static/images/image.png";
 
 const StyledButton = styled(Button)({
     backgroundColor: "var(--light-bg-color)",
@@ -73,14 +75,18 @@ const HistogramBox = ({dimensions}) => {
         histogram.imageData]
     })
 
+    const color = useSelector(state => state.savings.current.color)
+
     const [binType,
         binCount,
-        divided]
+        divided,
+        histColor]
         = useSelector(state => {
         const histogram = state.settings.histogram
         return [histogram.type,
             histogram.bins,
-            histogram.divided]
+            histogram.divided,
+            histogram.color]
     })
     const [isFocused,
         focusedTimeRange,
@@ -98,6 +104,7 @@ const HistogramBox = ({dimensions}) => {
     const inPlayerMode = useSelector(state => state.player.isActive)
 
     const [showHistogram, setHistogram] = useState(true)
+    const [currHistColor, setCurrHistColor] = useState(["var(--opacity-bg-color)", "var(--main-bg-color)", "var(--shadow-bg-color)"])
 
     const [legendStyle, setLegendStyle] = useState({})
     const [histMiniStyle, setHistMiniStyle] = useState({})
@@ -135,6 +142,10 @@ const HistogramBox = ({dimensions}) => {
         }
     }, [optionsOpen])
 
+    useEffect(() => {
+        setCurrHistColor(getHistColor(histColor, color))
+    }, [color, histColor])
+
     const handleCloseClick = () => {
         setHistogram(false)
         setOptionsOpen(false)
@@ -162,17 +173,17 @@ const HistogramBox = ({dimensions}) => {
             switch (binType) {
                 case "month":
                     if (d3.timeDay.count(d3.timeDay.floor(focusedTimeRange[0]), d3.timeDay.ceil(focusedTimeRange[1])) <= 100) {
-                        dispatch(setBins({type: "day", bins: binCount, divided: divided}))
+                        dispatch(setBins({type: "day", bins: binCount, divided: divided, color: histColor}))
                     }
                     break
                 case "day":
                     if (d3.timeHour.count(d3.timeHour.floor(focusedTimeRange[0]), d3.timeHour.ceil(focusedTimeRange[1])) <= 100) {
-                        dispatch(setBins({type: "hour", bins: binCount, divided: divided}))
+                        dispatch(setBins({type: "hour", bins: binCount, divided: divided, color: histColor}))
                     }
                     break
                 case "hour":
                     if (d3.timeMinute.count(d3.timeMinute.floor(focusedTimeRange[0]), d3.timeMinute.ceil(focusedTimeRange[1])) <= 100) {
-                        dispatch(setBins({type: "minute", bins: binCount, divided: divided}))
+                        dispatch(setBins({type: "minute", bins: binCount, divided: divided, color: histColor}))
                     }
                     break
                 default:
@@ -244,8 +255,8 @@ const HistogramBox = ({dimensions}) => {
                     </div>
                     <div className="histogramButtons">
                         <div style={{flexDirection: "column", ...legendStyle}}>
-                            <div className="histLegend"><span style={{backgroundColor: "var(--main-bg-color)"}}></span><p>Without images</p></div>
-                            <div className="histLegend"><span style={{backgroundColor: "var(--shadow-bg-color)"}}></span><p>With images</p></div>
+                            <div className="histLegend"><span style={{backgroundColor: currHistColor[1]}}></span><div><div><div/></div><img src={ImagePic} width={18} alt={"noImagePic"}/></div></div>
+                            <div className="histLegend"><span style={{backgroundColor: currHistColor[2], marginTop: '1px'}}></span><div><img src={ImagePic} width={18} alt={"imagePic"}/></div></div>
                         </div>
                         <StyledButton
                             disabled={focusedTimeRange.length===0}

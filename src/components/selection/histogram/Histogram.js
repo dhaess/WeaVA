@@ -4,7 +4,7 @@ import * as d3 from "d3";
 import {changeFocusedTimeRange} from "../../shared/features/MapSlice";
 import {setBins} from "../../shared/features/SettingsSlice";
 import {
-    controlBinNumber,
+    controlBinNumber, getHistColor,
     setBinTimeBorders,
     setHistData
 } from "../../shared/functions/HistogramFunctions";
@@ -16,13 +16,17 @@ const Histogram = ({dimensions}) => {
 
     const [binType,
         binCount,
-        divided]
+        divided,
+        histColor]
         = useSelector(state => {
         const histogram = state.settings.histogram
         return [histogram.type,
             histogram.bins,
-            histogram.divided]
+            histogram.divided,
+            histogram.color]
     })
+
+    const color = useSelector(state => state.savings.current.color)
 
     const [data,
         imageData,
@@ -53,8 +57,8 @@ const Histogram = ({dimensions}) => {
     const [dragStart, setDrag] = useState(undefined)
 
     useEffect(() => {
-        dispatch(setBins({type: binType, bins: binCount, divided: divided}))
-    }, [binCount, binType, data, dispatch, divided])
+        dispatch(setBins({type: binType, bins: binCount, divided: divided, color: histColor}))
+    }, [binCount, binType, data, dispatch, divided, histColor])
 
     useEffect(() => {
         const margin = {top: 10, right: 50, bottom: 50, left: 40}
@@ -104,7 +108,7 @@ const Histogram = ({dimensions}) => {
             }
         }
 
-        const toDelay = inPlayerMode ? false : controlBinNumber(timeRange, binType, binCount, divided, dispatch)
+        const toDelay = inPlayerMode ? false : controlBinNumber(timeRange, binType, binCount, divided, histColor, dispatch)
 
         if (!toDelay) {
             if (document.getElementsByTagName('g').length>0) d3.select(svgRef.current).select('g').remove()
@@ -167,9 +171,11 @@ const Histogram = ({dimensions}) => {
                         .style("opacity", opacity)
                 }
 
-                if (inPlayerMode || isFocused) appendData(histDataUnfocused, "var(--opacity-bg-color)", "0.4", x, y)
-                if (histDataFocused.length !== 0) appendData(histDataFocused, "var(--main-bg-color)", "1", x, y)
-                if (divided && imageHistData.length !== 0) appendData(imageHistData, "var(--shadow-bg-color)", "1", x, y)
+                const currentHistColor = getHistColor(histColor, color)
+
+                if (inPlayerMode || isFocused) appendData(histDataUnfocused, currentHistColor[0], "0.4", x, y)
+                if (histDataFocused.length !== 0) appendData(histDataFocused, currentHistColor[1], "1", x, y)
+                if (divided && imageHistData.length !== 0) appendData(imageHistData, currentHistColor[2], "1", x, y)
 
                 svg.append("svg")
                     .on("mousedown", (event) => handleMouseDown(event))
@@ -215,7 +221,7 @@ const Histogram = ({dimensions}) => {
                     .text("Number of Reports")
             }
         }
-    }, [binCount, binType, data, dimensions, dispatch, divided, dragStart, focusedData, focusedImageData, imageData, inPlayerMode, isFocused, playerData, playerImageData, timeRange]);
+    }, [binCount, binType, data, dimensions, dispatch, divided, dragStart, focusedData, focusedImageData, imageData, inPlayerMode, isFocused, playerData, playerImageData, timeRange, histColor, color]);
 
     return <>
         <svg ref={svgRef} width={dimensions.width} height={dimensions.height} style={{flexShrink: "0"}} />

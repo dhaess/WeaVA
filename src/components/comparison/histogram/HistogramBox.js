@@ -1,5 +1,5 @@
 import {useDispatch, useSelector} from "react-redux";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {changeVisibility, deleteEvent} from "../../shared/features/ComparisonSlice";
 import {setSelection} from "../../shared/features/SavingsSlice";
@@ -12,6 +12,8 @@ import {ImageButton, StyledButton} from "../../../static/style/muiStyling";
 import Hide from "../../../static/images/hide.png";
 import Show from "../../../static/images/show.png";
 import Delete from "../../../static/images/delete.png";
+import ImagePic from "../../../static/images/image.png";
+import {getHistColor} from "../../shared/functions/HistogramFunctions";
 
 const LocalStyledButton = styled(StyledButton)({
     width: "94px",
@@ -43,7 +45,17 @@ const HistogramBox = ({dimensions, id}) => {
             event.hidden
         ]})
 
+    const histColor = useSelector(state => state.settings.histogram.color)
+
     const [openDelete, setOpen] = useState(false)
+
+    const [themeColor, setThemeColor] = useState(false)
+    const [currHistColor, setCurrHistColor] = useState(["var(--opacity-bg-color)", "var(--main-bg-color)", "var(--shadow-bg-color)"])
+
+    useEffect(() => {
+        setThemeColor(histColor === "theme")
+        setCurrHistColor(getHistColor(histColor, color))
+    }, [color, histColor])
 
     const setVisibility = (hide) => {
         dispatch(changeVisibility(id, hide))
@@ -101,10 +113,20 @@ const HistogramBox = ({dimensions, id}) => {
                         </div>
                     </div>
                     {!hidden &&
-                        <Histogram
-                            id={id}
-                            dimensions={dimensions}
-                        />
+                        <div style={{position: 'relative', height: '200px', width: '500px'}}>
+                            <div style={{position: "absolute"}}>
+                                <Histogram
+                                    id={id}
+                                    dimensions={dimensions}
+                                />
+                            </div>
+                            {!themeColor &&
+                                <div style={{position: "absolute", bottom: "4px"}}>
+                                    <div className="histLegend"><span style={{backgroundColor: currHistColor[1]}}></span><div><div><div/></div><img src={ImagePic} width={18} alt={"noImagePic"}/></div></div>
+                                    <div className="histLegend"><span style={{backgroundColor: currHistColor[2]}}></span><div><img src={ImagePic} width={18} alt={"imagePic"}/></div></div>
+                                </div>
+                            }
+                        </div>
                     }
                     {hidden &&
                         <div style={{height: "3px"}}/>

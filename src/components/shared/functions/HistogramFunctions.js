@@ -1,25 +1,26 @@
 import * as d3 from "d3";
 import {setBins} from "../features/SettingsSlice";
+import tinycolor from "tinycolor2";
 
-export const controlBinNumber = (timeRange, binType, binCount, divided, dispatch, isComparison= false) => {
+export const controlBinNumber = (timeRange, binType, binCount, divided, histColor, dispatch, isComparison= false) => {
     let toDelay = false
     switch (binType) {
         case "day":
             if (d3.timeDay.count(d3.timeDay.floor(timeRange[0]), d3.timeDay.ceil(timeRange[1])) > 100) {
                 toDelay = true
-                dispatch(setBins({type: "month", bins: binCount, divided: divided}, isComparison))
+                dispatch(setBins({type: "month", bins: binCount, divided: divided, color: histColor}, isComparison))
             }
             break
         case "hour":
             if (d3.timeHour.count(d3.timeHour.floor(timeRange[0]), d3.timeHour.ceil(timeRange[1])) > 100) {
                 toDelay = true
-                dispatch(setBins({type: "day", bins: binCount, divided: divided}, isComparison))
+                dispatch(setBins({type: "day", bins: binCount, divided: divided, color: histColor}, isComparison))
             }
             break
         case "minute":
             if (d3.timeMinute.count(d3.timeMinute.floor(timeRange[0]), d3.timeMinute.ceil(timeRange[1])) > 100) {
                 toDelay = true
-                dispatch(setBins({type: "hour", bins: binCount, divided: divided}, isComparison))
+                dispatch(setBins({type: "hour", bins: binCount, divided: divided, color: histColor}, isComparison))
             }
             break
         default:
@@ -117,4 +118,12 @@ export const setHistData = (d, binTimeStart, binTimeBorder, timeRange) => {
         }
     }
     return histData
+}
+
+export const getHistColor = (histColor, color) => {
+    if (histColor === "theme") {
+        return ["var(--opacity-bg-color)", "var(--main-bg-color)", "var(--shadow-bg-color)"]
+    } else {
+        return [tinycolor(color).brighten(5), color, tinycolor(color).darken(20)]
+    }
 }
