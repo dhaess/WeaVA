@@ -197,10 +197,10 @@ export const setPlayerType = (type, isComparison = false) => {
     return (dispatch, getState) => {
         const state = getState()
         clearInterval(state.player.timerId)
-        dispatch(setTimerId(null))
         dispatch(setLocalType(type))
 
         if (state.player.isActive) {
+            dispatch(setTimerId(null))
             let updateId = state.player.updateId
             if (updateId !== null) clearTimeout(updateId)
             updateId = setTimeout(() => {
@@ -208,6 +208,8 @@ export const setPlayerType = (type, isComparison = false) => {
                 dispatch(initPlayer({data: data, mapData: mapData, histData: histData, histImageData: histImageData, type: type}))
             }, 200)
             dispatch(setUpdateId(updateId))
+        } else {
+            dispatch(resetPlayer());
         }
     }
 }

@@ -19,7 +19,6 @@ const Histogram = ({dimensions, id}) => {
         hidden
     ] = useSelector(state => {
         const event = state.comparison.events.find(e => e.info.id === id)
-        console.log(event)
         return [
             event.data,
             event.info.timeRange,
