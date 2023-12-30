@@ -1,4 +1,4 @@
-# CitizenWeatherVA
+# WeaVA
 
 This project was created in the master thesis "Visual Analysis of Weather Events observations based on Crowd-sourced data by MeteoSwiss" from Dominique Hässig.
 
