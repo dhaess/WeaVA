@@ -9,7 +9,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 mongoClient = MongoClient('mongodb://localhost:27017')
 db = mongoClient.get_database('weatherdb')
-reports = db.get_collection('reports')
+reports = db.get_collection('reports_v2')
 
 
 @app.route('/getData/', methods=["POST"], strict_slashes=False)

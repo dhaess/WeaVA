@@ -316,8 +316,7 @@ export const checkChanges = () => {
     }
 }
 
-const initialTimeRange = [new Date("2021-10-07T08:00").getTime(), new Date("2022-06-02T20:00").getTime()]
-// const initialTimeRange = [new Date("2022-01-01T09:00").getTime(), new Date("2022-01-01T10:00").getTime()]
+const initialTimeRange = [new Date("2023-12-05T00:00").getTime(), new Date("2023-12-06T00:00").getTime()]
 
 const initalCurrent = {
     id: 0,

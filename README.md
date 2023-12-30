@@ -55,8 +55,9 @@ and the curly bracket (}) at the end of the file. If not, the file can't be divi
 
 Import with:
 
-### `mongoimport ...place_of_file.../dwd_crowd_meldungen_20220602.json -d weatherdb -c weather_reports --drop`
+### `mongoimport ...place_of_file.../...file_name....json -d weatherdb -c weather_reports --jsonArray`
 (See [https://www.mongodbtutorial.org/mongodb-tools/mongoimport/](https://www.mongodbtutorial.org/mongodb-tools/mongoimport/))
+If you want to overwrite existing database, add `--drop`.
 
 ## Commented code
 

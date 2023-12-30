@@ -64,7 +64,8 @@ const timePaperProps = {
     }
 }
 
-const totalTimeRange = [new Date("2021-10-07T08:00").getTime(), new Date("2022-06-02T20:00").getTime()]
+const totalTimeRange = [new Date("2021-10-07T08:00").getTime(), new Date("2023-12-06T17:27").getTime()]
+const startTimeRange = [new Date("2023-12-05T00:00").getTime(), new Date("2023-12-06T00:00").getTime()]
 
 export default function TimePicker() {
     const dispatch = useDispatch()
@@ -247,6 +248,20 @@ export default function TimePicker() {
                     </div>
                 </div>
             </LocalizationProvider>
+            <div className="areaOptions">
+                <StyledRadio
+                    checked={startTimeRange[0] === timeRange[0].getTime() &&  startTimeRange[1] === timeRange[1].getTime()}
+                    onChange={isSelected => setTimeRange(startTimeRange, isSelected)}
+                    value={"startTime"}
+                    name="event-time-buttons"
+                    inputProps={{ 'aria-label': "startTime" }}
+                    sx={{
+                        margin: "4px 7px 0px 0px",
+                    }}
+                />
+                <p className="singleAreaChoice"
+                   onClick={() => setTimeRange(startTimeRange)}>Start time range</p>
+            </div>
             <div className="areaOptions">
                 <StyledRadio
                     checked={totalTimeRange[0] === timeRange[0].getTime() &&  totalTimeRange[1] === timeRange[1].getTime()}
