@@ -26,7 +26,7 @@ const setPlayerData = (state, props, event) => {
     type === "delete" ? playerData.push([]) : playerData.unshift([])
 
     const histData = playerData.map(e => e.map(e2 => e2.timestamp))
-    const histImageData = playerData.map(e => e.filter(e2 => e2.imageName !== null).map(e2 => e2.timestamp))
+    const histImageData = playerData.map(e => e.filter(e2 => e2.imageExists).map(e2 => e2.timestamp))
 
     if (event !== undefined) return [playerData, histData, histImageData]
 

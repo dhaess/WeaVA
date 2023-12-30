@@ -64,7 +64,7 @@ const Histogram = ({dimensions, id}) => {
 
     useEffect(() => {
         setLocalHistData(data.map(e => e.timestamp))
-        setImageData(data.filter(e => e.imageName!==null).map(e => e.timestamp))
+        setImageData(data.filter(e => e.imageExists).map(e => e.timestamp))
     }, [data])
 
     useEffect(() => {

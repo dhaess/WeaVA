@@ -3,7 +3,7 @@ import {createSlice} from '@reduxjs/toolkit'
 export const setHistogramData = (data, timeRange) => {
     return (dispatch) => {
         const timeData = data.map(a => a.timestamp)
-        const imageData = data.filter(a => a.imageName !== null).map(a => a.timestamp)
+        const imageData = data.filter(a => a.imageExists).map(a => a.timestamp)
         dispatch(setData({
             data: timeData,
             image: imageData,

@@ -98,7 +98,7 @@ const HistogramBox = ({dimensions}) => {
             map.isFocused,
             map.focusedTimeRange,
             map.focusedData,
-            map.focusedData.filter(e => e.imageName!==null)
+            map.focusedData.filter(e => e.imageExists)
         ]})
 
     const inPlayerMode = useSelector(state => state.player.isActive)
