@@ -206,6 +206,7 @@ export default function TimePicker() {
                     <div>
                         <StyledInputLabel>Days</StyledInputLabel>
                         <DurationInputField
+                            id="days"
                             value={duration[0]}
                             size="small"
                             onChange={e => handleInputChange(e, "day")}
@@ -220,6 +221,7 @@ export default function TimePicker() {
                     <div>
                         <StyledInputLabel>Hours</StyledInputLabel>
                         <DurationInputField
+                            id="hours"
                             value={duration[1]}
                             size="small"
                             onChange={e => handleInputChange(e, "hour")}
@@ -235,6 +237,7 @@ export default function TimePicker() {
                     <div>
                         <StyledInputLabel>Minutes</StyledInputLabel>
                         <DurationInputField
+                            id="minutes"
                             value={duration[2]}
                             size="small"
                             onChange={e => handleInputChange(e, "min")}

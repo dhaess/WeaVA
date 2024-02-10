@@ -33,7 +33,7 @@ export default function ColorSelector() {
                        readOnly
                 />
                 <StyledTextField
-                    id="outlined-basic"
+                    id="color"
                     label="Color"
                     variant="outlined"
                     size="small"

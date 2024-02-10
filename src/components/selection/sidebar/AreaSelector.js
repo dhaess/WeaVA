@@ -136,7 +136,7 @@ export default function AreaSelector() {
                                     <StyledAutocomplete
                                         disabled={dimension !== 'cantons'}
                                         multiple
-                                        id="tags-outlined"
+                                        id="cantons"
                                         options={cantonOptions}
                                         size="small"
                                         value={cantonValue}
@@ -164,7 +164,7 @@ export default function AreaSelector() {
                                         // todo: work with given value
                                         disabled={dimension !== 'places'}
                                         multiple
-                                        id="tags-outlined"
+                                        id="places"
                                         // value={placeValue}
                                         options={placeOptions}
                                         groupBy={(option) => option.canton}

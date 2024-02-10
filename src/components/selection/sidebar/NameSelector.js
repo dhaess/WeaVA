@@ -12,7 +12,7 @@ export default function NameSelector() {
     return (
         <div>
             <StyledTextField
-                id="outlined-basic"
+                id="name"
                 label="Name"
                 variant="outlined"
                 size="small"
