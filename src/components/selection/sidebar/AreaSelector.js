@@ -161,11 +161,9 @@ export default function AreaSelector() {
                                 control={<StyledRadio />}
                                 label={
                                     <StyledAutocomplete
-                                        // todo: work with given value
                                         disabled={dimension !== 'places'}
                                         multiple
                                         id="places"
-                                        // value={placeValue}
                                         options={placeOptions}
                                         groupBy={(option) => option.canton}
                                         getOptionLabel={(option) => option.place}

@@ -20,14 +20,6 @@ Start the back end with:
 
 Runs the back end  in the development mode on [http://localhost:5000](http://localhost:5000).
 
-Add new libraries with:
-
-### `yarn add library_name`
-
-Remove libraries with:
-
-### `yarn remove library_name`
-
 ## Further installations
 
 You also need to install the MongoDB database. Download and install it from [https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community).
@@ -58,36 +50,3 @@ Import with:
 ### `mongoimport ...place_of_file.../...file_name....json -d weatherdb -c weather_reports --jsonArray`
 (See [https://www.mongodbtutorial.org/mongodb-tools/mongoimport/](https://www.mongodbtutorial.org/mongodb-tools/mongoimport/))
 If you want to overwrite existing database, add `--drop`.
-
-## Commented code
-
-There are 2 functionalities, that where commented out, so that it doesn't appear at the moment, but it is possible to retrieve the functions fast again.
-
-### Marker clusters
-One ommited functionality is the marker clusters provided from leaflet which uses the hierarchical greedy clustering algorithm. 
-In both selection/map/Map.js and comparison/Map.js the corresponding parts are:
-- the imports from shared/functions/WeatherIcons, shared/functions/MapFunctions and shared/components/MarkerClusterGroup, where there are replacements for WeatherIcons and MapFunctions
-- the states: markerPos, clusterPopup, and clusterData
-- the functions showClusterPopup
-- the commented part of the return from
-`<LayersControl.BaseLayer name={MarkerMode["Cluster"]} checked={markerMode===MarkerMode["Cluster"]}>*/}`
-
-In other files:
-- createClusterCustomIcon in shared/functions/WeatherIcons.js
-- getClusterList in shared/functions/Mapfunctions.js
-- in return from `{markerMode===MarkerMode["Cluster"]` in selection/map/MiniMap.js
-
-Not commented out, but not used otherwise:
-- shared/components/MarkerClusterGroup
-
-### Convex hull
-The presentation of the convex hull in the map was remove from presented code.
-The commented code is:
-- in shared/functions/Mapfunctions.js `gridData.push({focused: gridContent, unfocused: [], coordinates: [avgLat, avgLng], convexHull: convexHull})`, the next line is the replacement
-
-In both selection/map/Map.js and comparison/Map.js:
-- `mouseover: e => setHoverPoint(selectionButton===null ? e.target.options.data: null)` and `mouseout: () => setHoverPoint(null)` in selection/map/Map.js and comparison/Map.js (in comparison additionally the wrapper eventHandler)
-- the commented part from `{hoverPoint && !isPlaying &&` respectively in comparison only `{hoverPoint &&`
-- the state hoverPoint
-- the import Polygon from react-leaflet
-- in selection only: the selector isPlaying

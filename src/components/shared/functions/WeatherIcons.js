@@ -104,9 +104,7 @@ export const getPieIcon = (data, props = {}) => {
         const maxSize = (1000 * props.gridDist) / props.meterPerPixel
         size = maxSize-size > props.maxCount-1 ? size + (maxSize-size) * Math.sqrt((sum-1)/(maxSize-size)) :
             size + (maxSize-size) * Math.sqrt((sum-1) / (props.maxCount-1))
-            // size + (maxSize-size) * (sum-1) / (props.maxCount-1)
     }
-    // const size = sum === 0 ? 22 : 22*(1+0.3*Math.log(sum))  // logarithmic growth
 
     let icon = <PieIcon
         size = {size}
@@ -121,11 +119,3 @@ export const getPieIcon = (data, props = {}) => {
         iconSize: [size, size],
     })
 }
-
-// export const createClusterCustomIcon = (cluster, size) => {
-//     const color = cluster.getAllChildMarkers()[0].options.color
-//     const pieSize = size === undefined ? 26 : size
-//     const markerList = cluster.getAllChildMarkers().map(e => e.options.data)
-//     const dataList = markerList.map(e => e.focused === undefined ? e : e.focused).flat()
-//     return getPieIcon(dataList, color === undefined ? {size: pieSize} : {color: color, size: pieSize})
-// }

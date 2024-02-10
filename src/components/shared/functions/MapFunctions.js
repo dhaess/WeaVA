@@ -200,8 +200,3 @@ export const getGridData = (allData, zoomLevel) => {
     }
     return [gridData, maxCount, gridDist]
 }
-
-// export const getClusterList = (event) => {
-//     let markerList = event.layer.getAllChildMarkers().map(e => e.options.data)
-//     return markerList.map(e => e.focused === undefined ? e : e.focused).flat()
-// }

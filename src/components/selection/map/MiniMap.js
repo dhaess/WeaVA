@@ -2,8 +2,6 @@ import {useSelector} from "react-redux";
 import {LayerGroup, MapContainer, Marker, TileLayer, useMap} from "react-leaflet";
 import {useEffect, useState} from "react";
 import {getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
-// import {createClusterCustomIcon, getMapIcon, getPieIcon} from "../../shared/functions/WeatherIcons";
-// import MarkerClusterGroup from "../../shared/components/MarkerClusterGroup";
 import {getGridData} from "../../shared/functions/MapFunctions";
 import {Button} from "@mui/material";
 import Arrow from "../../../static/images/left-arrow.png";
@@ -155,36 +153,6 @@ const MiniMap = ({color, id, mapData}) => {
                             })}
                         </LayerGroup>
                     }
-                    {/*{markerMode===MarkerMode["Cluster"] &&*/}
-                    {/*    <MarkerClusterGroup*/}
-                    {/*        iconCreateFunction={d => createClusterCustomIcon(d, 7)}*/}
-                    {/*        zoomToBoundsOnClick={false}*/}
-                    {/*        chunkedLoading={true}*/}
-                    {/*        maxClusterRadius={20}*/}
-                    {/*    >*/}
-                    {/*        {pointsData.filter(e => e.focused.length !== 0).map(e => {*/}
-                    {/*            if (e.focused.length === 1) {*/}
-                    {/*                return (*/}
-                    {/*                    <Marker key={e.coordinates[0] + "," + e.coordinates[1]}*/}
-                    {/*                            color={color}*/}
-                    {/*                            data={e.focused[0]}*/}
-                    {/*                            position={e.coordinates}*/}
-                    {/*                            icon={getMapIcon(e.focused[0].category, hasEvents ? e.focused[0].color : color, 7, "minimapMarkers minimapSingle")}*/}
-                    {/*                    />*/}
-                    {/*                )*/}
-                    {/*            } else {*/}
-                    {/*                return (*/}
-                    {/*                    <Marker opacity={1} key={e.coordinates[0] + "," + e.coordinates[1]}*/}
-                    {/*                            color={color}*/}
-                    {/*                            data={e}*/}
-                    {/*                            position={e.coordinates}*/}
-                    {/*                            icon={getPieIcon(e.focused, hasEvents ? {size: 7} : {color: color, size: 7})}*/}
-                    {/*                    />*/}
-                    {/*                )*/}
-                    {/*            }*/}
-                    {/*        })}*/}
-                    {/*    </MarkerClusterGroup>*/}
-                    {/*}*/}
                     {markerMode===MarkerMode["Location"] &&
                         <LayerGroup>
                             {pointsData.map(e => {
